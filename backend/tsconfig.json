@@ -10,7 +10,6 @@
     "module": "CommonJS",
     "moduleResolution": "node",
     "target": "es2020",
-    "types": ["node"],
     "esModuleInterop": true,
     "resolveJsonModule": true,
     // For nodejs:

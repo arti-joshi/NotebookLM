@@ -13,6 +13,7 @@ import { PrismaClient } from '../generated/prisma'
 import { GoogleGenerativeAIEmbeddings } from '@langchain/google-genai'
 import { ChatGoogleGenerativeAI } from '@langchain/google-genai'
 import { Pinecone } from '@pinecone-database/pinecone'
+import { getSambaClient } from './sambaClient'
 
 const prisma = new PrismaClient()
 const app = express()
@@ -90,7 +91,7 @@ app.post('/files/upload', upload.single('file'), async (req, res) => {
     // embed and upsert to Pinecone
     const pinecone = new Pinecone({ apiKey: process.env.PINECONE_API_KEY! })
     const index = pinecone.Index(process.env.PINECONE_INDEX!)
-    const embeddings = new GoogleGenerativeAIEmbeddings({ apiKey: process.env.GOOGLE_API_KEY!, model: 'text-embedding-004' })
+    const embeddings = new GoogleGenerativeAIEmbeddings({ apiKey: process.env.GOOGLE_API_KEY!, modelName: 'text-embedding-004' })
     const vectors = [] as { id: string; values: number[]; metadata: Record<string, any> }[]
     for (let i = 0; i < chunks.length; i++) {
       const chunk = chunks[i]
@@ -128,15 +129,15 @@ app.post('/ai/chat', async (req, res) => {
 
     const pinecone = new Pinecone({ apiKey: process.env.PINECONE_API_KEY! })
     const index = pinecone.Index(process.env.PINECONE_INDEX!)
-    const embeddings = new GoogleGenerativeAIEmbeddings({ apiKey: process.env.GOOGLE_API_KEY!, model: 'text-embedding-004' })
+    const embeddings = new GoogleGenerativeAIEmbeddings({ apiKey: process.env.GOOGLE_API_KEY!, modelName: 'text-embedding-004' })
     const queryEmb = await embeddings.embedQuery(userMessage)
     const results = await index.query({ vector: queryEmb, topK: 5, includeMetadata: true })
     const context = results.matches?.map(m => (m.metadata as any)?.chunk).filter(Boolean).join('\n\n') || ''
 
-    const llm = new ChatGoogleGenerativeAI({ apiKey: process.env.GOOGLE_API_KEY!, model: 'gemini-1.5-pro' })
+    const llm = new ChatGoogleGenerativeAI({ apiKey: process.env.GOOGLE_API_KEY!, modelName: 'gemini-1.5-pro' })
     const prompt = `You are a helpful assistant grounded in the user's documents. Use the CONTEXT to answer.
 CONTEXT:\n${context}\n\nQUESTION: ${userMessage}`
-    const ai = await llm.invoke([{ role: 'user', content: prompt }])
+    const ai = await llm.invoke(prompt)
     type AIResponse = {
       content?: Array<{text?: string}>;
     };
@@ -148,6 +149,90 @@ CONTEXT:\n${context}\n\nQUESTION: ${userMessage}`
   } catch (e) {
     console.error(e)
     res.status(500).json({ error: 'AI chat failed' })
+  }
+})
+
+// --- AI Chat via SambaNova ---
+app.post('/ai/chat-sambanova', async (req, res) => {
+  try {
+    const schema = z.object({ messages: z.array(z.object({ role: z.string(), content: z.string() })) })
+    const parsed = schema.safeParse(req.body)
+    if (!parsed.success) return res.status(400).json({ error: 'Invalid payload' })
+    const userMessage = [...parsed.data.messages].reverse().find(m => m.role === 'user')?.content || ''
+
+    // Retrieve relevant context from Pinecone using Google embeddings (fallback-safe)
+    let context = ''
+    const hasPinecone = !!process.env.PINECONE_API_KEY && !!process.env.PINECONE_INDEX
+    const hasGoogle = !!process.env.GOOGLE_API_KEY
+    if (hasPinecone && hasGoogle) {
+      try {
+        const pinecone = new Pinecone({ apiKey: process.env.PINECONE_API_KEY! })
+        const index = pinecone.Index(process.env.PINECONE_INDEX!)
+        const embeddings = new GoogleGenerativeAIEmbeddings({ apiKey: process.env.GOOGLE_API_KEY!, modelName: 'text-embedding-004' })
+        const queryEmb = await embeddings.embedQuery(userMessage)
+        const results = await index.query({ vector: queryEmb, topK: 5, includeMetadata: true })
+        context = results.matches?.map(m => (m.metadata as any)?.chunk).filter(Boolean).join('\n\n') || ''
+      } catch (err) {
+        console.warn('RAG disabled (retrieval failed):', (err as Error)?.message)
+        context = ''
+      }
+    }
+
+    const samba = await getSambaClient()
+    const completion = await samba.chat.completions.create({
+      model: 'Llama-4-Maverick-17B-128E-Instruct',
+      messages: [
+        { role: 'system', content: 'You are a helpful assistant grounded in the user\'s documents. Use the provided CONTEXT to answer succinctly and accurately. If the context is insufficient, say so.' },
+        { role: 'user', content: `CONTEXT:\n${context}\n\nQUESTION: ${userMessage}` },
+      ] as any,
+      temperature: 0.7,
+    })
+    const answer = completion.choices?.[0]?.message?.content || ''
+    res.json({ answer })
+  } catch (e) {
+    console.error(e)
+    res.status(500).json({ error: 'SambaNova chat failed' })
+  }
+})
+
+// --- AI Chat via SambaNova (GET with query param) ---
+app.get('/ai/chat-sambanova', async (req, res) => {
+  try {
+    const q = typeof req.query.q === 'string' ? req.query.q : ''
+    if (!q) return res.status(400).json({ error: 'Missing q query param' })
+
+    // Retrieve relevant context from Pinecone using Google embeddings (fallback-safe)
+    let context = ''
+    const hasPinecone = !!process.env.PINECONE_API_KEY && !!process.env.PINECONE_INDEX
+    const hasGoogle = !!process.env.GOOGLE_API_KEY
+    if (hasPinecone && hasGoogle) {
+      try {
+        const pinecone = new Pinecone({ apiKey: process.env.PINECONE_API_KEY! })
+        const index = pinecone.Index(process.env.PINECONE_INDEX!)
+        const embeddings = new GoogleGenerativeAIEmbeddings({ apiKey: process.env.GOOGLE_API_KEY!, modelName: 'text-embedding-004' })
+        const queryEmb = await embeddings.embedQuery(q)
+        const results = await index.query({ vector: queryEmb, topK: 5, includeMetadata: true })
+        context = results.matches?.map(m => (m.metadata as any)?.chunk).filter(Boolean).join('\n\n') || ''
+      } catch (err) {
+        console.warn('RAG disabled (retrieval failed):', (err as Error)?.message)
+        context = ''
+      }
+    }
+
+    const samba = await getSambaClient()
+    const completion = await samba.chat.completions.create({
+      model: 'Llama-4-Maverick-17B-128E-Instruct',
+      messages: [
+        { role: 'system', content: 'You are a helpful assistant grounded in the user\'s documents. Use the provided CONTEXT to answer succinctly and accurately. If the context is insufficient, say so.' },
+        { role: 'user', content: `CONTEXT:\n${context}\n\nQUESTION: ${q}` },
+      ] as any,
+      temperature: 0.7,
+    })
+    const answer = completion.choices?.[0]?.message?.content || ''
+    res.json({ answer })
+  } catch (e) {
+    console.error(e)
+    res.status(500).json({ error: 'SambaNova chat (GET) failed' })
   }
 })
 
@@ -169,6 +254,35 @@ app.get('/progress/summary', async (_req, res) => {
 })
 
 app.get('/', (_req, res) => res.send('API OK'))
+
+// --- RAG readiness status ---
+app.get('/rag/status', async (_req, res) => {
+  const hasPineconeKey = !!process.env.PINECONE_API_KEY
+  const hasPineconeIndex = !!process.env.PINECONE_INDEX
+  const hasGoogleKey = !!process.env.GOOGLE_API_KEY
+  const status: any = {
+    hasPineconeKey,
+    hasPineconeIndex,
+    hasGoogleKey,
+    indexReachable: false,
+    indexDimension: null as number | null,
+    note: 'Set PINECONE_API_KEY, PINECONE_INDEX, GOOGLE_API_KEY to enable grounding.'
+  }
+  if (hasPineconeKey && hasPineconeIndex) {
+    try {
+      const pinecone = new Pinecone({ apiKey: process.env.PINECONE_API_KEY! })
+      const index = pinecone.Index(process.env.PINECONE_INDEX!)
+      const stats = await index.describeIndexStats()
+      status.indexReachable = true
+      // dimension not always present; leave null if unavailable
+      status.namespaces = Object.keys(stats.namespaces || {})
+    } catch (e) {
+      status.indexReachable = false
+      status.error = (e as Error)?.message
+    }
+  }
+  res.json(status)
+})
 
 const PORT = process.env.PORT || 4000
 app.listen(PORT, () => {
