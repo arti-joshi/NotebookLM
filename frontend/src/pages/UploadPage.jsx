@@ -175,6 +175,7 @@
 
 import { useState, useRef } from 'react'
 import { Upload, FileText, File, CheckCircle, XCircle, Loader } from 'lucide-react'
+import { apiFetch, getApiBase } from '../lib/api'
 
 const ACCEPT = {
   pdf: 'application/pdf',
@@ -217,8 +218,8 @@ function UploadPage() {
         f.id === fileItem.id ? { ...f, status: 'uploading' } : f
       ))
       
-      const api = import.meta.env.VITE_API_URL || 'http://localhost:4000'
-      const res = await fetch(api + '/files/upload', {
+      const api = getApiBase()
+      const res = await apiFetch('/files/upload', {
         method: 'POST',
         body: form,
       })

@@ -112,28 +112,83 @@ function ChatWidget() {
 
     try {
       const api = import.meta.env.VITE_API_URL || 'http://localhost:4000'
-      const url = api + '/ai/chat-sambanova?q=' + encodeURIComponent(text)
-      const res = await fetch(url, { method: 'GET' })
-      const data = await res.json()
-      
-      setTimeout(() => {
-        setMessages(prev => [...prev, { 
-          role: 'assistant', 
-          content: data.answer ?? 'I apologize, but I couldn\'t process your request right now. Please try again.',
-          timestamp: new Date()
-        }])
-        setIsTyping(false)
-      }, 1000) // Simulate typing delay
+      const url = `${api}/ai/chat-sambanova/stream?q=${encodeURIComponent(text)}&ts=${Date.now()}`
+      console.log('Streaming from:', url)
+
+      const res = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        },
+        cache: 'no-store'
+      })
+
+      if (!res.ok || !res.body) {
+        let errText = ''
+        try { errText = await res.text() } catch {}
+        throw new Error(errText || `Server error: ${res.status}`)
+      }
+
+      let assistant = { role: 'assistant', content: '', timestamp: new Date() }
+      setMessages(prev => [...prev, assistant])
+
+      try {
+        const reader = res.body.getReader()
+        const decoder = new TextDecoder()
+        let buffer = ''
+        while (true) {
+          const { value, done } = await reader.read()
+          if (done) break
+          buffer += decoder.decode(value, { stream: true })
+          const events = buffer.split('\n\n')
+          buffer = events.pop() || ''
+          for (const evt of events) {
+            if (!evt.startsWith('data:')) continue
+            const json = evt.slice(5).trim()
+            try {
+              const { delta, done: finished, error } = JSON.parse(json)
+              if (error) throw new Error(error)
+              if (delta) {
+                assistant = { ...assistant, content: assistant.content + delta }
+                setMessages(prev => {
+                  const copy = [...prev]
+                  copy[copy.length - 1] = assistant
+                  return copy
+                })
+              }
+              if (finished) break
+            } catch {}
+          }
+        }
+      } catch (streamErr) {
+        console.warn('Stream failed, falling back:', streamErr)
+        // Fallback to non-streaming GET
+        const fallbackUrl = `${api}/ai/chat-sambanova?q=${encodeURIComponent(text)}&ts=${Date.now()}`
+        const r = await fetch(fallbackUrl, {
+          method: 'GET',
+          headers: { 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' },
+          cache: 'no-store'
+        })
+        const data = await r.json().catch(() => ({}))
+        const content = r.ok ? (data.answer || 'No response') : (data.error || `Server error: ${r.status}`)
+        assistant = { ...assistant, content }
+        setMessages(prev => {
+          const copy = [...prev]
+          copy[copy.length - 1] = assistant
+          return copy
+        })
+      }
       
     } catch (err) {
-      setTimeout(() => {
-        setMessages(prev => [...prev, { 
-          role: 'assistant', 
-          content: 'I\'m having trouble connecting to the AI service. Please check your connection and try again.',
-          timestamp: new Date()
-        }])
-        setIsTyping(false)
-      }, 1000)
+      console.error('Chat error:', err)
+      setMessages(prev => [...prev, { 
+        role: 'assistant', 
+        content: `Error: ${err.message}. Please check your connection and try again.`,
+        timestamp: new Date()
+      }])
+    } finally {
+      setIsTyping(false)
     }
   }
 
@@ -147,6 +202,25 @@ function ChatWidget() {
       content: 'Chat cleared! How can I help you with your documents?',
       timestamp: new Date()
     }])
+  }
+
+  const testConnection = async () => {
+    try {
+      const api = import.meta.env.VITE_API_URL || 'http://localhost:4000'
+      const res = await fetch(api + '/')
+      const text = await res.text()
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: `Connection test: ${text}`,
+        timestamp: new Date()
+      }])
+    } catch (err) {
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: `Connection failed: ${err.message}`,
+        timestamp: new Date()
+      }])
+    }
   }
 
   return (
@@ -271,6 +345,12 @@ function ChatWidget() {
                       className="px-2 py-1 text-xs bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full transition-colors duration-200"
                     >
                       Key Insights
+                    </button>
+                    <button
+                      onClick={testConnection}
+                      className="px-2 py-1 text-xs bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full transition-colors duration-200"
+                    >
+                      Test API
                     </button>
                     <button
                       onClick={clearChat}

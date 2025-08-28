@@ -18,11 +18,18 @@ model User {
   id           String   @id @default(cuid())
   email        String   @unique
   passwordHash String
+  role         Role     @default(USER)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
   notes    Note[]
   progress Progress[]
+  embeddings Embedding[]
+}
+
+enum Role {
+  USER
+  ADMIN
 }
 
 model Note {
@@ -43,4 +50,14 @@ model Progress {
   pagesRead Int      @default(0)
   minutes   Int      @default(0)
   date      DateTime @default(now())
+}
+
+model Embedding {
+  id         String   @id @default(cuid())
+  user       User?    @relation(fields: [userId], references: [id])
+  userId     String?
+  source     String
+  chunk      String
+  embedding  Json
+  createdAt  DateTime @default(now())
 }

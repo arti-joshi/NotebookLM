@@ -41,6 +41,14 @@ import UploadPage from './pages/UploadPage.jsx'
 import ReaderPage from './pages/ReaderPage.jsx'
 import DashboardPage from './pages/DashboardPage.jsx'
 import ChatWidget from './components/ChatWidget.jsx'
+import AuthPage from './pages/AuthPage.jsx'
+import { Navigate } from 'react-router-dom'
+
+function RequireAuth({ children }) {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
+  if (!token) return <Navigate to="/auth" replace />
+  return children
+}
 
 function App() {
   const [isDark, setIsDark] = useState(() => {
@@ -140,6 +148,24 @@ function App() {
 
               {/* Theme Toggle & Mobile Menu */}
               <div className="flex items-center space-x-4">
+                <NavLink 
+                  to="/auth" 
+                  className={({isActive}) => 
+                    `hidden md:inline-block relative px-3 py-2 text-sm font-medium transition-colors duration-200 ${
+                      isActive 
+                        ? 'text-indigo-600 dark:text-indigo-400' 
+                        : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
+                    }`
+                  }
+                >
+                  Account
+                </NavLink>
+                <button
+                  onClick={() => { try { localStorage.removeItem('auth_token') } catch {} window.location.href = '/auth' }}
+                  className="hidden md:inline-block px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white border rounded-lg border-gray-200 dark:border-gray-700"
+                >
+                  Logout
+                </button>
                 <button
                   onClick={toggleTheme}
                   className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-200"
@@ -171,6 +197,25 @@ function App() {
             {isMobileMenuOpen && (
               <div className="md:hidden border-t border-gray-200 dark:border-gray-800 py-4 animate-in slide-in-from-top duration-200">
                 <nav className="flex flex-col space-y-2">
+                  <NavLink 
+                    to="/auth" 
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className={({isActive}) => 
+                      `px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200 ${
+                        isActive 
+                          ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400' 
+                          : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
+                      }`
+                    }
+                  >
+                    Account
+                  </NavLink>
+                  <button
+                    onClick={() => { try { localStorage.removeItem('auth_token') } catch {} window.location.href = '/auth' }}
+                    className="text-left px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+                  >
+                    Logout
+                  </button>
                   <NavLink 
                     to="/upload" 
                     onClick={() => setIsMobileMenuOpen(false)}
@@ -219,10 +264,11 @@ function App() {
         <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
           <div className="animate-in fade-in-50 duration-300">
             <Routes>
-              <Route path="/" element={<UploadPage />} />
-              <Route path="/upload" element={<UploadPage />} />
-              <Route path="/reader" element={<ReaderPage />} />
-              <Route path="/dashboard" element={<DashboardPage />} />
+              <Route path="/auth" element={<AuthPage />} />
+              <Route path="/" element={<RequireAuth><UploadPage /></RequireAuth>} />
+              <Route path="/upload" element={<RequireAuth><UploadPage /></RequireAuth>} />
+              <Route path="/reader" element={<RequireAuth><ReaderPage /></RequireAuth>} />
+              <Route path="/dashboard" element={<RequireAuth><DashboardPage /></RequireAuth>} />
             </Routes>
           </div>
         </main>
