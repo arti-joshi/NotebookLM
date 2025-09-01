@@ -1,87 +1,79 @@
 import { useState } from 'react'
+import { setAccessToken } from '../lib/api'
 
 function AuthPage() {
-  const [mode, setMode] = useState('login') // 'login' | 'register'
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [message, setMessage] = useState('')
+  const [error, setError] = useState(null)
   const [loading, setLoading] = useState(false)
 
-  const api = import.meta.env.VITE_API_URL || 'http://localhost:4001'
-
-  async function handleSubmit(e) {
+  async function handleLogin(e) {
     e.preventDefault()
+    setError(null)
     setLoading(true)
-    setMessage('')
     try {
-      const res = await fetch(api + (mode === 'login' ? '/auth/login' : '/auth/register'), {
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:4000'
+      const res = await fetch(apiUrl + '/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
+        credentials: 'include' // expect backend to set refresh cookie
       })
+      if (!res.ok) {
+        const txt = await res.text()
+        throw new Error(txt || 'Login failed')
+      }
       const data = await res.json()
-      if (!res.ok) throw new Error(data?.error || 'Failed')
-      if (data?.token) {
-        localStorage.setItem('auth_token', data.token)
-        setMessage('Success. Token saved.')
+      if (data?.accessToken) {
+        // store short-lived access token and redirect
+        setAccessToken(data.accessToken)
+        // redirect to app root
+        window.location.assign('/')
       } else {
-        setMessage('Success.')
+        throw new Error('No access token returned from server')
       }
     } catch (err) {
-      setMessage(err.message || 'Request failed')
+      setError(err.message || 'Login error')
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div className="max-w-md mx-auto">
-      <div className="rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h1 className="text-xl font-semibold">{mode === 'login' ? 'Login' : 'Register'}</h1>
+    <div className="max-w-md mx-auto mt-12 p-6 border rounded">
+      <h2 className="text-xl font-semibold mb-4">Sign in</h2>
+      {error && <div className="text-red-600 mb-3">{error}</div>}
+      <form onSubmit={handleLogin} className="space-y-4">
+        <div>
+          <label className="block text-sm">Email</label>
+          <input
+            type="email"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="w-full border rounded px-3 py-2"
+          />
+        </div>
+        <div>
+          <label className="block text-sm">Password</label>
+          <input
+            type="password"
+            required
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full border rounded px-3 py-2"
+          />
+        </div>
+        <div>
           <button
-            className="text-sm text-indigo-600 dark:text-indigo-400"
-            onClick={() => setMode(mode === 'login' ? 'register' : 'login')}
+            type="submit"
+            disabled={loading}
+            className="w-full bg-indigo-600 text-white px-4 py-2 rounded"
           >
-            {mode === 'login' ? 'Create account' : 'Have an account? Login'}
+            {loading ? 'Signing in...' : 'Sign in'}
           </button>
         </div>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm mb-1">Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              className="w-full rounded border px-3 py-2 bg-white dark:bg-gray-900 border-gray-300 dark:border-gray-700"
-              required
-            />
-          </div>
-          <div>
-            <label className="block text-sm mb-1">Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              className="w-full rounded border px-3 py-2 bg-white dark:bg-gray-900 border-gray-300 dark:border-gray-700"
-              required
-              minLength={6}
-            />
-          </div>
-          <button
-            disabled={loading}
-            className="w-full px-4 py-2 bg-indigo-600 text-white rounded disabled:opacity-50"
-          >
-            {loading ? 'Please wait…' : (mode === 'login' ? 'Login' : 'Register')}
-          </button>
-        </form>
-        {message && (
-          <div className="mt-3 text-sm text-center text-gray-700 dark:text-gray-300">{message}</div>
-        )}
-      </div>
-      <div className="text-xs text-gray-500 dark:text-gray-400 mt-3 text-center">
-        Token is stored in localStorage under key <code>auth_token</code>.
-      </div>
+      </form>
     </div>
   )
 }

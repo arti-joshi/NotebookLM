@@ -8,18 +8,37 @@ import mammoth from 'mammoth'
 import pdfParse from 'pdf-parse'
 import { z } from 'zod'
 import jwt from 'jsonwebtoken'
+import crypto from 'crypto'
 import bcrypt from 'bcrypt'
 import { PrismaClient } from '../generated/prisma'
 import { GoogleGenerativeAIEmbeddings } from '@langchain/google-genai'
 import { ChatGoogleGenerativeAI } from '@langchain/google-genai'
-// Pinecone removed; using Postgres via Prisma
-import { getSambaClient } from './sambaClient'
-import { performance } from 'perf_hooks'
+import cookieParser from 'cookie-parser'
 
-const prisma = new PrismaClient()
-const app = express()
-app.use(cors())
+// replace app.use(cors()) with:
+app.use(cors({
+  origin: process.env.FRONTEND_ORIGIN || 'http://localhost:5173',
+  credentials: true
+}))
+
+app.use(cookieParser())
 app.use(express.json({ limit: '2mb' }))
+
+// Ensure default admin exists on startup (idempotent)
+async function ensureAdminUser() {
+  try {
+    const email = 'admin@demo.com'
+    const existing = await prisma.user.findUnique({ where: { email } })
+    if (!existing) {
+      const hash = await bcrypt.hash('password123', 10)
+      await prisma.user.create({ data: { email, passwordHash: hash, role: 'ADMIN' as any } })
+      console.log('Seeded startup admin user admin@demo.com / password123')
+    }
+  } catch (e) {
+    console.warn('ensureAdminUser skipped:', (e as Error)?.message)
+  }
+}
+ensureAdminUser()
 
 // Prevent caching of API responses and add simple latency logging
 app.use((req, res, next) => {
@@ -69,6 +88,7 @@ app.post('/auth/register', async (req, res) => {
   res.json({ token, role: (user as any).role })
 })
 
+// POST /auth/login (replace existing)
 app.post('/auth/login', async (req, res) => {
   const schema = z.object({ email: z.string().email(), password: z.string() })
   const parsed = schema.safeParse(req.body)
@@ -78,8 +98,19 @@ app.post('/auth/login', async (req, res) => {
   if (!user) return res.status(401).json({ error: 'Invalid credentials' })
   const ok = await bcrypt.compare(password, user.passwordHash)
   if (!ok) return res.status(401).json({ error: 'Invalid credentials' })
-  const token = jwt.sign({ uid: user.id, role: (user as any).role, email: user.email }, JWT_SECRET, { expiresIn: '7d' })
-  res.json({ token, role: (user as any).role })
+
+  // short-lived access token
+  const accessToken = jwt.sign({ uid: user.id, role: (user as any).role, email: user.email }, JWT_SECRET, { expiresIn: '15m' })
+
+  // create refresh token and store hashed value in DB (requires DB field or table)
+  const refreshToken = crypto.randomBytes(48).toString('hex')
+  const refreshHash = await bcrypt.hash(refreshToken, 10)
+  // store refreshHash somewhere linked to user (see DB note)
+  await prisma.user.update({ where: { id: user.id }, data: { refreshTokenHash: refreshHash } })
+
+  // set HttpOnly cookie and return access token
+  setRefreshCookie(res, refreshToken)
+  res.json({ accessToken, role: (user as any).role })
 })
 
 function auth(req: express.Request, res: express.Response, next: express.NextFunction) {
@@ -104,10 +135,10 @@ function requireAdmin(req: express.Request, res: express.Response, next: express
 }
 
 // --- CRUD: User ---
-app.get('/users', auth, requireAdmin, async (_req, res) => {
+app.get('/users', auth, requireAdmin, asyncHandler(async (_req, res) => {
   const users = await prisma.user.findMany()
   res.json(users)
-})
+}))
 
 app.get('/users/:id', async (req, res) => {
   const user = await prisma.user.findUnique({ where: { id: req.params.id } })
@@ -664,5 +695,97 @@ function cosineSimilarity(a: number[], b: number[]): number {
   if (na === 0 || nb === 0) return 0
   return dot / (Math.sqrt(na) * Math.sqrt(nb))
 }
+
+// helper: set refresh cookie
+function setRefreshCookie(res, token) {
+  const cookieOpts = {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    path: '/',
+    maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+  }
+  res.cookie('refresh_token', token, cookieOpts)
+}
+
+// --- Auth (refresh token) ---
+app.post('/auth/refresh', async (req, res) => {
+  const token = req.cookies?.refresh_token
+  if (!token) return res.status(401).json({ error: 'No refresh token' })
+
+  try {
+    // Find user by stored hashed refresh token
+    const users = await prisma.user.findMany({
+      where: {}, // we can't search by hash directly; instead fetch candidate user(s) — better: store refresh tokens in separate table keyed by token id
+      select: { id: true, refreshTokenHash: true, email: true, role: true }
+    })
+
+    // naive search — ideally store refresh tokens in their own model to query directly
+    let foundUser = null
+    for (const u of users) {
+      if (u.refreshTokenHash && await bcrypt.compare(token, u.refreshTokenHash)) {
+        foundUser = u
+        break
+      }
+    }
+    if (!foundUser) {
+      return res.status(401).json({ error: 'Invalid refresh token' })
+    }
+
+    // success -> issue new short-lived access token (and optionally rotate refresh token)
+    const accessToken = jwt.sign({ uid: foundUser.id, role: (foundUser as any).role, email: foundUser.email }, JWT_SECRET, { expiresIn: '15m' })
+
+    // (optional) rotate refresh token
+    const newRefresh = crypto.randomBytes(48).toString('hex')
+    const newHash = await bcrypt.hash(newRefresh, 10)
+    await prisma.user.update({ where: { id: foundUser.id }, data: { refreshTokenHash: newHash } })
+    setRefreshCookie(res, newRefresh)
+
+    res.json({ accessToken })
+  } catch (e) {
+    console.error(e)
+    return res.status(500).json({ error: 'Refresh failed' })
+  }
+})
+
+app.post('/auth/logout', async (req, res) => {
+  try {
+    const token = req.cookies?.refresh_token
+    if (token) {
+      // find user by hash and clear stored refresh hash
+      const users = await prisma.user.findMany({ select: { id: true, refreshTokenHash: true } })
+      for (const u of users) {
+        if (u.refreshTokenHash && await bcrypt.compare(token, u.refreshTokenHash)) {
+          await prisma.user.update({ where: { id: u.id }, data: { refreshTokenHash: null } })
+          break
+        }
+      }
+    }
+    // clear cookie
+    res.clearCookie('refresh_token', { path: '/' })
+    res.status(204).end()
+  } catch (e) {
+    res.clearCookie('refresh_token', { path: '/' })
+    res.status(204).end()
+  }
+})
+
+// tiny helper to catch async errors and forward to Express error handler
+function asyncHandler(fn) {
+  return function (req, res, next) {
+    Promise.resolve(fn(req, res, next)).catch(next)
+  }
+}
+
+// Central error handler
+app.use((err, req, res, next) => {
+  console.error('Unhandled error:', err && err.stack ? err.stack : err)
+  const status = err && err.status && Number.isInteger(err.status) ? err.status : 500
+  const message = (process.env.NODE_ENV === 'production') ? 'Internal server error' : (err && err.message) || 'Internal server error'
+  res.status(status).json({ error: message })
+})
+
+// Example usage:
+// app.post('/some-route', asyncHandler(async (req, res) => { /* ... */ }))
 
 

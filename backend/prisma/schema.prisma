@@ -19,17 +19,34 @@ model User {
   email        String   @unique
   passwordHash String
   role         Role     @default(USER)
+  isVerified   Boolean  @default(false)
+  failedLogins Int      @default(0)
+  lockedUntil  DateTime?
+  verificationToken   String? @unique
+  verificationExpires DateTime?
+  resetToken          String? @unique
+  resetTokenExpires   DateTime?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
   notes    Note[]
   progress Progress[]
   embeddings Embedding[]
+  refreshTokens RefreshToken[]
 }
 
 enum Role {
   USER
   ADMIN
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
 }
 
 model Note {
