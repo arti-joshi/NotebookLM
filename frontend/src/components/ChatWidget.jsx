@@ -1,72 +1,6 @@
-// import { useEffect, useRef, useState } from 'react'
-
-// function ChatWidget() {
-//   const [isOpen, setIsOpen] = useState(false)
-//   const [messages, setMessages] = useState([{ role: 'assistant', content: 'Hi! Ask me about your documents.' }])
-//   const [input, setInput] = useState('')
-//   const endRef = useRef(null)
-
-//   useEffect(() => {
-//     endRef.current?.scrollIntoView({ behavior: 'smooth' })
-//   }, [messages, isOpen])
-
-//   async function sendMessage(e) {
-//     e.preventDefault()
-//     const text = input.trim()
-//     if (!text) return
-//     const next = [...messages, { role: 'user', content: text }]
-//     setMessages(next)
-//     setInput('')
-//     try {
-//       const api = import.meta.env.VITE_API_URL || 'http://localhost:4000'
-//       const res = await fetch(api + '/ai/chat', {
-//         method: 'POST',
-//         headers: { 'Content-Type': 'application/json' },
-//         body: JSON.stringify({ messages: next.slice(-10) }),
-//       })
-//       const data = await res.json()
-//       setMessages((m) => [...m, { role: 'assistant', content: data.answer ?? 'No response' }])
-//     } catch (err) {
-//       setMessages((m) => [...m, { role: 'assistant', content: 'Error contacting AI service.' }])
-//     }
-//   }
-
-//   return (
-//     <div className="fixed bottom-4 right-4 z-50">
-//       {isOpen && (
-//         <div className="w-96 h-128 max-h-[70vh] bg-white dark:bg-gray-900 border dark:border-gray-800 rounded-xl shadow-xl flex flex-col">
-//           <div className="px-3 py-2 border-b dark:border-gray-800 flex items-center justify-between">
-//             <div className="font-medium">AI Assistant</div>
-//             <button className="text-sm text-gray-500" onClick={() => setIsOpen(false)}>Close</button>
-//           </div>
-//           <div className="flex-1 overflow-y-auto px-3 py-2 space-y-3">
-//             {messages.map((m, idx) => (
-//               <div key={idx} className={m.role === 'user' ? 'text-right' : 'text-left'}>
-//                 <div className={m.role === 'user' ? 'inline-block bg-brand text-white px-3 py-2 rounded-lg' : 'inline-block bg-gray-100 dark:bg-gray-800 px-3 py-2 rounded-lg'}>
-//                   {m.content}
-//                 </div>
-//               </div>
-//             ))}
-//             <div ref={endRef} />
-//           </div>
-//           <form onSubmit={sendMessage} className="p-2 border-t dark:border-gray-800 flex gap-2">
-//             <input value={input} onChange={(e)=>setInput(e.target.value)} placeholder="Ask a question..." className="flex-1 px-3 py-2 rounded border dark:border-gray-700 bg-white dark:bg-gray-900" />
-//             <button className="px-4 py-2 bg-brand text-white rounded">Send</button>
-//           </form>
-//         </div>
-//       )}
-//       <button onClick={() => setIsOpen((v)=>!v)} className="w-14 h-14 rounded-full bg-brand text-white shadow-lg">
-//         {isOpen ? '–' : 'AI'}
-//       </button>
-//     </div>
-//   )
-// }
-
-// export default ChatWidget
-
-
 import { useEffect, useRef, useState } from 'react'
 import { MessageCircle, Send, X, Bot, User, Minimize2, Maximize2 } from 'lucide-react'
+import { callApi } from '../lib/api'
 
 function ChatWidget() {
   const [isOpen, setIsOpen] = useState(false)
@@ -111,80 +45,61 @@ function ChatWidget() {
     setIsTyping(true)
 
     try {
-      const api = import.meta.env.VITE_API_URL || 'http://localhost:4000'
-      const url = `${api}/ai/chat-sambanova/stream?q=${encodeURIComponent(text)}&ts=${Date.now()}`
-      console.log('Streaming from:', url)
-
-      const res = await fetch(url, {
-        method: 'GET',
-        headers: {
-          'Cache-Control': 'no-cache',
-          'Pragma': 'no-cache'
+      const response = await callApi('/ai/chat', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json'
         },
-        cache: 'no-store'
+        body: JSON.stringify({ messages: updatedMessages })
       })
-
-      if (!res.ok || !res.body) {
-        let errText = ''
-        try { errText = await res.text() } catch {}
-        throw new Error(errText || `Server error: ${res.status}`)
-      }
-
-      let assistant = { role: 'assistant', content: '', timestamp: new Date() }
-      setMessages(prev => [...prev, assistant])
-
-      try {
-        const reader = res.body.getReader()
-        const decoder = new TextDecoder()
-        let buffer = ''
-        while (true) {
-          const { value, done } = await reader.read()
-          if (done) break
-          buffer += decoder.decode(value, { stream: true })
-          const events = buffer.split('\n\n')
-          buffer = events.pop() || ''
-          for (const evt of events) {
-            if (!evt.startsWith('data:')) continue
-            const json = evt.slice(5).trim()
-            try {
-              const { delta, done: finished, error } = JSON.parse(json)
-              if (error) throw new Error(error)
-              if (delta) {
-                assistant = { ...assistant, content: assistant.content + delta }
-                setMessages(prev => {
-                  const copy = [...prev]
-                  copy[copy.length - 1] = assistant
-                  return copy
-                })
-              }
-              if (finished) break
-            } catch {}
-          }
-        }
-      } catch (streamErr) {
-        console.warn('Stream failed, falling back:', streamErr)
-        // Fallback to non-streaming GET
-        const fallbackUrl = `${api}/ai/chat-sambanova?q=${encodeURIComponent(text)}&ts=${Date.now()}`
-        const r = await fetch(fallbackUrl, {
-          method: 'GET',
-          headers: { 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' },
-          cache: 'no-store'
-        })
-        const data = await r.json().catch(() => ({}))
-        const content = r.ok ? (data.answer || 'No response') : (data.error || `Server error: ${r.status}`)
-        assistant = { ...assistant, content }
-        setMessages(prev => {
-          const copy = [...prev]
-          copy[copy.length - 1] = assistant
-          return copy
-        })
+      
+      if (!response.ok) {
+        const errorText = await response.text()
+        throw new Error(`HTTP ${response.status}: ${errorText}`)
       }
       
-    } catch (err) {
-      console.error('Chat error:', err)
-      setMessages(prev => [...prev, { 
+      const data = await response.json()
+      
+      // Handle different response formats from the server
+      let assistantReply = ''
+      if (typeof data === 'string') {
+        assistantReply = data
+      } else if (data && typeof data === 'object') {
+        // Check various possible response fields
+        assistantReply = data.answer || data.reply || data.message || data.content || data.response || ''
+      }
+      
+      // Fallback if no valid response
+      if (!assistantReply) {
+        assistantReply = 'I received your message but couldn\'t generate a proper response. Please try again.'
+      }
+      
+      setMessages((prevMessages) => [...prevMessages, { 
         role: 'assistant', 
-        content: `Error: ${err.message}. Please check your connection and try again.`,
+        content: assistantReply,
+        timestamp: new Date()
+      }])
+    } catch (error) {
+      console.error('Chat Error:', error)
+      let errorMessage = 'Sorry, I encountered an error. '
+      
+      if (error.message) {
+        if (error.message.includes('Failed to fetch')) {
+          errorMessage += 'Unable to connect to the server. Please check if the backend is running on port 4003.'
+        } else if (error.message.includes('401') || error.message.includes('Unauthorized')) {
+          errorMessage += 'Authentication required. Please log in again.'
+        } else if (error.message.includes('CORS')) {
+          errorMessage += 'CORS error. Please check server configuration.'
+        } else {
+          errorMessage += error.message
+        }
+      } else {
+        errorMessage += 'Unknown error occurred.'
+      }
+      
+      setMessages((prevMessages) => [...prevMessages, { 
+        role: 'assistant', 
+        content: errorMessage,
         timestamp: new Date()
       }])
     } finally {
@@ -193,7 +108,11 @@ function ChatWidget() {
   }
 
   const formatTime = (date) => {
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    try {
+      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    } catch (error) {
+      return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    }
   }
 
   const clearChat = () => {
@@ -206,18 +125,21 @@ function ChatWidget() {
 
   const testConnection = async () => {
     try {
-      const api = import.meta.env.VITE_API_URL || 'http://localhost:4000'
-      const res = await fetch(api + '/')
-      const text = await res.text()
-      setMessages(prev => [...prev, {
-        role: 'assistant',
-        content: `Connection test: ${text}`,
-        timestamp: new Date()
-      }])
+      const res = await callApi('/', { method: 'GET' })
+      if (res.ok) {
+        const data = await res.json()
+        setMessages(prev => [...prev, {
+          role: 'assistant',
+          content: `✅ Connection successful! Server responded: ${JSON.stringify(data, null, 2)}`,
+          timestamp: new Date()
+        }])
+      } else {
+        throw new Error(`Server responded with status: ${res.status}`)
+      }
     } catch (err) {
       setMessages(prev => [...prev, {
         role: 'assistant',
-        content: `Connection failed: ${err.message}`,
+        content: `❌ Connection failed: ${err.message}`,
         timestamp: new Date()
       }])
     }
@@ -296,7 +218,7 @@ function ChatWidget() {
                           }`}>
                             {m.role === 'user' ? <User className="w-3 h-3" /> : <Bot className="w-3 h-3" />}
                           </div>
-                          <div className={`px-3 py-2 rounded-2xl text-sm ${
+                          <div className={`px-3 py-2 rounded-2xl text-sm whitespace-pre-wrap ${
                             m.role === 'user'
                               ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-br-md'
                               : 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-bl-md'

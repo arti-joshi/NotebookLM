@@ -1,13 +1,11 @@
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000'
+// Fixed API URL to match backend server port
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4001'
+console.log('API_URL:', API_URL) // Debug log
 
-// Keep access token in memory (avoid localStorage to reduce XSS risk)
 let accessToken = null
-
-// Optional handler called when auth is considered lost (refresh failed).
-// Default: clear token and navigate to /auth
 let authFailureHandler = () => {
   accessToken = null
-  try { window.location.assign('/auth') } catch (e) { /* no-op in non-browser env */ }
+  try { window.location.assign('/auth') } catch (e) {}
 }
 
 export function setAuthFailureHandler(fn) {
@@ -16,118 +14,193 @@ export function setAuthFailureHandler(fn) {
 
 export function setAccessToken(token) {
   accessToken = token
-  // intentionally NOT storing in localStorage to reduce XSS exposure
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('auth_token', token)
+  }
 }
 
 export function clearAccessToken() {
   accessToken = null
+  if (typeof window !== 'undefined') {
+    localStorage.removeItem('auth_token')
+  }
 }
 
-/**
- * callApi: wrapper for fetch that attaches Authorization header and tries refresh on 401
- * options: same as fetch options
- */
-export async function callApi(path, options = {}) {
+function getAccessToken() {
+  if (accessToken) return accessToken
+  if (typeof window !== 'undefined') {
+    const storedToken = localStorage.getItem('auth_token')
+    if (storedToken) {
+      accessToken = storedToken
+      return storedToken
+    }
+  }
+  return null
+}
+
+// low-level fetch wrapper
+export async function callApi(path, opts = {}) {
   const url = API_URL + path
+  const headers = opts.headers || {}
 
-  // Build headers from options (do not overwrite)
-  const headers = new Headers(options.headers || {})
-  if (accessToken) headers.set('Authorization', `Bearer ${accessToken}`)
+  const token = getAccessToken()
+  if (token) headers['Authorization'] = `Bearer ${token}`
 
-  // include cookies for refresh token flows
-  let res = await fetch(url, { ...options, headers, credentials: 'include' })
-  if (res.status !== 401) return res
-
-  // 401 -> try refresh once (refresh logic is locked to avoid races)
-  const refreshed = await tryRefreshToken()
-  if (!refreshed) {
-    // refresh failed -> treat as auth failure
-    authFailureHandler()
-    return res
-  }
-
-  // retry original request with new token
-  const retryHeaders = new Headers(options.headers || {})
-  if (accessToken) retryHeaders.set('Authorization', `Bearer ${accessToken}`)
-  return fetch(url, { ...options, headers: retryHeaders, credentials: 'include' })
-}
-
-// Refresh lock to prevent multiple simultaneous refresh calls
-let refreshingPromise = null
-
-async function tryRefreshToken() {
-  // If a refresh is already in progress, wait for it
-  if (refreshingPromise) {
-    try {
-      return await refreshingPromise
-    } catch (e) {
-      return false
-    }
-  }
-
-  refreshingPromise = (async () => {
-    try {
-      const res = await fetch(API_URL + '/auth/refresh', {
-        method: 'POST',
-        credentials: 'include' // refresh token expected in HttpOnly cookie
-      })
-
-      if (!res.ok) {
-        // refresh failed
-        clearAccessToken()
-        return false
-      }
-
-      const data = await res.json()
-      if (data?.accessToken) {
-        setAccessToken(data.accessToken)
-        return true
-      } else {
-        clearAccessToken()
-        return false
-      }
-    } catch (e) {
-      clearAccessToken()
-      return false
-    } finally {
-      // clear the lock after attempt
-      refreshingPromise = null
-    }
-  })()
-
-  try {
-    return await refreshingPromise
-  } catch (e) {
-    refreshingPromise = null
-    return false
-  }
-}
-
-// convenience helpers for JSON requests
-export async function apiGet(path) {
-  const res = await callApi(path, { method: 'GET' })
-  if (!res.ok) {
-    const text = await res.text()
-    throw new Error(text || `GET ${path} failed with ${res.status}`)
-  }
-  return res.json()
-}
-
-export async function apiPost(path, body, extraOptions = {}) {
-  // Merge headers safely so we don't accidentally drop Authorization
-  const mergedHeaders = new Headers(extraOptions.headers || {})
-  mergedHeaders.set('Content-Type', 'application/json')
-
-  const res = await callApi(path, {
-    method: 'POST',
-    headers: mergedHeaders,
-    body: JSON.stringify(body),
-    ...extraOptions
+  const res = await fetch(url, {
+    ...opts,
+    headers,
+    credentials: 'include'
   })
 
-  if (!res.ok) {
-    const text = await res.text()
-    throw new Error(text || `POST ${path} failed with ${res.status}`)
+  if (res.status === 401) {
+    clearAccessToken()
+    try { authFailureHandler() } catch (_) {}
+    throw new Error('Unauthorized')
   }
+
+  return res
+}
+
+// ✅ For JSON requests
+export async function apiPost(path, body) {
+  const res = await callApi(path, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  })
+  if (!res.ok) throw new Error(await res.text())
   return res.json()
 }
+
+export async function apiGet(path) {
+  const res = await callApi(path, { method: 'GET' })
+  if (!res.ok) throw new Error(await res.text())
+  return res.json()
+}
+
+// ✅ New helper for file uploads (FormData) with timeout support
+export async function apiUpload(path, formData, options = {}) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), options.timeout || 300000); // 5 minutes default
+
+  try {
+    const res = await callApi(path, {
+      method: 'POST',
+      body: formData, // don't stringify, don't set content-type
+      signal: controller.signal,
+    });
+    
+    clearTimeout(timeoutId);
+    
+    if (!res.ok) throw new Error(await res.text());
+    return res.json();
+  } catch (error) {
+    clearTimeout(timeoutId);
+    if (error.name === 'AbortError') {
+      throw new Error('Upload timeout - file too large or connection too slow');
+    }
+    throw error;
+  }
+}
+
+// ✅ Upload with progress tracking for large files
+export async function apiUploadWithProgress(path, formData, onProgress, options = {}) {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    const timeout = options.timeout || 300000; // 5 minutes
+    
+    // Set timeout
+    xhr.timeout = timeout;
+    
+    // Progress tracking
+    if (onProgress) {
+      xhr.upload.addEventListener('progress', (e) => {
+        if (e.lengthComputable) {
+          const percentComplete = (e.loaded / e.total) * 100;
+          onProgress(percentComplete);
+        }
+      });
+    }
+    
+    // Handle completion
+    xhr.addEventListener('load', () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        try {
+          resolve(JSON.parse(xhr.responseText));
+        } catch (e) {
+          resolve(xhr.responseText);
+        }
+      } else {
+        // Enhanced error with server response details
+        let errorMessage = `Upload failed: ${xhr.status} ${xhr.statusText}`;
+        if (xhr.responseText) {
+          try {
+            const errorData = JSON.parse(xhr.responseText);
+            errorMessage += ` - Server says: ${errorData.error || errorData.message || xhr.responseText}`;
+          } catch (e) {
+            errorMessage += ` - Server response: ${xhr.responseText}`;
+          }
+        }
+        console.error('Server error details:', {
+          status: xhr.status,
+          statusText: xhr.statusText,
+          responseText: xhr.responseText,
+          responseHeaders: xhr.getAllResponseHeaders()
+        });
+        reject(new Error(errorMessage));
+      }
+    });
+    
+    // Handle errors
+    xhr.addEventListener('error', () => {
+      reject(new Error('Upload failed due to network error'));
+    });
+    
+    xhr.addEventListener('timeout', () => {
+      reject(new Error('Upload timeout - file too large or connection too slow'));
+    });
+    
+    xhr.addEventListener('abort', () => {
+      reject(new Error('Upload cancelled'));
+    });
+    
+    // ✅ MUST call xhr.open() BEFORE setting headers
+    const url = API_URL + path;
+    xhr.open('POST', url);
+    
+    // ✅ NOW we can set headers (after xhr.open())
+    const token = getAccessToken();
+    if (token) {
+      xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+    }
+    
+    // Start upload
+    xhr.send(formData);
+  });
+}
+
+// ✅ Document management functions
+export async function apiDelete(path) {
+  const res = await callApi(path, { method: 'DELETE' })
+  if (!res.ok) throw new Error(await res.text())
+  return res.json()
+}
+
+// ✅ Document-specific API functions
+export async function getDocuments() {
+  return apiGet('/documents')
+}
+
+export async function getDocumentStatus(documentId) {
+  return apiGet(`/documents/${documentId}/status`)
+}
+
+export async function deleteDocument(documentId) {
+  return apiDelete(`/documents/${documentId}`)
+}
+
+export async function cancelDocumentProcessing(documentId) {
+  return apiDelete(`/documents/${documentId}/cancel`)
+}
+
+export const apiFetch = callApi

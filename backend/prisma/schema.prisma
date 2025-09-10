@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
   output   = "../generated/prisma"
@@ -31,6 +25,7 @@ model User {
 
   notes    Note[]
   progress Progress[]
+  documents Document[]
   embeddings Embedding[]
   refreshTokens RefreshToken[]
 }
@@ -69,12 +64,73 @@ model Progress {
   date      DateTime @default(now())
 }
 
+model Document {
+  id           String   @id @default(cuid())
+  user         User     @relation(fields: [userId], references: [id])
+  userId       String
+  filename     String
+  originalName String
+  contentHash  String   @unique // SHA-256 hash of content to prevent duplicates
+  fileSize     Int
+  mimeType     String?
+  status       DocumentStatus @default(PENDING)
+  
+  // Processing metadata
+  totalChunks     Int?     // Expected number of chunks
+  processedChunks Int      @default(0)
+  processingError String?
+  startedAt       DateTime?
+  completedAt     DateTime?
+  
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  embeddings   Embedding[]
+  
+  @@index([userId])
+  @@index([contentHash])
+  @@index([status])
+}
+
+enum DocumentStatus {
+  PENDING     // Uploaded, waiting to process
+  PROCESSING  // Currently being processed
+  COMPLETED   // Successfully processed
+  FAILED      // Processing failed
+  CANCELLED   // Processing was cancelled
+}
+
 model Embedding {
   id         String   @id @default(cuid())
   user       User?    @relation(fields: [userId], references: [id])
   userId     String?
-  source     String
+  document   Document? @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  documentId String?
+  source     String   // Keep for backward compatibility
   chunk      String
   embedding  Json
+  
+  // Smart chunking metadata
+  documentType String? // DocumentType enum value
+  chunkIndex   Int?    // Position of this chunk in the document
+  totalChunks  Int?    // Total number of chunks in the document
+  section      String? // Section or heading this chunk belongs to
+  startLine    Int?    // Starting line number in original document
+  endLine      Int?    // Ending line number in original document
+  chunkingConfig Json? // Configuration used for chunking
+  
+  // Adaptive chunking metadata
+  sectionLevel Int?    // Heading level (1=chapter, 2=section, 3=subsection)
+  pageStart    Int?    // Starting page number
+  pageEnd      Int?    // Ending page number
+  hasTable     Boolean @default(false) // Contains table data
+  hasImage     Boolean @default(false) // Contains image references
+  wordCount    Int?    // Number of words in this chunk
+  
   createdAt  DateTime @default(now())
+
+  @@index([userId])
+  @@index([documentId])
+  @@index([documentType])
+  @@index([source, chunkIndex])
 }

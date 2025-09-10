@@ -2,4 +2,18 @@ node_modules
 # Keep environment variables out of version control
 .env
 
-/generated/prisma
+# Prisma generated engine
+/generated/prisma/*.tmp*
+/generated/prisma/query_engine-windows.dll.node
+/uploads
+
+# Debug and test files
+debug-*.js
+test-*.js
+__pycache__/
+*.pyc
+
+# Temporary files
+*.log
+*.tmp
+*.bak
