@@ -65,15 +65,16 @@ model Progress {
 }
 
 model Document {
-  id           String         @id @default(cuid())
-  user         User           @relation(fields: [userId], references: [id])
-  userId       String
-  filename     String
-  originalName String
-  contentHash  String         @unique // SHA-256 hash of content to prevent duplicates
-  fileSize     Int
-  mimeType     String?
-  status       DocumentStatus @default(PENDING)
+  id               String         @id @default(cuid())
+  user             User           @relation(fields: [userId], references: [id])
+  userId           String
+  filename         String
+  originalName     String
+  contentHash      String         @unique // SHA-256 hash of content to prevent duplicates
+  fileSize         Int
+  mimeType         String?
+  status           DocumentStatus @default(PENDING)
+  isSystemDocument Boolean        @default(false) // NEW FIELD ADDED
 
   // Processing metadata
   totalChunks     Int? // Expected number of chunks
@@ -118,6 +119,14 @@ model Embedding {
   startLine      Int? // Starting line number in original document
   endLine        Int? // Ending line number in original document
   chunkingConfig Json? // Configuration used for chunking
+
+  // Adaptive chunking metadata
+  sectionLevel Int? // Heading level (1=chapter, 2=section, 3=subsection)
+  pageStart    Int? // Starting page number
+  pageEnd      Int? // Ending page number
+  hasTable     Boolean @default(false) // Contains table data
+  hasImage     Boolean @default(false) // Contains image references
+  wordCount    Int? // Number of words in this chunk
 
   createdAt DateTime @default(now())
 

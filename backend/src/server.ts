@@ -6,11 +6,16 @@ import { GoogleGenerativeAIEmbeddings } from '@langchain/google-genai'
 import { ChatGoogleGenerativeAI } from '@langchain/google-genai'
 import { corsConfig } from './config/cors'
 import path from 'path'
+import { fileURLToPath } from 'url'
 import multer from 'multer'
 import mammoth from 'mammoth'
-import pdfParse from 'pdf-parse'
 import { z } from 'zod'
 import fs from 'fs'
+import { parsePDF } from './utils/pdfParser.js'
+
+// ES Module path resolution
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 import { createReadStream } from 'fs'
 import { pipeline } from 'stream/promises'
 import axios from 'axios'
@@ -22,7 +27,15 @@ import { DocumentService } from './services/documentService'
 import { RAGService } from './services/ragService'
 
 // Types
+interface User {
+  id: string
+  email: string
+  role: string
+  isDemo?: boolean
+}
+
 interface AuthenticatedRequest extends Request {
+  user?: User
   isAuthenticated?: boolean
   isAdmin?: boolean
 }
@@ -59,7 +72,7 @@ const documentService = new DocumentService(prisma)
 // Initialize enhanced RAG service
 const ragService = new RAGService(prisma, {
   maxResults: 5,
-  similarityThreshold: 0.2, // Lowered for better recall
+  similarityThreshold: 0.35, // Balanced threshold for precision and recall
   enableKeywordSearch: true,
   enableQueryExpansion: true,
   enableHybridSearch: true
@@ -81,7 +94,7 @@ async function parsePDFStream(filePath: string): Promise<string> {
     } else {
       // For smaller files, use optimized pdf-parse
       const buffer = fs.readFileSync(filePath)
-      const data = await pdfParse(buffer)
+      const data = await parsePDF(buffer)
       return data.text
     }
   } catch (error) {
@@ -169,7 +182,7 @@ async function parseLargePDFInChunks(filePath: string, fileSize: number): Promis
     const buffer = fs.readFileSync(filePath)
     
     // Use pdf-parse with basic settings
-    const data = await pdfParse(buffer)
+    const data = await parsePDF(buffer)
     
     return data.text
   } catch (error) {
@@ -202,7 +215,7 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 })
 
 // ensure uploads directory exists
-const uploadsDir = path.join(__dirname, '..', 'uploads')
+const uploadsDir = path.join(path.dirname(__dirname), 'uploads')
 if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true })
 
 // multer storage & upload middleware
@@ -477,22 +490,35 @@ async function getSambaClient(): Promise<SambaNovaClient> {
   }
 }
 
-// Simple auth middleware
+// Auth middleware with demo token support
 function auth(req: Request, res: Response, next: NextFunction): void {
   const header = req.headers.authorization
   const token = header?.startsWith('Bearer ') ? header.slice(7) : null
 
   if (!token) {
-    res.status(401).json({ error: 'Unauthorized' })
+    res.status(401).json({ error: 'Unauthorized - No token provided' })
     return
   }
 
-  // Allow static demo token without expiry
-  const session = token === DEMO_TOKEN
-    ? { username: DEMO_ADMIN.email, role: DEMO_ADMIN.role, createdAt: Date.now() }
-    : sessions.get(token)
+  // Handle demo token
+  if (token === DEMO_TOKEN) {
+    // Set demo admin session properties
+    (req as AuthenticatedRequest).user = {
+      id: DEMO_USER_ID,
+      email: DEMO_ADMIN.email,
+      role: DEMO_ADMIN.role,
+      isDemo: true
+    };
+    (req as AuthenticatedRequest).isAuthenticated = true;
+    (req as AuthenticatedRequest).isAdmin = true;
+    next();
+    return;
+  }
+
+  // Regular JWT session handling for non-demo tokens
+  const session = sessions.get(token)
   if (!session) {
-    res.status(401).json({ error: 'Invalid session' })
+    res.status(401).json({ error: 'Invalid session token' })
     return
   }
 
@@ -1066,6 +1092,30 @@ app.post('/files/upload', auth, upload.single('file'), asyncHandler(async (req: 
 app.get('/documents', auth, asyncHandler(async (req: Request, res: Response) => {
   const documents = await documentService.getUserDocuments(DEMO_USER_ID);
   res.json({ documents });
+}))
+
+app.get('/documents/system', auth, asyncHandler(async (req: Request, res: Response) => {
+  try {
+    const systemDocuments = await prisma.document.findMany({
+      where: {
+        isSystemDocument: true
+      },
+      include: {
+        embeddings: true,
+      },
+      orderBy: {
+        createdAt: 'desc'
+      }
+    });
+    
+    res.json({ documents: systemDocuments });
+  } catch (error) {
+    console.error('Error fetching system documents:', error);
+    res.status(500).json({ 
+      error: 'Failed to fetch system documents',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
 }))
 
 app.get('/documents/:documentId/status', auth, asyncHandler(async (req: Request, res: Response) => {
@@ -1847,25 +1897,28 @@ app.use('*', (req: Request, res: Response) => {
 })
 
 // --- Server Startup ---
-const BASE_PORT = Number(process.env.PORT) || 4000
+const PORT = Number(process.env.PORT) || 4001  // Fixed port 4001
 
-function startServer(port: number, retries = 5): void {
-  const server = app.listen(port, () => {
-    console.log(`🚀 Server listening on http://localhost:${port}`)
-    console.log(`📊 Health check: http://localhost:${port}/health`)
-    console.log(`🔍 RAG status: http://localhost:${port}/rag/status`)
-  })
-
-  server.on('error', (err: any) => {
-    if (err?.code === 'EADDRINUSE' && retries > 0) {
-      const nextPort = port + 1
-      console.warn(`⚠️  Port ${port} in use. Retrying on ${nextPort}...`)
-      setTimeout(() => startServer(nextPort, retries - 1), 250)
-    } else {
-      console.error('❌ Failed to start server:', err)
-      process.exit(1)
-    }
-  })
+function startServer(): void {
+  const server = app.listen(PORT)
+    .on('listening', () => {
+      console.log(`🚀 Server listening on http://localhost:${PORT}`)
+      console.log(`📊 Health check: http://localhost:${PORT}/health`)
+      console.log(`🔍 RAG status: http://localhost:${PORT}/rag/status`)
+    })
+    .on('error', (error: any) => {
+      if (error.code === 'EADDRINUSE') {
+        console.error(`❌ Port ${PORT} is already in use!`)
+        console.error('Please ensure no other server is running on this port.')
+        console.error('You can:')
+        console.error(`1. Stop any other service using port ${PORT}`)
+        console.error(`2. Set a different port using PORT environment variable`)
+        process.exit(1)
+      } else {
+        console.error('❌ Failed to start server:', error)
+        process.exit(1)
+      }
+    })
 
   // Graceful shutdown
   process.on('SIGTERM', () => {
@@ -1885,4 +1938,4 @@ function startServer(port: number, retries = 5): void {
   })
 }
 
-startServer(BASE_PORT)
+startServer()

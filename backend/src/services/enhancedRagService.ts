@@ -41,8 +41,8 @@ export class EnhancedRAGService {
     config: Partial<RAGConfig> = {}
   ) {
     this.config = {
-      maxResults: 10, // Increased from 5
-      similarityThreshold: 0.1, // Lowered threshold
+      maxResults: 10, // Maximum number of results to return
+      similarityThreshold: 0.35, // Balanced threshold for relevance
       minKeywordScore: 0.3,
       contextWindow: 2,
       hybridWeights: {

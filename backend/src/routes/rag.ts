@@ -7,7 +7,7 @@ const router = express.Router();
 // Initialize the enhanced RAG service with optimal settings
 const ragService = new EnhancedRAGService(prisma, {
   maxResults: 10,
-  similarityThreshold: 0.1,
+  similarityThreshold: 0.35, // Adjusted for better relevance
   minKeywordScore: 0.3,
   contextWindow: 2,
   hybridWeights: {

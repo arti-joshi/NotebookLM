@@ -2,20 +2,26 @@
   // Visit https://aka.ms/tsconfig to read more about this file
   "compilerOptions": {
     // File Layout
-    "rootDir": "./src",
+    "rootDir": ".",
     "outDir": "./dist",
+    "baseUrl": ".",
+    "paths": {
+      "*": ["src/*", "prisma/*"]
+    },
 
     // Environment Settings
     // See also https://aka.ms/tsconfig/module
-    "module": "CommonJS",
-    "moduleResolution": "node",
-    "target": "es2020",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "target": "ES2022",
     "esModuleInterop": true,
     "resolveJsonModule": true,
-    // For nodejs:
-    // "lib": ["esnext"],
-    // "types": ["node"],
-    // and npm install -D @types/node
+    "lib": ["esnext"],
+    "types": ["node"],
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "allowImportingTsExtensions": true,
+    "moduleDetection": "force"
 
     // Other Outputs
     "sourceMap": true,
@@ -46,6 +52,6 @@
       "./src/types"
     ]
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules"]
+  "include": ["src/**/*", "prisma/**/*"],
+  "exclude": ["node_modules", "**/node_modules/*", "dist"]
 }

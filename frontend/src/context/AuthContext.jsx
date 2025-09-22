@@ -20,6 +20,9 @@ export function AuthProvider({ children }) {
         const storedToken = localStorage.getItem('auth_token')
         if (storedToken) {
           setAccessToken(storedToken)
+        } else {
+          // Set demo token if no other token exists
+          setAccessToken('demo-token')
         }
         
         const data = await apiGet('/auth/whoami')

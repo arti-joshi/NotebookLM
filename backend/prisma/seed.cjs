@@ -12,15 +12,15 @@ async function main() {
     const adminPassword = '123456'       // Match VITE_DEMO_PASSWORD
 
     // Check if demo admin user already exists
-    const existingAdmin = await prisma.user.findUnique({
+    let adminUser = await prisma.user.findUnique({
       where: { email: adminEmail }
     })
 
-    if (!existingAdmin) {
+    if (!adminUser) {
       // Create demo admin user
       const passwordHash = await bcrypt.hash(adminPassword, 10)
-      
-      const adminUser = await prisma.user.create({
+
+      adminUser = await prisma.user.create({
         data: {
           email: adminEmail,
           passwordHash,
@@ -34,15 +34,15 @@ async function main() {
       console.log(`   Password: ${adminPassword}`)
       console.log(`   Role: ${adminUser.role}`)
       console.log(`   ID: ${adminUser.id}`)
-      
+
       // Create some sample data for the admin user
       await createSampleData(adminUser.id)
-      
+
     } else {
       // Ensure existing user has correct role and verification status
-      if (existingAdmin.role !== 'ADMIN' || !existingAdmin.isVerified) {
+      if (adminUser.role !== 'ADMIN' || !adminUser.isVerified) {
         await prisma.user.update({
-          where: { id: existingAdmin.id },
+          where: { id: adminUser.id },
           data: { 
             role: 'ADMIN', 
             isVerified: true 
@@ -54,6 +54,9 @@ async function main() {
       }
     }
 
+    // ✅ Always run this (new OR existing admin)
+    await createPostgresSystemDocs(adminUser.id)
+
     // Create a regular demo user as well
     const userEmail = 'demo@user.com'
     const userPassword = '123456'
@@ -64,7 +67,7 @@ async function main() {
 
     if (!existingUser) {
       const passwordHash = await bcrypt.hash(userPassword, 10)
-      
+
       const demoUser = await prisma.user.create({
         data: {
           email: userEmail,
@@ -87,6 +90,67 @@ async function main() {
   } catch (error) {
     console.error('❌ Seeding failed:', error)
     throw error
+  }
+}
+
+async function createPostgresSystemDocs(adminUserId) {
+  console.log('\n📚 Creating PostgreSQL system documentation records...')
+
+  const postgresDocs = [
+    {
+      filename: 'postgresql-15-reference.pdf',
+      originalName: 'PostgreSQL 15 Reference Manual',
+      contentHash: 'pg15ref', // Placeholder hash, will be updated when processing actual PDFs
+      fileSize: 12500000, // Approximate size in bytes
+      mimeType: 'application/pdf',
+      status: 'PENDING',
+      isSystemDocument: true
+    },
+    {
+      filename: 'postgresql-15-admin.pdf',
+      originalName: 'PostgreSQL 15 Administration Guide',
+      contentHash: 'pg15admin',
+      fileSize: 8500000,
+      mimeType: 'application/pdf',
+      status: 'PENDING',
+      isSystemDocument: true
+    },
+    {
+      filename: 'postgresql-15-tutorial.pdf',
+      originalName: 'PostgreSQL 15 Tutorial',
+      contentHash: 'pg15tutorial',
+      fileSize: 3500000,
+      mimeType: 'application/pdf',
+      status: 'PENDING',
+      isSystemDocument: true
+    }
+  ]
+
+  try {
+    for (const docData of postgresDocs) {
+      // Check if document already exists by contentHash
+      const existingDoc = await prisma.document.findUnique({
+        where: { contentHash: docData.contentHash }
+      })
+
+      if (!existingDoc) {
+        await prisma.document.create({
+          data: {
+            ...docData,
+            userId: adminUserId
+          }
+        })
+        console.log(`✅ Created system document: ${docData.originalName}`)
+      } else {
+        console.log(`ℹ️  System document already exists: ${docData.originalName}`)
+      }
+    }
+    
+    console.log(`✅ PostgreSQL system documents ensured successfully`)
+    console.log(`   - ${postgresDocs.length} system documents checked`)
+  } catch (error) {
+    console.warn('⚠️  Failed to create PostgreSQL system documents:', error.message)
+    // Don't throw - system docs are optional like sample data
   }
 }
 

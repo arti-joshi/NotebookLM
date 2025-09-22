@@ -5504,6 +5504,7 @@ export namespace Prisma {
     fileSize: number | null
     mimeType: string | null
     status: $Enums.DocumentStatus | null
+    isSystemDocument: boolean | null
     totalChunks: number | null
     processedChunks: number | null
     processingError: string | null
@@ -5522,6 +5523,7 @@ export namespace Prisma {
     fileSize: number | null
     mimeType: string | null
     status: $Enums.DocumentStatus | null
+    isSystemDocument: boolean | null
     totalChunks: number | null
     processedChunks: number | null
     processingError: string | null
@@ -5540,6 +5542,7 @@ export namespace Prisma {
     fileSize: number
     mimeType: number
     status: number
+    isSystemDocument: number
     totalChunks: number
     processedChunks: number
     processingError: number
@@ -5572,6 +5575,7 @@ export namespace Prisma {
     fileSize?: true
     mimeType?: true
     status?: true
+    isSystemDocument?: true
     totalChunks?: true
     processedChunks?: true
     processingError?: true
@@ -5590,6 +5594,7 @@ export namespace Prisma {
     fileSize?: true
     mimeType?: true
     status?: true
+    isSystemDocument?: true
     totalChunks?: true
     processedChunks?: true
     processingError?: true
@@ -5608,6 +5613,7 @@ export namespace Prisma {
     fileSize?: true
     mimeType?: true
     status?: true
+    isSystemDocument?: true
     totalChunks?: true
     processedChunks?: true
     processingError?: true
@@ -5713,6 +5719,7 @@ export namespace Prisma {
     fileSize: number
     mimeType: string | null
     status: $Enums.DocumentStatus
+    isSystemDocument: boolean
     totalChunks: number | null
     processedChunks: number
     processingError: string | null
@@ -5750,6 +5757,7 @@ export namespace Prisma {
     fileSize?: boolean
     mimeType?: boolean
     status?: boolean
+    isSystemDocument?: boolean
     totalChunks?: boolean
     processedChunks?: boolean
     processingError?: boolean
@@ -5771,6 +5779,7 @@ export namespace Prisma {
     fileSize?: boolean
     mimeType?: boolean
     status?: boolean
+    isSystemDocument?: boolean
     totalChunks?: boolean
     processedChunks?: boolean
     processingError?: boolean
@@ -5790,6 +5799,7 @@ export namespace Prisma {
     fileSize?: boolean
     mimeType?: boolean
     status?: boolean
+    isSystemDocument?: boolean
     totalChunks?: boolean
     processedChunks?: boolean
     processingError?: boolean
@@ -5823,6 +5833,7 @@ export namespace Prisma {
       fileSize: number
       mimeType: string | null
       status: $Enums.DocumentStatus
+      isSystemDocument: boolean
       totalChunks: number | null
       processedChunks: number
       processingError: string | null
@@ -6233,6 +6244,7 @@ export namespace Prisma {
     readonly fileSize: FieldRef<"Document", 'Int'>
     readonly mimeType: FieldRef<"Document", 'String'>
     readonly status: FieldRef<"Document", 'DocumentStatus'>
+    readonly isSystemDocument: FieldRef<"Document", 'Boolean'>
     readonly totalChunks: FieldRef<"Document", 'Int'>
     readonly processedChunks: FieldRef<"Document", 'Int'>
     readonly processingError: FieldRef<"Document", 'String'>
@@ -7872,6 +7884,7 @@ export namespace Prisma {
     fileSize: 'fileSize',
     mimeType: 'mimeType',
     status: 'status',
+    isSystemDocument: 'isSystemDocument',
     totalChunks: 'totalChunks',
     processedChunks: 'processedChunks',
     processingError: 'processingError',
@@ -8364,6 +8377,7 @@ export namespace Prisma {
     fileSize?: IntFilter<"Document"> | number
     mimeType?: StringNullableFilter<"Document"> | string | null
     status?: EnumDocumentStatusFilter<"Document"> | $Enums.DocumentStatus
+    isSystemDocument?: BoolFilter<"Document"> | boolean
     totalChunks?: IntNullableFilter<"Document"> | number | null
     processedChunks?: IntFilter<"Document"> | number
     processingError?: StringNullableFilter<"Document"> | string | null
@@ -8384,6 +8398,7 @@ export namespace Prisma {
     fileSize?: SortOrder
     mimeType?: SortOrderInput | SortOrder
     status?: SortOrder
+    isSystemDocument?: SortOrder
     totalChunks?: SortOrderInput | SortOrder
     processedChunks?: SortOrder
     processingError?: SortOrderInput | SortOrder
@@ -8407,6 +8422,7 @@ export namespace Prisma {
     fileSize?: IntFilter<"Document"> | number
     mimeType?: StringNullableFilter<"Document"> | string | null
     status?: EnumDocumentStatusFilter<"Document"> | $Enums.DocumentStatus
+    isSystemDocument?: BoolFilter<"Document"> | boolean
     totalChunks?: IntNullableFilter<"Document"> | number | null
     processedChunks?: IntFilter<"Document"> | number
     processingError?: StringNullableFilter<"Document"> | string | null
@@ -8427,6 +8443,7 @@ export namespace Prisma {
     fileSize?: SortOrder
     mimeType?: SortOrderInput | SortOrder
     status?: SortOrder
+    isSystemDocument?: SortOrder
     totalChunks?: SortOrderInput | SortOrder
     processedChunks?: SortOrder
     processingError?: SortOrderInput | SortOrder
@@ -8453,6 +8470,7 @@ export namespace Prisma {
     fileSize?: IntWithAggregatesFilter<"Document"> | number
     mimeType?: StringNullableWithAggregatesFilter<"Document"> | string | null
     status?: EnumDocumentStatusWithAggregatesFilter<"Document"> | $Enums.DocumentStatus
+    isSystemDocument?: BoolWithAggregatesFilter<"Document"> | boolean
     totalChunks?: IntNullableWithAggregatesFilter<"Document"> | number | null
     processedChunks?: IntWithAggregatesFilter<"Document"> | number
     processingError?: StringNullableWithAggregatesFilter<"Document"> | string | null
@@ -8916,6 +8934,7 @@ export namespace Prisma {
     fileSize: number
     mimeType?: string | null
     status?: $Enums.DocumentStatus
+    isSystemDocument?: boolean
     totalChunks?: number | null
     processedChunks?: number
     processingError?: string | null
@@ -8936,6 +8955,7 @@ export namespace Prisma {
     fileSize: number
     mimeType?: string | null
     status?: $Enums.DocumentStatus
+    isSystemDocument?: boolean
     totalChunks?: number | null
     processedChunks?: number
     processingError?: string | null
@@ -8954,6 +8974,7 @@ export namespace Prisma {
     fileSize?: IntFieldUpdateOperationsInput | number
     mimeType?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumDocumentStatusFieldUpdateOperationsInput | $Enums.DocumentStatus
+    isSystemDocument?: BoolFieldUpdateOperationsInput | boolean
     totalChunks?: NullableIntFieldUpdateOperationsInput | number | null
     processedChunks?: IntFieldUpdateOperationsInput | number
     processingError?: NullableStringFieldUpdateOperationsInput | string | null
@@ -8974,6 +8995,7 @@ export namespace Prisma {
     fileSize?: IntFieldUpdateOperationsInput | number
     mimeType?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumDocumentStatusFieldUpdateOperationsInput | $Enums.DocumentStatus
+    isSystemDocument?: BoolFieldUpdateOperationsInput | boolean
     totalChunks?: NullableIntFieldUpdateOperationsInput | number | null
     processedChunks?: IntFieldUpdateOperationsInput | number
     processingError?: NullableStringFieldUpdateOperationsInput | string | null
@@ -8993,6 +9015,7 @@ export namespace Prisma {
     fileSize: number
     mimeType?: string | null
     status?: $Enums.DocumentStatus
+    isSystemDocument?: boolean
     totalChunks?: number | null
     processedChunks?: number
     processingError?: string | null
@@ -9010,6 +9033,7 @@ export namespace Prisma {
     fileSize?: IntFieldUpdateOperationsInput | number
     mimeType?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumDocumentStatusFieldUpdateOperationsInput | $Enums.DocumentStatus
+    isSystemDocument?: BoolFieldUpdateOperationsInput | boolean
     totalChunks?: NullableIntFieldUpdateOperationsInput | number | null
     processedChunks?: IntFieldUpdateOperationsInput | number
     processingError?: NullableStringFieldUpdateOperationsInput | string | null
@@ -9028,6 +9052,7 @@ export namespace Prisma {
     fileSize?: IntFieldUpdateOperationsInput | number
     mimeType?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumDocumentStatusFieldUpdateOperationsInput | $Enums.DocumentStatus
+    isSystemDocument?: BoolFieldUpdateOperationsInput | boolean
     totalChunks?: NullableIntFieldUpdateOperationsInput | number | null
     processedChunks?: IntFieldUpdateOperationsInput | number
     processingError?: NullableStringFieldUpdateOperationsInput | string | null
@@ -9608,6 +9633,7 @@ export namespace Prisma {
     fileSize?: SortOrder
     mimeType?: SortOrder
     status?: SortOrder
+    isSystemDocument?: SortOrder
     totalChunks?: SortOrder
     processedChunks?: SortOrder
     processingError?: SortOrder
@@ -9632,6 +9658,7 @@ export namespace Prisma {
     fileSize?: SortOrder
     mimeType?: SortOrder
     status?: SortOrder
+    isSystemDocument?: SortOrder
     totalChunks?: SortOrder
     processedChunks?: SortOrder
     processingError?: SortOrder
@@ -9650,6 +9677,7 @@ export namespace Prisma {
     fileSize?: SortOrder
     mimeType?: SortOrder
     status?: SortOrder
+    isSystemDocument?: SortOrder
     totalChunks?: SortOrder
     processedChunks?: SortOrder
     processingError?: SortOrder
@@ -10605,6 +10633,7 @@ export namespace Prisma {
     fileSize: number
     mimeType?: string | null
     status?: $Enums.DocumentStatus
+    isSystemDocument?: boolean
     totalChunks?: number | null
     processedChunks?: number
     processingError?: string | null
@@ -10623,6 +10652,7 @@ export namespace Prisma {
     fileSize: number
     mimeType?: string | null
     status?: $Enums.DocumentStatus
+    isSystemDocument?: boolean
     totalChunks?: number | null
     processedChunks?: number
     processingError?: string | null
@@ -10805,6 +10835,7 @@ export namespace Prisma {
     fileSize?: IntFilter<"Document"> | number
     mimeType?: StringNullableFilter<"Document"> | string | null
     status?: EnumDocumentStatusFilter<"Document"> | $Enums.DocumentStatus
+    isSystemDocument?: BoolFilter<"Document"> | boolean
     totalChunks?: IntNullableFilter<"Document"> | number | null
     processedChunks?: IntFilter<"Document"> | number
     processingError?: StringNullableFilter<"Document"> | string | null
@@ -11390,6 +11421,7 @@ export namespace Prisma {
     fileSize: number
     mimeType?: string | null
     status?: $Enums.DocumentStatus
+    isSystemDocument?: boolean
     totalChunks?: number | null
     processedChunks?: number
     processingError?: string | null
@@ -11409,6 +11441,7 @@ export namespace Prisma {
     fileSize: number
     mimeType?: string | null
     status?: $Enums.DocumentStatus
+    isSystemDocument?: boolean
     totalChunks?: number | null
     processedChunks?: number
     processingError?: string | null
@@ -11493,6 +11526,7 @@ export namespace Prisma {
     fileSize?: IntFieldUpdateOperationsInput | number
     mimeType?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumDocumentStatusFieldUpdateOperationsInput | $Enums.DocumentStatus
+    isSystemDocument?: BoolFieldUpdateOperationsInput | boolean
     totalChunks?: NullableIntFieldUpdateOperationsInput | number | null
     processedChunks?: IntFieldUpdateOperationsInput | number
     processingError?: NullableStringFieldUpdateOperationsInput | string | null
@@ -11512,6 +11546,7 @@ export namespace Prisma {
     fileSize?: IntFieldUpdateOperationsInput | number
     mimeType?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumDocumentStatusFieldUpdateOperationsInput | $Enums.DocumentStatus
+    isSystemDocument?: BoolFieldUpdateOperationsInput | boolean
     totalChunks?: NullableIntFieldUpdateOperationsInput | number | null
     processedChunks?: IntFieldUpdateOperationsInput | number
     processingError?: NullableStringFieldUpdateOperationsInput | string | null
@@ -11545,6 +11580,7 @@ export namespace Prisma {
     fileSize: number
     mimeType?: string | null
     status?: $Enums.DocumentStatus
+    isSystemDocument?: boolean
     totalChunks?: number | null
     processedChunks?: number
     processingError?: string | null
@@ -11639,6 +11675,7 @@ export namespace Prisma {
     fileSize?: IntFieldUpdateOperationsInput | number
     mimeType?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumDocumentStatusFieldUpdateOperationsInput | $Enums.DocumentStatus
+    isSystemDocument?: BoolFieldUpdateOperationsInput | boolean
     totalChunks?: NullableIntFieldUpdateOperationsInput | number | null
     processedChunks?: IntFieldUpdateOperationsInput | number
     processingError?: NullableStringFieldUpdateOperationsInput | string | null
@@ -11657,6 +11694,7 @@ export namespace Prisma {
     fileSize?: IntFieldUpdateOperationsInput | number
     mimeType?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumDocumentStatusFieldUpdateOperationsInput | $Enums.DocumentStatus
+    isSystemDocument?: BoolFieldUpdateOperationsInput | boolean
     totalChunks?: NullableIntFieldUpdateOperationsInput | number | null
     processedChunks?: IntFieldUpdateOperationsInput | number
     processingError?: NullableStringFieldUpdateOperationsInput | string | null
@@ -11675,6 +11713,7 @@ export namespace Prisma {
     fileSize?: IntFieldUpdateOperationsInput | number
     mimeType?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumDocumentStatusFieldUpdateOperationsInput | $Enums.DocumentStatus
+    isSystemDocument?: BoolFieldUpdateOperationsInput | boolean
     totalChunks?: NullableIntFieldUpdateOperationsInput | number | null
     processedChunks?: IntFieldUpdateOperationsInput | number
     processingError?: NullableStringFieldUpdateOperationsInput | string | null

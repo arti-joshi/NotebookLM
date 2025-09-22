@@ -2,15 +2,18 @@
   "name": "backend",
   "version": "1.0.0",
   "private": true,
-  "type": "commonjs",
+  "type": "module",
   "scripts": {
-    "dev": "cross-env PORT=4001 ts-node-dev --respawn --transpile-only src/server.ts",
-    "build": "tsc",
-    "start": "node dist/server.js",
+    "dev": "cross-env PORT=4001 tsx watch src/server.ts",
+    "build": "tsx src/server.ts",
+    "build:clean": "rimraf dist && tsx src/server.ts",
+    "start": "tsx src/server.ts",
     "test": "jest",
     "test:watch": "jest --watch",
     "prisma:generate": "prisma generate",
-    "seed": "prisma db seed",
+    "seed": "npm run build:clean && prisma db seed",
+    "seed:only": "prisma db seed",
+    "seed:system": "tsx prisma/seed-system-docs.ts",
     "cleanup": "node cleanup.js"
   },
   "prisma": {
@@ -33,6 +36,7 @@
     "node-fetch": "^3.3.2",
     "openai": "^5.15.0",
     "pdf-parse": "^1.1.1",
+    "pdf2json": "^3.2.1",
     "pdfjs-dist": "^5.4.149",
     "tesseract.js": "^6.0.1",
     "zod": "^3.22.2"
@@ -51,8 +55,10 @@
     "cross-env": "^10.0.0",
     "jest": "^29.7.0",
     "prisma": "^5.22.0",
+    "rimraf": "^6.0.1",
     "ts-jest": "^29.1.2",
     "ts-node-dev": "^2.0.0",
+    "tsx": "^4.20.5",
     "typescript": "^5.4.5"
   }
 }

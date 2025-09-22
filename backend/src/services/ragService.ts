@@ -37,7 +37,7 @@ export class RAGService {
     this.prisma = prisma;
     this.config = {
       maxResults: config.maxResults ?? 5,
-      similarityThreshold: config.similarityThreshold ?? 0.2,
+      similarityThreshold: config.similarityThreshold ?? 0.35,
       enableKeywordSearch: config.enableKeywordSearch ?? true,
       enableQueryExpansion: config.enableQueryExpansion ?? true,
       enableHybridSearch: config.enableHybridSearch ?? true,

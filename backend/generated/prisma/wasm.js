@@ -173,6 +173,7 @@ exports.Prisma.DocumentScalarFieldEnum = {
   fileSize: 'fileSize',
   mimeType: 'mimeType',
   status: 'status',
+  isSystemDocument: 'isSystemDocument',
   totalChunks: 'totalChunks',
   processedChunks: 'processedChunks',
   processingError: 'processingError',

@@ -74,6 +74,7 @@ model Document {
   fileSize     Int
   mimeType     String?
   status       DocumentStatus @default(PENDING)
+  isSystemDocument Boolean @default(false)  // NEW FIELD ADDED
   
   // Processing metadata
   totalChunks     Int?     // Expected number of chunks

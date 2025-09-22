@@ -1,4 +1,4 @@
-// Fixed API URL to match backend server port
+// Fixed API URL using consistent port 4001
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4001'
 console.log('API_URL:', API_URL) // Debug log
 
@@ -189,6 +189,10 @@ export async function apiDelete(path) {
 // ✅ Document-specific API functions
 export async function getDocuments() {
   return apiGet('/documents')
+}
+
+export async function getSystemDocuments() {
+  return apiGet('/documents/system')
 }
 
 export async function getDocumentStatus(documentId) {
