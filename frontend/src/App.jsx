@@ -281,9 +281,10 @@ function App() {
           <div className="animate-in fade-in-50 duration-300">
             <Routes>
               <Route path="/auth" element={<AuthPage />} />
-              <Route path="/" element={<RequireAuth><UploadPage /></RequireAuth>} />
+              <Route path="/" element={<RequireAuth><ReaderPage /></RequireAuth>} />
               <Route path="/upload" element={<RequireAuth><UploadPage /></RequireAuth>} />
               <Route path="/reader" element={<RequireAuth><ReaderPage /></RequireAuth>} />
+              <Route path="/reader/:id" element={<RequireAuth><ReaderPage /></RequireAuth>} />
               <Route path="/dashboard" element={<RequireAuth><DashboardPage /></RequireAuth>} />
             </Routes>
           </div>

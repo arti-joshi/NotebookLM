@@ -48,7 +48,18 @@ export default function UploadPage() {
     setLoadingDocuments(true)
     try {
       const response = await getDocuments()
-      setExistingDocuments(response.documents || [])
+      // Add PostgreSQL documentation as a pinned document
+      const postgresDoc = {
+        id: 'postgres-official',
+        filename: 'PostgreSQL Documentation',
+        originalName: 'PostgreSQL Documentation.pdf',
+        status: 'COMPLETED',
+        isPinned: true,
+        isOfficial: true,
+        progress: response.postgresProgress || 0,
+        totalPages: 900 // Approximate total pages of PostgreSQL docs
+      }
+      setExistingDocuments([postgresDoc, ...(response.documents || [])])
     } catch (error) {
       console.error('Failed to load existing documents:', error)
       setExistingDocuments([])
@@ -487,55 +498,74 @@ export default function UploadPage() {
               return (
                 <div
                   key={doc.id}
-                  className="flex items-center space-x-4 p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 transition-all duration-200"
+                  className={`flex items-center space-x-4 p-4 bg-white dark:bg-gray-800 rounded-xl border ${
+                    doc.isOfficial
+                      ? 'border-2 border-blue-500 dark:border-blue-400'
+                      : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+                  } transition-all duration-200`}
                 >
-                  <Icon className={`w-6 h-6 ${color}`} />
+                  <Icon className={`w-6 h-6 ${doc.isOfficial ? 'text-blue-500' : color}`} />
                   
                   <div className="flex-1 min-w-0">
-                    <div className="font-medium truncate">{doc.originalName}</div>
-                    <div className="text-sm text-gray-500 dark:text-gray-400 space-y-1">
-                      <div>Uploaded: {new Date(doc.createdAt).toLocaleDateString()}</div>
-                      <div>Size: {formatFileSize(doc.fileSize)}</div>
-                      <div className="flex items-center space-x-2">
-                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                          doc.status === 'COMPLETED' ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400' :
-                          doc.status === 'PROCESSING' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400' :
-                          doc.status === 'FAILED' ? 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400' :
-                          doc.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400' :
-                          'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400'
-                        }`}>
-                          {doc.status === 'COMPLETED' && <CheckCircle className="w-3 h-3 mr-1" />}
-                          {doc.status === 'PROCESSING' && <Loader className="w-3 h-3 mr-1 animate-spin" />}
-                          {doc.status === 'FAILED' && <XCircle className="w-3 h-3 mr-1" />}
-                          {doc.status === 'PENDING' && <AlertCircle className="w-3 h-3 mr-1" />}
-                          {doc.status}
+                    <div className="flex items-center gap-2">
+                      {doc.isOfficial && (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400">
+                          Official
                         </span>
-                        {doc._count?.embeddings > 0 && (
-                          <span className="text-xs text-gray-500">
-                            {doc._count.embeddings} chunks
+                      )}
+                      <div className="font-medium truncate">{doc.originalName}</div>
+                    </div>
+                    {doc.isOfficial ? (
+                      <div className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                        Complete PostgreSQL reference documentation with examples and guides
+                      </div>
+                    ) : (
+                      <div className="text-sm text-gray-500 dark:text-gray-400 space-y-1">
+                        <div>Uploaded: {new Date(doc.createdAt).toLocaleDateString()}</div>
+                        <div>Size: {formatFileSize(doc.fileSize)}</div>
+                        <div className="flex items-center space-x-2">
+                          <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                            doc.status === 'COMPLETED' ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400' :
+                            doc.status === 'PROCESSING' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400' :
+                            doc.status === 'FAILED' ? 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400' :
+                            doc.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400' :
+                            'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400'
+                          }`}>
+                            {doc.status === 'COMPLETED' && <CheckCircle className="w-3 h-3 mr-1" />}
+                            {doc.status === 'PROCESSING' && <Loader className="w-3 h-3 mr-1 animate-spin" />}
+                            {doc.status === 'FAILED' && <XCircle className="w-3 h-3 mr-1" />}
+                            {doc.status === 'PENDING' && <AlertCircle className="w-3 h-3 mr-1" />}
+                            {doc.status}
                           </span>
+                          {doc._count?.embeddings > 0 && (
+                            <span className="text-xs text-gray-500">
+                              {doc._count.embeddings} chunks
+                            </span>
+                          )}
+                        </div>
+                        {doc.processingError && (
+                          <div className="text-xs text-red-600 dark:text-red-400">
+                            Error: {doc.processingError}
+                          </div>
                         )}
                       </div>
-                      {doc.processingError && (
-                        <div className="text-xs text-red-600 dark:text-red-400">
-                          Error: {doc.processingError}
-                        </div>
-                      )}
-                    </div>
+                    )}
                   </div>
 
                   <div className="flex items-center space-x-2">
                     {isDeleting ? (
                       <Loader className="w-5 h-5 text-red-500 animate-spin" />
                     ) : (
-                      <button
-                        onClick={() => handleDeleteDocument(doc.id, doc.originalName)}
-                        disabled={isDeleting}
-                        className="p-2 text-gray-400 hover:text-red-500 transition-colors duration-200 disabled:opacity-50"
-                        title="Delete document"
-                      >
-                        <Trash2 className="w-5 h-5" />
-                      </button>
+                      !doc.isOfficial && (
+                        <button
+                          onClick={() => handleDeleteDocument(doc.id, doc.originalName)}
+                          disabled={isDeleting}
+                          className="p-2 text-gray-400 hover:text-red-500 transition-colors duration-200 disabled:opacity-50"
+                          title="Delete document"
+                        >
+                          <Trash2 className="w-5 h-5" />
+                        </button>
+                      )
                     )}
                   </div>
                 </div>

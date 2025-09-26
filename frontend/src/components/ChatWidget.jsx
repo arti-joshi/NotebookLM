@@ -1,8 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
 import { MessageCircle, Send, X, Bot, User, Minimize2, Maximize2 } from 'lucide-react'
 import { callApi } from '../lib/api'
+import { CitationList } from './CitationBadge'
+import { ErrorBoundary } from './ErrorBoundary'
+import './CitationBadge.css'
 
-function ChatWidget() {
+function ChatWidgetContent() {
   const [isOpen, setIsOpen] = useState(false)
   const [isMinimized, setIsMinimized] = useState(false)
   const [messages, setMessages] = useState([
@@ -45,12 +48,11 @@ function ChatWidget() {
     setIsTyping(true)
 
     try {
-      const response = await callApi('/ai/chat', {
+      // Use PostgreSQL docs chat endpoint
+      const response = await callApi('/postgres-docs/chat', {
         method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ messages: updatedMessages })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages: updatedMessages.map(({ role, content }) => ({ role, content })) })
       })
       
       if (!response.ok) {
@@ -77,7 +79,8 @@ function ChatWidget() {
       setMessages((prevMessages) => [...prevMessages, { 
         role: 'assistant', 
         content: assistantReply,
-        timestamp: new Date()
+        timestamp: new Date(),
+        citations: data.citations
       }])
     } catch (error) {
       console.error('Chat Error:', error)
@@ -224,6 +227,9 @@ function ChatWidget() {
                               : 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-bl-md'
                           }`}>
                             {m.content}
+                            {m.role === 'assistant' && m.citations && (
+                              <CitationList citations={m.citations} />
+                            )}
                           </div>
                         </div>
                         <div className={`text-xs text-gray-400 mt-1 ${m.role === 'user' ? 'text-right' : 'text-left'}`}>
@@ -312,4 +318,26 @@ function ChatWidget() {
   )
 }
 
-export default ChatWidget
+function ChatWidget() {
+  return (
+    <ErrorBoundary
+      fallback={
+        <div className="fixed bottom-6 right-6 z-50 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-2xl p-4">
+          <p className="text-red-600 dark:text-red-400">
+            Something went wrong with the chat widget. Please refresh the page.
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-2 px-3 py-1 text-sm bg-red-100 text-red-800 rounded-md hover:bg-red-200"
+          >
+            Refresh
+          </button>
+        </div>
+      }
+    >
+      <ChatWidgetContent />
+    </ErrorBoundary>
+  );
+}
+
+export default ChatWidget;

@@ -1,11 +1,15 @@
 import { useEffect, useState, useRef } from 'react'
 import { Document, Page, pdfjs } from 'react-pdf'
-import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut, RotateCw, BookOpen, StickyNote, Search, Download } from 'lucide-react'
+import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut, RotateCw, BookOpen, StickyNote, Search, Download, MenuIcon } from 'lucide-react'
+import { useParams } from 'react-router-dom'
+import PostgresTableOfContents from '../components/PostgresTableOfContents'
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`
 
 function ReaderPage() {
+  const { id } = useParams()
   const [fileUrl, setFileUrl] = useState('')
+  const [documentTitle, setDocumentTitle] = useState('')
   const [numPages, setNumPages] = useState(0)
   const [pageNumber, setPageNumber] = useState(1)
   const [scale, setScale] = useState(1.0)
@@ -15,12 +19,43 @@ function ReaderPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const [showNotes, setShowNotes] = useState(true)
+  const [showTOC, setShowTOC] = useState(false)
+  const [postgresSearch, setPostgresSearch] = useState('')
+  const [searchResults, setSearchResults] = useState([])
   const documentRef = useRef(null)
 
   useEffect(() => {
-    // Placeholder: later pull last-opened doc from backend
-    setFileUrl('https://mozilla.github.io/pdf.js/web/compressed.tracemonkey-pldi-09.pdf')
-  }, [])
+    async function loadDocument() {
+      setIsLoading(true)
+      try {
+        if (!id) {
+          // By default, load PostgreSQL documentation
+          setFileUrl('/data/postgres_docs/pdf/postgresql.pdf')
+          setDocumentTitle('PostgreSQL Documentation')
+          setShowTOC(true)
+        } else if (id === 'postgres-official') {
+          // Load official PostgreSQL documentation (same as default)
+          setFileUrl('/data/postgres_docs/pdf/postgresql.pdf')
+          setDocumentTitle('PostgreSQL Documentation')
+          setShowTOC(true)
+        } else {
+          // Load regular document
+          const response = await fetch(`/api/documents/${id}`)
+          const data = await response.json()
+          setFileUrl(data.url)
+          setDocumentTitle(data.originalName)
+          setShowTOC(false)
+        }
+      } catch (error) {
+        console.error('Failed to load document:', error)
+        setError('Failed to load document. Please try again.')
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    loadDocument()
+  }, [id])
 
   function onLoadSuccess({ numPages }) {
     setNumPages(numPages)
@@ -58,22 +93,62 @@ function ReaderPage() {
     // TODO: Save to backend API
   }
 
+  // PostgreSQL documentation search
+  useEffect(() => {
+    async function searchPostgresDocs() {
+      if (!postgresSearch || !id === 'postgres-official') return setSearchResults([]);
+      
+      try {
+        const response = await fetch(`/api/postgres-docs/search?q=${encodeURIComponent(postgresSearch)}`);
+        const data = await response.json();
+        setSearchResults(data.results);
+      } catch (error) {
+        console.error('Failed to search PostgreSQL docs:', error);
+        setSearchResults([]);
+      }
+    }
+
+    const debounceTimer = setTimeout(searchPostgresDocs, 300);
+    return () => clearTimeout(debounceTimer);
+  }, [postgresSearch]);
+
   return (
     <div className="grid grid-cols-12 gap-6 h-full">
+      {/* Table of Contents */}
+      {id === 'postgres-official' && showTOC && (
+        <div className="col-span-3 space-y-4">
+          <PostgresTableOfContents onNavigate={goToPage} currentPage={pageNumber} />
+        </div>
+      )}
+
       {/* Main Document Viewer */}
-      <div className={`${showNotes ? 'col-span-8' : 'col-span-12'} space-y-4`}>
+      <div className={`${showNotes ? (showTOC ? 'col-span-5' : 'col-span-8') : (showTOC ? 'col-span-9' : 'col-span-12')} space-y-4`}>
         {/* Toolbar */}
         <div className="flex items-center justify-between p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
-          <div className="flex items-center space-x-3">
-            <input 
-              value={fileUrl} 
-              onChange={(e) => {
-                setFileUrl(e.target.value)
-                setIsLoading(true)
-              }}
-              placeholder="Enter PDF URL or select from uploaded files" 
-              className="w-80 px-3 py-2 text-sm border rounded-lg dark:bg-gray-900 dark:border-gray-600 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-            />
+          <div className="flex items-center space-x-3 flex-1">
+            <div className="flex-1">
+              <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100 truncate">
+                {documentTitle}
+              </h1>
+              {id === 'postgres-official' && (
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                  Official PostgreSQL documentation with examples and best practices
+                </p>
+              )}
+            </div>
+            {id === 'postgres-official' && (
+              <button
+                onClick={() => setShowTOC(!showTOC)}
+                className={`p-2 rounded-lg transition-colors duration-200 mr-2 ${
+                  showTOC
+                    ? 'bg-indigo-100 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400'
+                    : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'
+                }`}
+                title={showTOC ? 'Hide contents' : 'Show contents'}
+              >
+                <MenuIcon className="w-4 h-4" />
+              </button>
+            )}
             <button
               onClick={() => setShowNotes(!showNotes)}
               className={`p-2 rounded-lg transition-colors duration-200 ${
@@ -228,6 +303,49 @@ function ReaderPage() {
       {/* Notes Panel */}
       {showNotes && (
         <div className="col-span-4 space-y-4">
+          {/* PostgreSQL Search Section */}
+          {id === 'postgres-official' && (
+            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+              <h3 className="font-medium text-sm mb-3">Search Documentation</h3>
+              <div className="space-y-4">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <input
+                    type="text"
+                    value={postgresSearch}
+                    onChange={(e) => setPostgresSearch(e.target.value)}
+                    placeholder="Search PostgreSQL docs..."
+                    className="w-full pl-10 pr-4 py-2 text-sm border rounded-lg dark:bg-gray-900 dark:border-gray-600 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  />
+                </div>
+                <div className="max-h-48 overflow-y-auto space-y-2">
+                  {searchResults.map((result) => (
+                    <button
+                      key={result.page}
+                      onClick={() => goToPage(result.page)}
+                      className="w-full text-left p-3 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors duration-200"
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-xs font-medium text-indigo-600 dark:text-indigo-400">
+                          Page {result.page}
+                        </span>
+                        <span className="text-xs text-gray-500">{result.section}</span>
+                      </div>
+                      <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2">
+                        {result.preview}
+                      </p>
+                    </button>
+                  ))}
+                  {postgresSearch && searchResults.length === 0 && (
+                    <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-2">
+                      No results found
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold flex items-center space-x-2">
               <StickyNote className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />

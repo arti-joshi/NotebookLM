@@ -4,8 +4,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider          = "postgresql"
+  url               = env("DATABASE_URL")
+  shadowDatabaseUrl = env("PRISMA_MIGRATION_SHADOW_DATABASE_URL")
 }
 
 model User {
@@ -110,6 +111,7 @@ model Embedding {
   source     String   // Keep for backward compatibility
   chunk      String
   embedding  Json
+  embedding_vec Unsupported("vector(768)")? // pgvector column for similarity search
   
   // Smart chunking metadata
   documentType String? // DocumentType enum value

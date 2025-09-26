@@ -13,52 +13,116 @@ export function setAuthFailureHandler(fn) {
 }
 
 export function setAccessToken(token) {
-  accessToken = token
-  if (typeof window !== 'undefined') {
-    localStorage.setItem('auth_token', token)
+  if (!token) {
+    clearAccessToken();
+    return;
+  }
+  
+  accessToken = token;
+  try {
+    localStorage.setItem('auth_token', token);
+    console.log('Access token set successfully');
+  } catch (error) {
+    console.error('Error saving access token:', error);
   }
 }
 
 export function clearAccessToken() {
-  accessToken = null
-  if (typeof window !== 'undefined') {
-    localStorage.removeItem('auth_token')
+  accessToken = null;
+  try {
+    localStorage.removeItem('auth_token');
+    localStorage.removeItem('user_info');
+    console.log('Access token cleared successfully');
+  } catch (error) {
+    console.error('Error clearing access token:', error);
   }
 }
 
 function getAccessToken() {
-  if (accessToken) return accessToken
-  if (typeof window !== 'undefined') {
-    const storedToken = localStorage.getItem('auth_token')
-    if (storedToken) {
-      accessToken = storedToken
-      return storedToken
-    }
+  // First check memory
+  if (accessToken) {
+    return accessToken;
   }
-  return null
+  
+  // Then check localStorage
+  try {
+    const storedToken = localStorage.getItem('auth_token');
+    if (storedToken) {
+      accessToken = storedToken;
+      return storedToken;
+    }
+  } catch (error) {
+    console.error('Error reading access token:', error);
+  }
+  
+  return null;
+}
+
+// Configurable timeout
+const DEFAULT_TIMEOUT = 30000; // 30 seconds
+
+class APIError extends Error {
+  constructor(message, status, data) {
+    super(message);
+    this.name = 'APIError';
+    this.status = status;
+    this.data = data;
+  }
 }
 
 // low-level fetch wrapper
 export async function callApi(path, opts = {}) {
   const url = API_URL + path
   const headers = opts.headers || {}
+  const controller = new AbortController();
+  const timeout = setTimeout(
+    () => controller.abort(), 
+    opts.timeout || DEFAULT_TIMEOUT
+  );
 
   const token = getAccessToken()
   if (token) headers['Authorization'] = `Bearer ${token}`
 
-  const res = await fetch(url, {
-    ...opts,
-    headers,
-    credentials: 'include'
-  })
+  try {
+    const res = await fetch(url, {
+      ...opts,
+      signal: controller.signal,
+      headers,
+      credentials: 'include'
+    });
 
-  if (res.status === 401) {
-    clearAccessToken()
-    try { authFailureHandler() } catch (_) {}
-    throw new Error('Unauthorized')
+    if (res.status === 401) {
+      clearAccessToken();
+      try { authFailureHandler(); } catch (_) {}
+      throw new APIError('Unauthorized', 401);
+    }
+
+    if (!res.ok) {
+      let errorData;
+      try {
+        errorData = await res.json();
+      } catch {
+        errorData = await res.text();
+      }
+      throw new APIError(
+        errorData.message || 'API request failed',
+        res.status,
+        errorData
+      );
+    }
+
+    return res;
+  } catch (error) {
+    if (error.name === 'AbortError') {
+      throw new APIError('Request timed out', 408);
+    }
+    if (error instanceof APIError) {
+      throw error;
+    }
+    throw new APIError(error.message, 500);
+  } finally {
+    clearTimeout(timeout);
   }
-
-  return res
 }
 
 // ✅ For JSON requests

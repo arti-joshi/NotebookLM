@@ -2,66 +2,50 @@ import { PrismaClient } from '../generated/prisma'
 import crypto from 'crypto'
 import * as fs from 'fs'
 import * as path from 'path'
-import PDFParser from 'pdf2json'
+import { PDFLoader } from 'langchain/document_loaders/fs/pdf'
+import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter'
+import { GoogleGenerativeAIEmbeddings } from '@langchain/google-genai'
 
 const prisma = new PrismaClient()
 
-interface PDFPage {
-  Texts: {
-    R: {
-      T: string;
-    }[];
-  }[];
-}
+// Legacy PDFParser removed; rely on LangChain PDFLoader
 
-interface PDFData {
-  Pages: PDFPage[];
-}
-
-function parsePDF(pdfPath: string): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const pdfParser = new PDFParser(null)
-    
-    pdfParser.on("pdfParser_dataReady", (pdfData: PDFData) => {
-      try {
-        const text = decodeURIComponent(pdfData.Pages.map(page => 
-          page.Texts.map(text => text.R.map(r => r.T).join(' ')).join(' ')
-        ).join('\n'))
-        resolve(text)
-      } catch (err) {
-        reject(err)
-      }
-    })
-    
-    pdfParser.on("pdfParser_dataError", (errData: unknown) => {
-      if (errData instanceof Error) {
-        reject(errData)
-      } else if (typeof errData === 'object' && errData !== null && 'parserError' in errData) {
-        reject(errData.parserError)
-      } else {
-        reject(new Error('Unknown PDF parsing error'))
-      }
-    })
-    
-    pdfParser.loadPDF(pdfPath)
-  })
-}
-
-// Legacy chunking function with limit parameter
-function chunkText(text: string, chunkSize = 1000, overlap = 200, limit = 100): string[] {
-  const clean = text.replace(/\s+/g, ' ').trim()
-  const chunks: string[] = []
-  let i = 0
-  let count = 0
-
-  while (i < clean.length && count < limit) {
-    const end = Math.min(i + chunkSize, clean.length)
-    chunks.push(clean.slice(i, end))
-    i += chunkSize - overlap
-    count++
-  }
-
-  return chunks
+// Enhanced content type detection for PostgreSQL documentation
+function detectContentType(text: string): 'sql_example' | 'table' | 'warning' | 'text' {
+  const lowerText = text.toLowerCase();
+  
+  // Enhanced SQL pattern detection
+  const sqlPatterns = [
+    /\b(create|insert|select|update|delete|alter|drop|grant|revoke)\s+/i,
+    /\b(explain|analyze|vacuum|reindex|cluster)\s+/i,
+    /\b(begin|commit|rollback|savepoint)\s+/i,
+    /\b(declare|fetch|open|close|cursor)\s+/i,
+    /\b(function|procedure|trigger|view|index)\s+/i,
+    /\b(union|intersect|except|with)\s+/i,
+    /\b(inner|left|right|full|outer)\s+join/i,
+    /\b(group\s+by|order\s+by|having|where)\s+/i,
+    /\b(limit|offset|distinct|all)\s+/i
+  ];
+  
+  const hasSqlPattern = sqlPatterns.some(pattern => pattern.test(text));
+  if (hasSqlPattern) return "sql_example";
+  
+  // Enhanced table detection
+  const tablePattern = /\|.*\|.*\n.*---/;
+  if (tablePattern.test(text)) return "table";
+  
+  // Enhanced warning detection
+  const warningPatterns = [
+    /\b(note|caution|warning|important|tip|hint):/i,
+    /\b(be\s+aware|remember|notice|attention):/i,
+    /\b(deprecated|obsolete|removed|changed):/i,
+    /\b(security|permission|privilege|access):/i
+  ];
+  
+  const hasWarningPattern = warningPatterns.some(pattern => pattern.test(text));
+  if (hasWarningPattern) return "warning";
+  
+  return "text";
 }
 
 interface SystemDocumentInput {
@@ -97,9 +81,7 @@ async function seedSystemDocuments(): Promise<void> {
     const dataBuffer = fs.readFileSync(pgDocPath)
     const contentHash = crypto.createHash('sha256').update(dataBuffer).digest('hex')
 
-    // Parse PDF content
-    console.log('📄 Parsing PDF content...')
-    const pgContent = await parsePDF(pgDocPath)
+    // Parsing will be handled by LangChain below
 
     // Create document record
     const document = await prisma.document.upsert({
@@ -124,28 +106,64 @@ async function seedSystemDocuments(): Promise<void> {
       }
     })
 
-    console.log('📄 Processing first 100 chunks...')
-    // Process only first 100 chunks for initial testing
-    const chunks = chunkText(pgContent.toString(), 1000, 200, 100)
-    const totalChunks = chunks.length
+    console.log('📄 Processing with LangChain enhanced chunking...')
+    
+    // Initialize embeddings
+    const embeddings = new GoogleGenerativeAIEmbeddings({
+      apiKey: process.env.GOOGLE_API_KEY!,
+      modelName: "text-embedding-004"
+    })
+    
+    // Load PDF with LangChain
+    const loader = new PDFLoader(pgDocPath)
+    const docs = await loader.load()
+    console.log(`✅ Loaded ${docs.length} pages from PDF`)
+    
+    // Use LangChain text splitter
+    const splitter = new RecursiveCharacterTextSplitter({
+      chunkSize: 1000,
+      chunkOverlap: 200,
+      separators: ["\n\n", "\n", ". ", " ", ""],
+      keepSeparator: false
+    })
+    
+    const chunks = await splitter.splitDocuments(docs)
+    const totalChunks = Math.min(chunks.length, 100) // Limit to 100 for testing
+    const limitedChunks = chunks.slice(0, totalChunks)
 
-    console.log(`🔄 Processing ${totalChunks} chunks...`)
+    console.log(`🔄 Processing ${totalChunks} chunks with enhanced metadata...`)
     let processedCount = 0
 
     // Process chunks in batches of 3 with delay
-    for (let i = 0; i < chunks.length; i += 3) {
-      const batch = chunks.slice(i, i + 3)
-      const promises = batch.map((chunk, idx) => {
+    for (let i = 0; i < limitedChunks.length; i += 3) {
+      const batch = limitedChunks.slice(i, i + 3)
+      const promises = batch.map(async (chunk, idx) => {
+        const chunkText = chunk.pageContent.trim()
+        const contentType = detectContentType(chunkText)
+        const pageNumber = chunk.metadata?.loc?.pageNumber || chunk.metadata?.pageNumber || undefined
+        
+        // Generate embedding
+        const embedding = await embeddings.embedQuery(chunkText)
+        
         return prisma.embedding.create({
           data: {
             documentId: document.id,
             source: document.filename,
-            chunk,
+            chunk: chunkText,
             chunkIndex: i + idx,
             totalChunks,
-            embedding: [], // Empty embedding for now
+            embedding,
             documentType: 'SYSTEM_DOCUMENT',
-            wordCount: chunk.split(/\s+/).length
+            wordCount: chunkText.split(/\s+/).length,
+            pageStart: pageNumber,
+            hasTable: contentType === 'table',
+            hasImage: /!\[.*?\]\(.*?\)/.test(chunkText),
+            chunkingConfig: {
+              contentType,
+              pageNumber,
+              source: document.filename,
+              processingDate: new Date().toISOString()
+            }
           }
         })
       })
@@ -168,7 +186,7 @@ async function seedSystemDocuments(): Promise<void> {
       console.log(`✅ Processed chunks ${processedCount}/${totalChunks}`)
 
       // Small delay between batches
-      if (i + 3 < chunks.length) {
+      if (i + 3 < limitedChunks.length) {
         await new Promise(resolve => setTimeout(resolve, 1500))
       }
     }
@@ -182,7 +200,7 @@ async function seedSystemDocuments(): Promise<void> {
 }
 
 // Self-executing async function with proper error handling
-(async () => {
+;(async () => {
   try {
     await seedSystemDocuments()
     process.exit(0)

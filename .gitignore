@@ -1,5 +1,6 @@
 .env
 frontend/.env
+backend/.env
 backend/dist/
-
-
+backend/uploads/
+node_modules

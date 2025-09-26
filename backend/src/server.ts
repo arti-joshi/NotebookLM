@@ -11,6 +11,7 @@ import multer from 'multer'
 import mammoth from 'mammoth'
 import { z } from 'zod'
 import fs from 'fs'
+import { promises as fsPromises } from 'fs'
 import { parsePDF } from './utils/pdfParser.js'
 
 // ES Module path resolution
@@ -20,9 +21,7 @@ import { createReadStream } from 'fs'
 import { pipeline } from 'stream/promises'
 import axios from 'axios'
 import FormData from 'form-data'
-import { processDocumentWithSmartChunking } from './chunking/databaseIntegration'
-import { parseAndChunkPDF, convertChunksForDatabase, fallbackTextExtraction } from './chunking/enhancedPDFProcessor'
-import { CHUNKING_PRESETS } from './chunking/chunkingPipeline'
+// Services with LangChain integration
 import { DocumentService } from './services/documentService'
 import { RAGService } from './services/ragService'
 
@@ -66,7 +65,7 @@ const prisma = new PrismaClient({
 // Track processing documents to prevent concurrent processing
 const processingDocuments = new Map<string, { startTime: number, status: string }>()
 
-// Initialize document service (after prisma)
+// Initialize document services (after prisma)
 const documentService = new DocumentService(prisma)
 
 // Initialize enhanced RAG service
@@ -346,47 +345,8 @@ resolveDemoUserId()
 // Resume any pending document processing on startup
 documentService.resumePendingProcessing().catch(console.error)
 
-// 🚀 Background processing function with concurrency control
-async function processDocumentInBackground(
-  prisma: PrismaClient,
-  text: string,
-  options: { userId: string; source: string; config: any }
-): Promise<void> {
-  const documentKey = `${options.userId}:${options.source}`;
-  
-  // Check if document is already being processed
-  if (processingDocuments.has(documentKey)) {
-    const existing = processingDocuments.get(documentKey)!;
-    console.log(`[Background] Document ${options.source} is already being processed (started ${Date.now() - existing.startTime}ms ago)`);
-    return;
-  }
-  
-  // Mark document as being processed
-  processingDocuments.set(documentKey, { startTime: Date.now(), status: 'processing' });
-  
-  try {
-    console.log(`[Background] Starting processing for ${options.source}`);
-    const result = await processDocumentWithSmartChunking(prisma, text, options);
-    console.log(`[Background] Completed ${options.source}: ${result.processedChunks}/${result.totalChunks} chunks in ${result.processingTime}ms`);
-    
-    // Update status to completed
-    processingDocuments.set(documentKey, { startTime: Date.now(), status: 'completed' });
-    
-    // Clean up completed processing after 5 minutes
-    setTimeout(() => {
-      processingDocuments.delete(documentKey);
-    }, 5 * 60 * 1000);
-    
-  } catch (error) {
-    console.error(`[Background] Failed to process ${options.source}:`, error);
-    
-    // Mark as failed and clean up after 1 minute
-    processingDocuments.set(documentKey, { startTime: Date.now(), status: 'failed' });
-    setTimeout(() => {
-      processingDocuments.delete(documentKey);
-    }, 60 * 1000);
-  }
-}
+// Legacy background processing function - now handled by DocumentService
+// This function is kept for backward compatibility but is no longer used
 
 function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
   return new Promise<T>((resolve, reject) => {
@@ -434,20 +394,7 @@ function cosineSimilarity(a: number[], b: number[]): number {
   return dot / (Math.sqrt(normA) * Math.sqrt(normB))
 }
 
-// Legacy chunking function - kept for backward compatibility
-function chunkText(text: string, chunkSize = 1000, overlap = 200): string[] {
-  const clean = text.replace(/\s+/g, ' ').trim()
-  const chunks: string[] = []
-  let i = 0
-
-  while (i < clean.length) {
-    const end = Math.min(i + chunkSize, clean.length)
-    chunks.push(clean.slice(i, end))
-    i += chunkSize - overlap
-  }
-
-  return chunks
-}
+// Legacy chunking function removed - now using LangChain splitters
 
 // Generate simple session token
 function generateSessionToken(): string {
@@ -905,91 +852,48 @@ app.post('/files/upload', auth, upload.single('file'), asyncHandler(async (req: 
         console.log(`[PDF] Processing ${file.originalname} (${fileSizeMB.toFixed(1)}MB)`)
         
         try {
-          // Use enhanced adaptive PDF processing
-          const pdfResult = await withTimeout(
-            parseAndChunkPDF(file.path),
-            PDF_PARSE_TIMEOUT_MS
+          // Use document service with LangChain chunking (path-based to avoid UTF-8 corruption)
+          console.log(`[PDF] Processing with LangChain chunking (path-based)...`)
+
+          const result = await documentService.uploadDocumentFromFile(
+            DEMO_USER_ID,
+            file.path,
+            file.originalname,
+            file.mimetype
           )
           
-          if (pdfResult.success && pdfResult.chunks.length > 0) {
-            // Process with pre-chunked semantic blocks
-            console.log(`[PDF] ✅ Enhanced processing: ${pdfResult.chunks.length} semantic chunks from ${pdfResult.metadata.totalSections} sections`)
-            
-            // Convert chunks for database storage
-            const chunkData = convertChunksForDatabase(pdfResult.chunks, {
-              userId: DEMO_USER_ID,
-              source: file.originalname,
-              documentId: undefined // Will be set by DocumentService
-            })
-            
-            console.log(`[PDF] Converted ${chunkData.length} chunks for database storage`)
-            
-            // Store chunks directly without re-chunking
-            const filename = file.originalname
-            const result = await documentService.uploadPreChunkedDocument(
-              DEMO_USER_ID,
-              filename,
-              file.originalname,
-              chunkData,
-              file.mimetype
-            )
-            
-            console.log(`[PDF] Document service result:`, { 
-              documentId: result.documentId, 
-              status: result.status, 
-              isDuplicate: result.isDuplicate 
-            })
-            
-            return res.json({
-              message: result.message,
-              filename: filename,
-              documentId: result.documentId,
-              status: result.status.toLowerCase(),
-              isDuplicate: result.isDuplicate,
-              totalChunks: pdfResult.chunks.length,
-              totalSections: pdfResult.metadata.totalSections,
-              processingTime: `${Math.round(pdfResult.metadata.processingTime / 1000)}s`,
-              chunkingType: 'adaptive-semantic',
-              note: result.isDuplicate 
-                ? 'This document has been processed before or is currently processing.'
-                : result.status === 'COMPLETED' 
-                  ? `✅ Successfully processed with semantic-aware chunking: ${pdfResult.metadata.totalSections} sections, ${pdfResult.chunks.length} chunks stored in database.`
-                  : `❌ Processing failed: ${result.message}`
-            })
-          } else {
-            // Fallback to simple text extraction and regular chunking
-            console.log(`[PDF] ⚠️ Adaptive chunking failed: ${pdfResult.error || 'Unknown error'}`)
-            console.log(`[PDF] Falling back to regular PDF processing pipeline`)
-            
-            // Use the existing PDF processing pipeline
-            text = await withTimeout(
-              parsePdfWithPython(file.path),
-              PDF_PARSE_TIMEOUT_MS
-            )
-          }
+          console.log(`[PDF] Processing completed:`, { 
+            documentId: result.documentId, 
+            status: result.status,
+            isDuplicate: result.isDuplicate
+          })
+          
+          return res.json({
+            message: 'PDF processed successfully with LangChain chunking',
+            filename: file.originalname,
+            documentId: result.documentId,
+            status: result.status,
+            isDuplicate: result.isDuplicate,
+            chunkingType: 'langchain-enhanced',
+            note: `✅ Successfully processed with PostgreSQL-aware chunking`
+          })
+          
+        } catch (pdfError) {
+          const errorMessage = pdfError instanceof Error ? pdfError.message : 'Unknown error'
+          console.error(`[PDF] Enhanced processing failed for ${file.originalname}:`, errorMessage)
+          
+          // Fallback to regular PDF processing
+          console.log(`[PDF] Falling back to regular PDF processing...`)
+          text = await withTimeout(
+            parsePdfWithPython(file.path),
+            PDF_PARSE_TIMEOUT_MS
+          )
           
           if (!text || text.trim().length === 0) {
             throw new Error('No text content extracted from PDF')
           }
           
-          if (text) {
-            console.log(`[PDF] Fallback extraction: ${text.length} characters`)
-          }
-        } catch (pdfError) {
-          const errorMessage = pdfError instanceof Error ? pdfError.message : 'Unknown error'
-          console.error(`[PDF] Failed to parse ${file.originalname}:`, errorMessage)
-          
-          if (errorMessage === 'timeout') {
-            return res.status(408).json({ 
-              error: `PDF processing timed out after ${PDF_PARSE_TIMEOUT_MS/1000} seconds. The file may be too complex or corrupted.`,
-              suggestion: 'Try converting the PDF to a simpler format or splitting it into smaller files.'
-            })
-          }
-          
-          return res.status(422).json({ 
-            error: `Failed to process PDF: ${errorMessage}`,
-            suggestion: 'The PDF may be corrupted, password-protected, or contain only images. Try converting it to text first.'
-          })
+          console.log(`[PDF] Fallback extraction: ${text.length} characters`)
         }
         break
       }
@@ -1047,42 +951,39 @@ app.post('/files/upload', auth, upload.single('file'), asyncHandler(async (req: 
     return res.status(400).json({ error: 'No text content found in file' })
   }
 
-  // 🚀 Use DocumentService for proper duplicate handling and job queue
+  // For non-PDF text-like files, use text already extracted
   const filename = file.originalname;
   const fileSize = text.length;
-  
-  console.log(`[Upload] Processing ${filename} (${fileSize} chars) with DocumentService`);
-  
+
+  console.log(`[Upload] Processing ${filename} (${fileSize} chars) with Enhanced DocumentService`);
+
   try {
     const result = await documentService.uploadDocument(
       DEMO_USER_ID,
       filename,
-      file.originalname,
+      filename,
       text,
       file.mimetype
     );
-    
-    // Estimate processing time based on file size
+
     const estimatedChunks = Math.ceil(fileSize / 1000);
     const estimatedTime = Math.min(estimatedChunks * 100, 30000);
-    
+
     res.json({
-      message: result.message,
+      message: 'Document processed successfully with enhanced LangChain chunking',
       filename: filename,
       documentId: result.documentId,
-      status: result.status.toLowerCase(),
+      status: result.status,
       isDuplicate: result.isDuplicate,
-      estimatedChunks: estimatedChunks,
       estimatedProcessingTime: `${Math.round(estimatedTime / 1000)}s`,
-      note: result.isDuplicate 
-        ? 'This document has been processed before or is currently processing.'
-        : 'Processing started in background. You can start searching in a few moments.'
+      chunkingType: 'langchain-enhanced',
+      note: `✅ Successfully processed with PostgreSQL-aware chunking`
     });
-    
+
   } catch (error) {
-    console.error(`[Upload] DocumentService error for ${filename}:`, error);
+    console.error(`[Upload] Enhanced DocumentService error for ${filename}:`, error);
     res.status(500).json({
-      error: 'Failed to process document',
+      error: 'Failed to process document with enhanced chunking',
       details: error instanceof Error ? error.message : String(error)
     });
   }
@@ -1127,6 +1028,41 @@ app.get('/documents/:documentId/status', auth, asyncHandler(async (req: Request,
   }
   
   res.json(status);
+}))
+
+app.get('/documents/:documentId/chunk-stats', auth, asyncHandler(async (req: Request, res: Response) => {
+  const { documentId } = req.params;
+  
+  try {
+    const stats = await documentService.getChunkStatistics(documentId);
+    res.json(stats);
+  } catch (error) {
+    console.error(`[ChunkStats] Error getting chunk statistics for ${documentId}:`, error);
+    res.status(500).json({
+      error: 'Failed to get chunk statistics',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+}))
+
+app.get('/documents/:documentId/chunks/:contentType', auth, asyncHandler(async (req: Request, res: Response) => {
+  const { documentId, contentType } = req.params;
+  const limit = parseInt(req.query.limit as string) || 10;
+  
+  try {
+    const chunks = await documentService.searchChunksByContentType(
+      documentId, 
+      contentType as any, 
+      limit
+    );
+    res.json({ chunks, count: chunks.length });
+  } catch (error) {
+    console.error(`[ChunksByType] Error searching chunks for ${documentId} by type ${contentType}:`, error);
+    res.status(500).json({
+      error: 'Failed to search chunks by content type',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
 }))
 
 app.delete('/documents/:documentId', auth, asyncHandler(async (req: Request, res: Response) => {
@@ -1870,6 +1806,7 @@ app.get('/', (req: Request, res: Response) => {
       progress: ['/progress', '/progress/summary'],
       embeddings: ['/embeddings'],
       files: ['/files/upload'],
+      documents: ['/documents', '/documents/:id/status', '/documents/:id/chunk-stats', '/documents/:id/chunks/:contentType'],
       ai: ['/ai/chat', '/ai/chat-sambanova', '/ai/chat-sambanova/stream'],
       status: ['/rag/status', '/health']
     }

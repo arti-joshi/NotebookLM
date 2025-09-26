@@ -1,0 +1,27 @@
+.citation-badge {
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: 6px;
+  font-size: 12px;
+  margin-right: 6px;
+  margin-bottom: 4px;
+}
+
+.citation-badge.postgres {
+  background: #e6f0ff;
+  color: #0b57d0;
+  border: 1px solid #cce0ff;
+}
+
+.citation-badge.user {
+  background: #f3f4f6;
+  color: #374151;
+  border: 1px solid #e5e7eb;
+}
+
+.citations {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 8px;
+}
