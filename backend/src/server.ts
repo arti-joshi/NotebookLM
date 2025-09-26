@@ -3,7 +3,6 @@ import express, { Request, Response, NextFunction } from 'express'
 import cors from 'cors'
 import { PrismaClient } from '../generated/prisma'
 import { GoogleGenerativeAIEmbeddings } from '@langchain/google-genai'
-import { ChatGoogleGenerativeAI } from '@langchain/google-genai'
 import { corsConfig } from './config/cors'
 import path from 'path'
 import { fileURLToPath } from 'url'
@@ -43,7 +42,12 @@ interface AuthenticatedRequest extends Request {
 interface SambaNovaClient {
   chat: {
     completions: {
-      create: (params: any) => Promise<any>
+      create: (params: {
+        model: string,
+        messages: Array<{ role: 'system' | 'user' | 'assistant', content: string }>,
+        temperature?: number,
+        stream?: boolean
+      }) => Promise<{ choices: Array<{ message: { role: string, content: string }, delta?: { content?: string } }> }>
     }
   }
 }
@@ -75,7 +79,8 @@ const ragService = new RAGService(prisma, {
   similarityThreshold: 0.35, // Balanced threshold for precision and recall
   enableKeywordSearch: true,
   enableQueryExpansion: true,
-  enableHybridSearch: true
+  enableHybridSearch: true,
+  debugRetrieval: true
 })
 
 // Memory-efficient PDF parsing function
@@ -287,7 +292,7 @@ async function resolveDemoUserId(): Promise<void> {
 // Fast fallback timeouts (env overrideable)
 const CHAT_EMBED_TIMEOUT_MS = Number(process.env.CHAT_EMBED_TIMEOUT_MS || 3000)
 const CHAT_LLM_TIMEOUT_MS = Number(process.env.CHAT_LLM_TIMEOUT_MS || 15000)
-const CHAT_MODEL = process.env.CHAT_MODEL || 'gemini-1.5-flash'
+const SAMBA_MODEL = process.env.SAMBA_MODEL || 'Llama-4-Maverick-17B-128E-Instruct'
 
 // PDF processing timeouts
 const PDF_PARSE_TIMEOUT_MS = Number(process.env.PDF_PARSE_TIMEOUT_MS || 60000) // 60 seconds for large PDFs
@@ -470,15 +475,34 @@ function asyncHandler(fn: (req: Request, res: Response, next: NextFunction) => P
   }
 }
 
-// SambaNova client placeholder
+// SambaNova client using REST API compatible with OpenAI-style /v1/chat/completions
 async function getSambaClient(): Promise<SambaNovaClient> {
-  if (!process.env.SAMBANOVA_API_KEY) {
-    throw new Error('SAMBANOVA_API_KEY is required')
-  }
+  const apiKey = process.env.SAMBANOVA_API_KEY
+  if (!apiKey) throw new Error('SAMBANOVA_API_KEY is required')
+
+  const baseURL = process.env.SAMBANOVA_BASE_URL || 'https://api.sambanova.ai/v1'
   return {
     chat: {
       completions: {
-        create: async () => { throw new Error('SambaNova client not implemented') }
+        create: async (params) => {
+          const resp = await axios.post(
+            `${baseURL}/chat/completions`,
+            {
+              model: params.model,
+              messages: params.messages,
+              temperature: params.temperature ?? 0.7,
+              stream: false
+            },
+            {
+              headers: {
+                Authorization: `Bearer ${apiKey}`,
+                'Content-Type': 'application/json'
+              },
+              timeout: CHAT_LLM_TIMEOUT_MS
+            }
+          )
+          return resp.data
+        }
       }
     }
   }
@@ -1319,8 +1343,8 @@ app.post('/ai/chat', auth, asyncHandler(async (req: Request, res: Response) => {
 - Parts: ${contextParts.length}
 - Retrieval Time: ${Date.now() - ragStartTime}ms`)
 
-  // If key missing, return fast fallback
-  if (!process.env.GOOGLE_API_KEY) {
+  // If key missing, return fast fallback (retrieval still may work without provider)
+  if (!process.env.SAMBANOVA_API_KEY) {
     console.warn(`[ai/chat] No Google API key found, using fallback response`)
     const fallback = generateFastFallback(userMessage, context)
     return res.json({ answer: fallback })
@@ -1329,33 +1353,31 @@ app.post('/ai/chat', auth, asyncHandler(async (req: Request, res: Response) => {
   // LLM processing
   const llmStartTime = Date.now()
   try {
-    console.log(`[ai/chat] Initializing LLM with model: ${CHAT_MODEL}`)
-    const llm = new ChatGoogleGenerativeAI({
-      apiKey: process.env.GOOGLE_API_KEY,
-      modelName: CHAT_MODEL
-    })
+    console.log(`[ai/chat] Initializing SambaNova LLM with model: ${SAMBA_MODEL}`)
+    const samba = await getSambaClient()
+    console.log(`[ai/chat] Sending request to SambaNova (timeout: ${CHAT_LLM_TIMEOUT_MS}ms)`) 
+    console.log(`[ai/chat] Using embeddings provider: google (text-embedding-004)`)
+    const completion = await withTimeout(samba.chat.completions.create({
+      model: SAMBA_MODEL,
+      messages: [
+        {
+          role: 'system',
+          content: 'You are a helpful assistant grounded in the provided CONTEXT. Use it to answer succinctly. If context is insufficient, say so and suggest what to upload.'
+        },
+        {
+          role: 'user',
+          content: `CONTEXT:\n${context}\n\nQUESTION: ${userMessage}`
+        }
+      ],
+      temperature: 0.7
+    }), CHAT_LLM_TIMEOUT_MS)
 
-    const prompt = `SYSTEM: You DO have access to the user's uploaded content via the provided CONTEXT below. Never claim you lack file access. Use the CONTEXT to answer. If it is insufficient, say so briefly and propose what to upload or ask next.
-
-RULES:
-- Ground answers strictly in CONTEXT when relevant
-- Never say you cannot access files; instead reference CONTEXT
-- Be concise and specific
-
-CONTEXT START\n${context}\nCONTEXT END
-
-USER QUESTION: ${userMessage}`
-
-    console.log(`[ai/chat] Sending request to LLM (timeout: ${CHAT_LLM_TIMEOUT_MS}ms)`)
-    const aiResponse = await withTimeout(llm.invoke(prompt), CHAT_LLM_TIMEOUT_MS)
-    
     const llmTime = Date.now() - llmStartTime
     console.log(`[ai/chat] LLM response received:
-- Model: ${CHAT_MODEL}
+- Generation provider: SambaNova
 - Processing Time: ${llmTime}ms
 - Status: Success`)
-
-    const answer = extractAiAnswer(aiResponse) || 'I could not generate a response.'
+    const answer = completion?.choices?.[0]?.message?.content || 'I could not generate a response.'
     
     // Log final stats
     console.log(`[ai/chat] Request complete:
@@ -1454,7 +1476,7 @@ app.post('/ai/chat-sambanova', auth, asyncHandler(async (req: Request, res: Resp
 
   const samba = await getSambaClient()
   const completion = await withTimeout(samba.chat.completions.create({
-    model: 'Llama-4-Maverick-17B-128E-Instruct',
+    model: SAMBA_MODEL,
     messages: [
       {
         role: 'system',
@@ -1626,43 +1648,9 @@ app.get('/ai/chat-sambanova/stream', asyncHandler(async (req: Request, res: Resp
 
     const samba = await getSambaClient()
 
-    // Try streaming first
-    try {
-      const stream = await samba.chat.completions.create({
-        model: 'Llama-4-Maverick-17B-128E-Instruct',
-        messages: [
-          {
-            role: 'system',
-            content: 'You are a helpful assistant grounded in the user\'s documents. Use the provided CONTEXT to answer succinctly and accurately. If the context is insufficient, say so.'
-          },
-          {
-            role: 'user',
-            content: `CONTEXT:\n${context}\n\nQUESTION: ${q}`
-          },
-        ],
-        temperature: 0.7,
-        stream: true,
-      })
-
-      if (stream && typeof stream[Symbol.asyncIterator] === 'function') {
-        for await (const chunk of stream as AsyncIterable<any>) {
-          const delta = chunk?.choices?.[0]?.delta?.content ||
-            chunk?.choices?.[0]?.message?.content || ''
-          if (delta) {
-            send(JSON.stringify({ delta }))
-          }
-        }
-        send(JSON.stringify({ done: true }))
-        res.end()
-        return
-      }
-    } catch (streamErr) {
-      console.warn('Provider streaming failed, falling back:', (streamErr as Error)?.message)
-    }
-
-    // Fallback: non-streaming completion
+    // Non-streaming completion; we simulate streaming by chunking the result
     const completion = await withTimeout(samba.chat.completions.create({
-      model: 'Llama-4-Maverick-17B-128E-Instruct',
+      model: SAMBA_MODEL,
       messages: [
         {
           role: 'system',
