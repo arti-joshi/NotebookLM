@@ -73,13 +73,25 @@ const processingDocuments = new Map<string, { startTime: number, status: string 
 // Initialize document services (after prisma)
 const documentService = new DocumentService(prisma)
 
-// Initialize enhanced RAG service
+// Initialize enhanced RAG service (tuned)
 const ragService = new RAGService(prisma, {
-  maxResults: 5,
-  similarityThreshold: 0.35, // Balanced threshold for precision and recall
+  // Retrieval window
+  maxResults: 10,
+  similarityThreshold: 0.4,
   enableKeywordSearch: true,
   enableQueryExpansion: true,
   enableHybridSearch: true,
+
+  // Reranking & adjustments
+  enableReranking: true,
+  keywordDensityWeight: 0.15,
+  positionWeight: 0.07,
+  sectionImportanceWeight: 0.12,
+  exactMatchBoost: 0.2,
+  narrativeBoost: 0.06,
+  tocPenalty: 0.06,
+
+  // Debug output
   debugRetrieval: true
 })
 
