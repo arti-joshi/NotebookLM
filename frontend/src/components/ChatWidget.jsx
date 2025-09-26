@@ -48,8 +48,8 @@ function ChatWidgetContent() {
     setIsTyping(true)
 
     try {
-      // Use PostgreSQL docs chat endpoint
-      const response = await callApi('/postgres-docs/chat', {
+      // Use unified AI chat endpoint
+      const response = await callApi('/ai/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ messages: updatedMessages.map(({ role, content }) => ({ role, content })) })

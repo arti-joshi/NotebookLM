@@ -586,6 +586,16 @@ export class DocumentService {
           }
         }
 
+        // Debug: print total and previews of first 3 chunks
+        try {
+          const examples = splitDocs.slice(0, 3).map((d, idx) => {
+            const pg = (d as any).metadata?.loc?.pageNumber || (d as any).metadata?.pageNumber;
+            const preview = (d.pageContent || '').slice(0, 160).replace(/\s+/g, ' ').trim();
+            return `#${idx} [page ${pg ?? 'n/a'}] index ${idx}: ${preview}`;
+          });
+          console.log(`[DocumentService] Debug: processed ${processedCount}/${splitDocs.length} chunks. Examples:\n- ${examples.join('\n- ')}`);
+        } catch {}
+
         // Mark as completed
         await this.prisma.document.update({
           where: { id: documentId },
@@ -740,6 +750,16 @@ export class DocumentService {
           }
         }
 
+        // Debug: print total and previews of first 3 chunks
+        try {
+          const examples = splitDocs.slice(0, 3).map((d, idx) => {
+            const pg = (d as any).metadata?.loc?.pageNumber || (d as any).metadata?.pageNumber;
+            const preview = (d.pageContent || '').slice(0, 160).replace(/\s+/g, ' ').trim();
+            return `#${idx} [page ${pg ?? 'n/a'}] index ${idx}: ${preview}`;
+          });
+          console.log(`[DocumentService] Debug: processed ${processedCount}/${splitDocs.length} chunks. Examples:\n- ${examples.join('\n- ')}`);
+        } catch {}
+
         await this.prisma.document.update({
           where: { id: documentId },
           data: {
@@ -774,7 +794,8 @@ export class DocumentService {
     filePath: string,
     originalName: string,
     mimeType?: string,
-    maxChunks?: number
+    maxChunks?: number,
+    isSystemDocument?: boolean
   ): Promise<DocumentUploadResult> {
     // Use file bytes for hash to avoid text transcoding issues
     const data = await (await import('fs')).promises.readFile(filePath);
@@ -799,7 +820,8 @@ export class DocumentService {
         contentHash,
         fileSize,
         mimeType,
-        status: 'PENDING'
+        status: 'PENDING',
+        isSystemDocument: !!isSystemDocument
       }
     });
 
@@ -810,6 +832,54 @@ export class DocumentService {
       isDuplicate: false,
       status: 'PENDING',
       message: 'Document uploaded and processing started'
+    };
+  }
+
+  /**
+   * Public: Upload document from file path with optional chunk limit
+   */
+  async uploadDocumentFromFileWithLimit(
+    userId: string,
+    filePath: string,
+    originalName: string,
+    mimeType: string | undefined,
+    maxChunks: number | undefined,
+    isSystemDocument?: boolean
+  ): Promise<DocumentUploadResult> {
+    const data = await (await import('fs')).promises.readFile(filePath);
+    const contentHash = crypto.createHash('sha256').update(data).digest('hex');
+    const fileSize = data.length;
+
+    const existingDoc = await this.prisma.document.findUnique({ where: { contentHash } });
+    if (existingDoc) {
+      return {
+        documentId: existingDoc.id,
+        isDuplicate: true,
+        status: existingDoc.status as any,
+        message: 'Document already exists'
+      };
+    }
+
+    const document = await this.prisma.document.create({
+      data: {
+        userId,
+        filename: originalName,
+        originalName,
+        contentHash,
+        fileSize,
+        mimeType,
+        status: 'PENDING',
+        isSystemDocument: !!isSystemDocument
+      }
+    });
+
+    this.startProcessingFromPath(document.id, filePath, mimeType, maxChunks);
+
+    return {
+      documentId: document.id,
+      isDuplicate: false,
+      status: 'PENDING',
+      message: `Document uploaded and processing started${maxChunks ? ` (limited to ${maxChunks} chunks)` : ''}`
     };
   }
 

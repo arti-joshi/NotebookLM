@@ -21,6 +21,7 @@ import { createReadStream } from 'fs'
 import { pipeline } from 'stream/promises'
 import axios from 'axios'
 import FormData from 'form-data'
+import crypto from 'crypto'
 // Services with LangChain integration
 import { DocumentService } from './services/documentService'
 import { RAGService } from './services/ragService'
@@ -338,12 +339,58 @@ function extractAiAnswer(aiResponse: any): string {
   }
 }
 
-// Initialize database tasks (run in background)
-ensurePgVector()
-resolveDemoUserId()
+// Initialize database tasks (run before server starts)
+async function initializeStartup(): Promise<void> {
+  await ensurePgVector()
+  await resolveDemoUserId()
 
-// Resume any pending document processing on startup
-documentService.resumePendingProcessing().catch(console.error)
+  // Preload and process official PostgreSQL system document before listening
+  try {
+    const sysDocPath = path.join(path.dirname(__dirname), 'system-documents', 'postgresql', 'postgresql-17-A4.pdf')
+    if (fs.existsSync(sysDocPath)) {
+      console.log('[Startup] Ensuring system PostgreSQL doc is processed...')
+
+      // Hash file to deduplicate
+      const dataBuffer = fs.readFileSync(sysDocPath)
+      const contentHash = crypto.createHash('sha256').update(dataBuffer).digest('hex')
+
+      const existing = await prisma.document.findUnique({ where: { contentHash } })
+      if (!existing) {
+        const result = await documentService.uploadDocumentFromFile(
+          DEMO_USER_ID,
+          sysDocPath,
+          'postgresql-17-A4.pdf',
+          'application/pdf',
+          undefined,
+          true // isSystemDocument
+        )
+        console.log('[Startup] System doc queued for processing:', result)
+      } else {
+        // If exists but embeddings are missing, requeue
+        const embCount = await prisma.embedding.count({ where: { documentId: existing.id } })
+        if (embCount === 0 || existing.status !== 'COMPLETED') {
+          console.log('[Startup] System doc exists but not fully processed. Re-queueing...')
+          await prisma.document.update({
+            where: { id: existing.id },
+            data: { status: 'PENDING', processedChunks: 0, processingError: null, startedAt: null, completedAt: null }
+          })
+          // Restart processing from path
+          // Note: DocumentService resume will pick it up as system doc by path
+          await documentService.resumePendingProcessing()
+        } else {
+          console.log('[Startup] System doc already processed; skipping.')
+        }
+      }
+    } else {
+      console.warn('[Startup] System PostgreSQL doc not found at expected path:', sysDocPath)
+    }
+  } catch (e) {
+    console.warn('[Startup] Failed ensuring system doc:', (e as Error)?.message)
+  }
+
+  // Resume any pending document processing
+  await documentService.resumePendingProcessing().catch(console.error)
+}
 
 // Legacy background processing function - now handled by DocumentService
 // This function is kept for backward compatibility but is no longer used
@@ -1325,6 +1372,41 @@ USER QUESTION: ${userMessage}`
   }
 }))
 
+// Compatibility route for older frontend paths
+app.post('/postgres-docs/chat', auth, (req: Request, res: Response) => {
+  // Preserve method and body for POST
+  res.redirect(307, '/ai/chat')
+})
+
+// --- System Document PDF serving (protected) ---
+app.get('/system-docs/:filename', auth, asyncHandler(async (req: Request, res: Response) => {
+  const filename = req.params.filename
+  try {
+    // Validate exists in DB as system document
+    const doc = await prisma.document.findFirst({
+      where: { isSystemDocument: true, filename }
+    })
+    if (!doc) {
+      res.status(404).json({ error: 'System document not found' })
+      return
+    }
+
+    const filePath = path.join(path.dirname(__dirname), 'system-documents', 'postgresql', filename)
+    if (!fs.existsSync(filePath)) {
+      res.status(404).json({ error: 'File not found on disk' })
+      return
+    }
+
+    res.setHeader('Content-Type', 'application/pdf')
+    res.setHeader('Cache-Control', 'no-cache')
+    const stream = createReadStream(filePath)
+    stream.on('error', () => res.status(500).end())
+    await pipeline(stream, res)
+  } catch (e) {
+    res.status(500).json({ error: 'Failed to serve system document' })
+  }
+}))
+
 app.post('/ai/chat-sambanova', auth, asyncHandler(async (req: Request, res: Response) => {
   const schema = z.object({
     messages: z.array(z.object({
@@ -1836,7 +1918,10 @@ app.use('*', (req: Request, res: Response) => {
 // --- Server Startup ---
 const PORT = Number(process.env.PORT) || 4001  // Fixed port 4001
 
-function startServer(): void {
+async function startServer(): Promise<void> {
+  // Run startup initialization first
+  await initializeStartup()
+
   const server = app.listen(PORT)
     .on('listening', () => {
       console.log(`🚀 Server listening on http://localhost:${PORT}`)
