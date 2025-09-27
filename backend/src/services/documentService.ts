@@ -18,7 +18,7 @@ import crypto from 'crypto';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import * as os from 'os';
-import { getEmbeddingWithFallback } from './embeddingService';
+import { getEmbedding } from './embeddingService';
 
 // Define ChunkContentType locally since it's not exported
 type ChunkContentType = 'sql_example' | 'table' | 'warning' | 'text';
@@ -496,9 +496,9 @@ export class DocumentService {
           const doc = splitDocs[i];
           
           // Create embedding
-          const embeddingResult = await getEmbeddingWithFallback(doc.pageContent);
+          const embedding = await getEmbedding(doc.pageContent);
           
-          if (!embeddingResult.embedding || !Array.isArray(embeddingResult.embedding) || embeddingResult.embedding.length === 0) {
+          if (!embedding || !Array.isArray(embedding) || embedding.length === 0) {
             console.warn(`[DocumentService] Skipping chunk ${i}: embedding is empty or invalid.`);
             continue;
           }
@@ -541,8 +541,8 @@ export class DocumentService {
               userId: document.userId,
               source: document.filename,
               chunk: doc.pageContent,
-              embedding: embeddingResult.embedding,
-              // embedding_vec: `[${embeddingResult.embedding.join(',')}]`, // This field is handled by Prisma triggers
+              embedding: embedding,
+              // embedding_vec: `[${embedding.join(',')}]`, // This field is handled by Prisma triggers
               chunkIndex: i,
               totalChunks: splitDocs.length,
               wordCount,
@@ -561,7 +561,7 @@ export class DocumentService {
 
           // Populate pgvector column for similarity search
           try {
-            const vec = `[${embeddingResult.embedding.join(',')}]`;
+            const vec = `[${embedding.join(',')}]`;
             await (this.prisma as any).$executeRawUnsafe(
               'UPDATE "Embedding" SET embedding_vec = $1::vector WHERE id = $2',
               vec,
@@ -668,8 +668,8 @@ export class DocumentService {
         for (let i = 0; i < splitDocs.length; i++) {
           const doc = splitDocs[i];
 
-          const embeddingResult = await getEmbeddingWithFallback(doc.pageContent);
-          if (!embeddingResult.embedding || !Array.isArray(embeddingResult.embedding) || embeddingResult.embedding.length === 0) {
+          const embedding = await getEmbedding(doc.pageContent);
+          if (!embedding || !Array.isArray(embedding) || embedding.length === 0) {
             console.warn(`[DocumentService] Skipping chunk ${i}: embedding is empty or invalid.`);
             continue;
           }
@@ -708,7 +708,7 @@ export class DocumentService {
               userId: document.userId,
               source: document.filename,
               chunk: doc.pageContent,
-              embedding: embeddingResult.embedding,
+              embedding: embedding,
               chunkIndex: i,
               totalChunks: splitDocs.length,
               wordCount,
@@ -726,7 +726,7 @@ export class DocumentService {
           });
 
           try {
-            const vec = `[${embeddingResult.embedding.join(',')}]`;
+            const vec = `[${embedding.join(',')}]`;
             await (this.prisma as any).$executeRawUnsafe(
               'UPDATE "Embedding" SET embedding_vec = $1::vector WHERE id = $2',
               vec,

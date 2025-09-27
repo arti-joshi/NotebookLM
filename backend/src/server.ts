@@ -1294,13 +1294,14 @@ app.post('/ai/chat', auth, asyncHandler(async (req: Request, res: Response) => {
 - Sources: ${ragResult.results.map(r => r.source).filter(Boolean).join(', ')}`)
     
     // Log individual chunk details
-    ragResult.results.forEach((r, i) => {
-      console.log(`[ai/chat] Chunk ${i + 1}:
-- Method: ${r.method}
-- Score: ${r.score?.toFixed(4) || 'N/A'}
-- Source: ${r.source || 'unknown'}
-- Index: ${r.chunkIndex !== null ? r.chunkIndex : 'N/A'}
-- Preview: ${r.chunk.substring(0, 100).replace(/\n/g, ' ')}...`)
+    ragResult.results.slice(0, 5).forEach((r, i) => {
+      const meta: any = r.metadata || {}
+      console.log(`[ai/chat] Top${i + 1}:
+ - Method: ${r.method}
+ - Score: ${r.score?.toFixed(4) || 'N/A'} Final: ${(r as any).finalScore?.toFixed?.(4) || 'N/A'}
+ - Source: ${r.source || 'unknown'} Page: ${meta?.pageNumber ?? meta?.loc?.pageNumber ?? 'n/a'} Index: ${r.chunkIndex ?? 'n/a'}
+ - contentType: ${meta?.contentType ?? 'n/a'} sqlKeywords: ${Array.isArray(meta?.sqlKeywords) ? meta.sqlKeywords.slice(0,5).join(',') : 'n/a'}
+ - Preview: ${r.chunk.substring(0, 140).replace(/\n/g, ' ')}...`)
     })
     
   } catch (err) {

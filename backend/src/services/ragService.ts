@@ -5,7 +5,7 @@
 import { PrismaClient } from '../../generated/prisma';
 import { GoogleGenerativeAIEmbeddings } from '@langchain/google-genai';
 import { generateQueryVariants, extractWeightedKeywords } from './searchUtils';
-import { getEmbeddingWithFallback } from './embeddingService';
+import { getEmbedding } from './embeddingService';
 
 interface RetrievalResult {
   chunk: string;
@@ -200,33 +200,85 @@ export class RAGService {
     if (!this.config.enableReranking) {
       return results;
     }
+    // Lightweight query intent classification
+    const q = query.toLowerCase();
+    const intent = {
+      howTo: /(how\s+to|example|syntax|code)/.test(q),
+      warning: /(warning|caution|deprecated|permission|privilege|access)/.test(q),
+      performance: /(performance|optimi[sz]e|faster|speed)/.test(q),
+      definition: /(what\s+is|define|explain)/.test(q)
+    };
+
+    // Extract keywords from query for overlap with chunk metadata
+    const weightedKeywords = extractWeightedKeywords(query);
+    const querySqlTerms = new Set(
+      Array.from(weightedKeywords.keys()).map(k => k.toLowerCase())
+    );
 
     return results.map(result => {
       let rerankScore = result.score || 0;
-      
-      // 1. Keyword density scoring
+
+      // 1) Keyword density
       const keywordDensity = this.calculateKeywordDensity(result.chunk, query);
       rerankScore += keywordDensity * this.config.keywordDensityWeight;
-      
-      // 2. Exact match boost
+
+      // 2) Exact match boost
       const exactMatchBoost = this.calculateExactMatchBoost(result.chunk, query);
       rerankScore += exactMatchBoost;
-      
-      // 3. Position-based scoring
+
+      // 3) Position
       const positionScore = this.calculatePositionScore(result.chunkIndex, totalChunks);
-      rerankScore += positionScore;
-      
-      // 4. Section importance
+      rerankScore += positionScore * (this.config.positionWeight ?? 0);
+
+      // 4) Section importance
       const sectionScore = this.calculateSectionImportance(result);
       rerankScore += sectionScore;
-      
+
+      // 5) Content-type & intent mapped boosts
+      const cfg: any = result.metadata || {};
+      const contentType = (cfg?.contentType || '').toString();
+      let contentTypeBoost = 0;
+      if (intent.howTo && contentType === 'sql_example') contentTypeBoost += 0.15;
+      if (intent.definition && contentType === 'text') contentTypeBoost += 0.06;
+      if (intent.warning && contentType === 'warning') contentTypeBoost += 0.10;
+      if (intent.performance && contentType === 'table') contentTypeBoost += 0.08; // catalog/tables often relevant
+      rerankScore += contentTypeBoost;
+
+      // 6) SQL keyword overlap boost
+      let sqlOverlapBoost = 0;
+      const sqlKeywords: string[] | undefined = cfg?.sqlKeywords;
+      if (Array.isArray(sqlKeywords) && sqlKeywords.length) {
+        const overlap = sqlKeywords.reduce((acc, k) => acc + (querySqlTerms.has(k.toLowerCase()) ? 1 : 0), 0);
+        if (overlap > 0) sqlOverlapBoost += Math.min(0.15, 0.05 * overlap); // up to +0.15
+      }
+      rerankScore += sqlOverlapBoost;
+
+      // 7) Function and command matches
+      let functionBoost = 0;
+      const fnName: string | undefined = cfg?.functionName;
+      if (fnName) {
+        if (q.includes(`${fnName.toLowerCase()}(`)) functionBoost += 0.2;
+        else if (q.includes(fnName.toLowerCase())) functionBoost += 0.1;
+      }
+      const cmd: string | undefined = cfg?.commandType;
+      if (cmd && q.includes(cmd.toLowerCase())) functionBoost += 0.15;
+      rerankScore += functionBoost;
+
+      // 8) Method diversity multiplier (hybrid gets a small lift)
+      const diversityMultiplier = result.method === 'hybrid' ? 1.1 : 1.0;
+      rerankScore *= diversityMultiplier;
+
       return {
         ...result,
         rerankScore: Math.max(0, rerankScore),
         keywordDensity,
         exactMatchBoost,
         positionScore,
-        sectionScore
+        sectionScore,
+        // Expose diagnostics
+        contentTypeBoost,
+        sqlOverlapBoost,
+        functionBoost
       };
     }).sort((a, b) => (b.rerankScore || 0) - (a.rerankScore || 0));
   }
@@ -281,11 +333,9 @@ export class RAGService {
   }
 
   private async vectorSearch(query: string, userId: string): Promise<RetrievalResult[]> {
-    let queryEmbedding, provider;
+    let queryEmbedding: number[];
     try {
-      const result = await getEmbeddingWithFallback(query);
-      queryEmbedding = result.embedding;
-      provider = result.provider;
+      queryEmbedding = await getEmbedding(query);
       if (!queryEmbedding || !Array.isArray(queryEmbedding) || queryEmbedding.length === 0) {
         console.warn('[RAGService] Skipping vector search: embedding is empty or invalid.');
         return [];
@@ -293,9 +343,6 @@ export class RAGService {
     } catch (embedErr) {
       console.error('[RAGService] Query embedding failed:', embedErr);
       return [];
-    }
-    if (this.config.debugRetrieval) {
-      console.log(`[RAGService] Query embedding provider: ${provider}`);
     }
     const vec = `[${queryEmbedding.join(',')}]`;
 
@@ -359,8 +406,8 @@ export class RAGService {
         chunk: true,
         source: true,
         chunkIndex: true,
-        pageNumber: true,
-        metadata: true
+        pageStart: true,
+        chunkingConfig: true
       }
     });
 
@@ -368,8 +415,8 @@ export class RAGService {
       chunk: doc.chunk,
       source: doc.source || '',
       chunkIndex: doc.chunkIndex,
-      pageNumber: doc.pageNumber,
-      metadata: doc.metadata,
+      pageNumber: doc.pageStart ?? undefined,
+      metadata: doc.chunkingConfig as any,
       score: 0.5,
       method: 'keyword' as const
     }));
@@ -455,6 +502,19 @@ export class RAGService {
     
     // Sort by finalScore descending
     adjustedResults.sort((a, b) => (b.finalScore || 0) - (a.finalScore || 0));
+
+    // Per-source cap to diversify results
+    const maxPerSource = 4;
+    const perSourceCount = new Map<string, number>();
+    const diversified: RetrievalResult[] = [];
+    for (const r of adjustedResults) {
+      const src = r.source || 'unknown';
+      const n = perSourceCount.get(src) || 0;
+      if (n < maxPerSource) {
+        diversified.push(r);
+        perSourceCount.set(src, n + 1);
+      }
+    }
     
     // Debug logging
     if (this.config.debugRetrieval) {
@@ -477,7 +537,17 @@ export class RAGService {
       })));
     }
     
-    const finalResults = adjustedResults.slice(0, this.config.maxResults);
+    const finalResults = diversified.slice(0, this.config.maxResults);
+
+    // Build sourceGroups for debug and context reporting
+    const sourceGroups = finalResults.reduce((groups, result) => {
+      const source = result.source || 'unknown';
+      if (!groups[source]) {
+        groups[source] = [] as RetrievalResult[];
+      }
+      groups[source].push(result);
+      return groups;
+    }, {} as Record<string, RetrievalResult[]>);
 
     // Fallback for empty context
     let context = '';
