@@ -1,20 +1,18 @@
-import { EnhancedRAGService } from './services/enhancedRagService';
-import { documentService } from './services/documentService';
+import { RAGService } from '../services/ragService';
+import { PrismaClient } from '../../generated/prisma';
 import express from 'express';
 
 const router = express.Router();
+const prisma = new PrismaClient();
 
-// Initialize the enhanced RAG service with optimal settings
-const ragService = new EnhancedRAGService(prisma, {
+// Initialize the RAG service with optimal settings
+const ragService = new RAGService(prisma, {
   maxResults: 10,
   similarityThreshold: 0.35, // Adjusted for better relevance
-  minKeywordScore: 0.3,
-  contextWindow: 2,
-  hybridWeights: {
-    vector: 0.6,
-    keyword: 0.3,
-    context: 0.1
-  }
+  enableKeywordSearch: true,
+  enableQueryExpansion: true,
+  enableHybridSearch: true,
+  enableReranking: true
 });
 
 // Debug endpoint for testing RAG improvements
@@ -27,15 +25,15 @@ router.post('/debug-rag', async (req, res) => {
 
     const results = await Promise.all(
       queries.map(async (query) => {
-        const searchResults = await ragService.search(query, 'demo-user');
+        const searchResults = await ragService.retrieveContext(query, 'demo-user');
         return {
           query,
-          results: searchResults.map(r => ({
+          results: searchResults.results.map(r => ({
             chunk: r.chunk,
             source: r.source,
             score: r.score,
             method: r.method,
-            matches: r.matches
+            finalScore: r.finalScore
           }))
         };
       })
