@@ -1,0 +1,24 @@
+[
+  {
+    "question": "What is MVCC in PostgreSQL?",
+    "expected": ["multiversion", "concurrency"]
+  },
+  {
+    "question": "Who maintains PostgreSQL now?",
+    "expected": ["Global Development Group", "PGDG"]
+  },
+  {
+    "question": "How to connect to a database using psql?",
+    "expected": ["psql", "-U", "-h"]
+  },
+  {
+    "question": "How to list databases and tables in PostgreSQL?",
+    "expected": ["\\l", "\\dt"]
+  },
+  {
+    "question": "How to create a table with a primary key?",
+    "expected": ["CREATE TABLE", "PRIMARY KEY"]
+  }
+]
+
+

@@ -20,8 +20,7 @@
     "types": ["node"],
     "noEmit": true,
     "allowImportingTsExtensions": true,
-    "allowImportingTsExtensions": true,
-    "moduleDetection": "force"
+    "moduleDetection": "force",
 
     // Other Outputs
     "sourceMap": true,
@@ -44,7 +43,6 @@
     "verbatimModuleSyntax": false,
     "isolatedModules": true,
     "noUncheckedSideEffectImports": true,
-    "moduleDetection": "force",
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "typeRoots": [
