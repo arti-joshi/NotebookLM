@@ -127,6 +127,7 @@ export class SpellCorrectionService {
 
   /**
    * Correct spelling in a query using fuzzy matching
+   * Pipeline: Split query into tokens → Check each token/phrase against dictionary → Replace if similarity > threshold
    * @param query Original query string
    * @returns Corrected query string
    */
@@ -135,35 +136,35 @@ export class SpellCorrectionService {
       return query;
     }
 
-    const words = query.split(/\s+/);
-    const correctedWords: string[] = [];
+    // Step 1: Split query into tokens (words and phrases)
+    const tokens = this.extractTokens(query);
+    let correctedQuery = query;
     let correctionsCount = 0;
 
-    for (const word of words) {
+    // Sort tokens by length (longest first) to prioritize phrases over individual words
+    const sortedTokens = tokens.sort((a, b) => b.length - a.length);
+
+    for (const token of tokens) {
       if (correctionsCount >= this.config.maxCorrections) {
-        correctedWords.push(word);
+        break;
+      }
+
+      // Skip very short tokens or numbers
+      if (token.length < 3 || /^\d+$/.test(token)) {
         continue;
       }
 
-      // Skip very short words or numbers
-      if (word.length < 3 || /^\d+$/.test(word)) {
-        correctedWords.push(word);
-        continue;
-      }
+      // Step 2: Check token against PostgreSQL dictionary
+      const match = simpleFuzzyMatch(token, this.knownTerms, this.config.threshold);
 
-      // Find best match using fuzzy search
-      const match = simpleFuzzyMatch(word, this.knownTerms, this.config.threshold);
-
+      // Step 3: Replace with closest valid match if similarity > threshold
       if (match && match.score >= this.config.threshold) {
-        correctedWords.push(match.string);
+        // Replace the token in the original query
+        correctedQuery = correctedQuery.replace(new RegExp(`\\b${this.escapeRegExp(token)}\\b`, 'gi'), match.string);
         correctionsCount++;
-        console.log(`[SpellCorrection] "${word}" → "${match.string}" (score: ${match.score.toFixed(2)})`);
-      } else {
-        correctedWords.push(word);
+        console.log(`[SpellCorrection] "${token}" → "${match.string}" (score: ${match.score.toFixed(2)})`);
       }
     }
-
-    const correctedQuery = correctedWords.join(' ');
     
     if (correctedQuery !== query) {
       console.log(`[SpellCorrection] Original: "${query}"`);
@@ -171,6 +172,42 @@ export class SpellCorrectionService {
     }
 
     return correctedQuery;
+  }
+
+  /**
+   * Escape special regex characters in a string
+   * @param string String to escape
+   * @returns Escaped string
+   */
+  private escapeRegExp(string: string): string {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+
+  /**
+   * Extract tokens from query, including both individual words and potential phrases
+   * @param query Input query string
+   * @returns Array of tokens to check against dictionary
+   */
+  private extractTokens(query: string): string[] {
+    const tokens: string[] = [];
+    const words = query.split(/\s+/);
+    
+    // Add individual words
+    tokens.push(...words);
+    
+    // Add 2-word phrases for multi-word terms like "primary key", "foreign key"
+    for (let i = 0; i < words.length - 1; i++) {
+      const phrase = `${words[i]} ${words[i + 1]}`;
+      tokens.push(phrase);
+    }
+    
+    // Add 3-word phrases for terms like "GROUP BY", "ORDER BY"
+    for (let i = 0; i < words.length - 2; i++) {
+      const phrase = `${words[i]} ${words[i + 1]} ${words[i + 2]}`;
+      tokens.push(phrase);
+    }
+    
+    return tokens;
   }
 
   /**
