@@ -3,6 +3,7 @@ import { Document, Page, pdfjs } from 'react-pdf'
 import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut, RotateCw, BookOpen, StickyNote, Search, Download, MenuIcon } from 'lucide-react'
 import { useParams } from 'react-router-dom'
 import PostgresTableOfContents from '../components/PostgresTableOfContents'
+import ChatWidget from '../components/ChatWidget.jsx'
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`
 
@@ -23,6 +24,12 @@ function ReaderPage() {
   const [postgresSearch, setPostgresSearch] = useState('')
   const [searchResults, setSearchResults] = useState([])
   const documentRef = useRef(null)
+
+  // Hide global floating chat; we'll render embedded full-size chat here
+  useEffect(() => {
+    try { document.body.classList.add('hide-floating-chat') } catch {}
+    return () => { try { document.body.classList.remove('hide-floating-chat') } catch {} }
+  }, [])
 
   useEffect(() => {
     async function loadDocument() {
@@ -113,7 +120,7 @@ function ReaderPage() {
   }, [postgresSearch]);
 
   return (
-    <div className="grid grid-cols-12 gap-6 h-full">
+    <div className="grid grid-cols-12 gap-6 h-[calc(100vh-8rem)]">
       {/* Table of Contents */}
       {id === 'postgres-official' && showTOC && (
         <div className="col-span-3 space-y-4">
@@ -121,20 +128,15 @@ function ReaderPage() {
         </div>
       )}
 
-      {/* Main Document Viewer */}
+      {/* Main area: Chatbot */}
       <div className={`${showNotes ? (showTOC ? 'col-span-5' : 'col-span-8') : (showTOC ? 'col-span-9' : 'col-span-12')} space-y-4`}>
         {/* Toolbar */}
         <div className="flex items-center justify-between p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
           <div className="flex items-center space-x-3 flex-1">
             <div className="flex-1">
               <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100 truncate">
-                {documentTitle}
+                Chat
               </h1>
-              {id === 'postgres-official' && (
-                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                  Official PostgreSQL documentation with examples and best practices
-                </p>
-              )}
             </div>
             {id === 'postgres-official' && (
               <button
@@ -169,140 +171,36 @@ function ReaderPage() {
           </div>
         </div>
 
-        {/* Document Controls */}
-        <div className="flex items-center justify-between p-3 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
-          <div className="flex items-center space-x-2">
-            <button
-              onClick={() => goToPage(pageNumber - 1)}
-              disabled={pageNumber <= 1}
-              className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
-            
-            <div className="flex items-center space-x-2">
-              <input
-                type="number"
-                value={pageNumber}
-                onChange={(e) => goToPage(parseInt(e.target.value) || 1)}
-                className="w-16 px-2 py-1 text-sm text-center border rounded dark:bg-gray-900 dark:border-gray-600"
-                min="1"
-                max={numPages}
-              />
-              <span className="text-sm text-gray-500">of {numPages || '—'}</span>
-            </div>
-
-            <button
-              onClick={() => goToPage(pageNumber + 1)}
-              disabled={!numPages || pageNumber >= numPages}
-              className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </button>
-          </div>
-
-          <div className="flex items-center space-x-2">
-            <button
-              onClick={() => setScale(Math.max(0.5, scale - 0.1))}
-              className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors duration-200"
-              title="Zoom out"
-            >
-              <ZoomOut className="w-4 h-4" />
-            </button>
-            
-            <span className="text-sm text-gray-600 dark:text-gray-300 px-2">
-              {Math.round(scale * 100)}%
-            </span>
-            
-            <button
-              onClick={() => setScale(Math.min(3.0, scale + 0.1))}
-              className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors duration-200"
-              title="Zoom in"
-            >
-              <ZoomIn className="w-4 h-4" />
-            </button>
-
-            <button
-              onClick={() => setRotation((rotation + 90) % 360)}
-              className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors duration-200"
-              title="Rotate"
-            >
-              <RotateCw className="w-4 h-4" />
-            </button>
-          </div>
+        {/* Embedded full-screen Chat */}
+        <div className="h-full">
+          <ChatWidget fullScreen />
         </div>
-
-        {/* Document Viewer */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden shadow-lg">
-          <div className="h-[70vh] overflow-auto flex justify-center items-start p-4 bg-gray-50 dark:bg-gray-900">
-            {isLoading && (
-              <div className="flex items-center justify-center h-full">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
-              </div>
-            )}
-            
-            {error && (
-              <div className="flex flex-col items-center justify-center h-full text-center space-y-4">
-                <BookOpen className="w-12 h-12 text-gray-400" />
-                <div className="text-red-600 dark:text-red-400">{error}</div>
-                <div className="text-sm text-gray-500">
-                  Try a different PDF URL or upload a file first
-                </div>
-              </div>
-            )}
-
-            {fileUrl && !error && (
-              <div ref={documentRef} className="shadow-2xl">
-                <Document 
-                  file={fileUrl} 
-                  onLoadSuccess={onLoadSuccess} 
-                  onLoadError={onLoadError}
-                  loading={
-                    <div className="flex items-center justify-center p-8">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
-                    </div>
-                  }
-                >
-                  <Page 
-                    pageNumber={pageNumber} 
-                    scale={scale}
-                    rotate={rotation}
-                    renderTextLayer={false} 
-                    renderAnnotationLayer={false}
-                    className="shadow-lg"
-                  />
-                </Document>
-              </div>
-            )}
-
-            {!fileUrl && !error && (
-              <div className="flex flex-col items-center justify-center h-full text-center space-y-4">
-                <BookOpen className="w-16 h-16 text-gray-300 dark:text-gray-600" />
-                <div className="space-y-2">
-                  <h3 className="text-lg font-medium text-gray-600 dark:text-gray-300">No Document Loaded</h3>
-                  <p className="text-sm text-gray-500">
-                    Enter a PDF URL above or upload a document to get started
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Progress Bar */}
-        {numPages > 0 && (
-          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-            <div 
-              className="bg-gradient-to-r from-indigo-500 to-purple-600 h-2 rounded-full transition-all duration-300"
-              style={{ width: `${progress}%` }}
-            ></div>
-          </div>
-        )}
       </div>
 
-      {/* Notes Panel */}
+      {/* Notes Panel and Document Viewer moved to right column */}
       {showNotes && (
-        <div className="col-span-4 space-y-4">
+        <div className="col-span-4 space-y-4 overflow-y-auto">
+          {/* Compact Document Viewer panel */}
+          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div className="p-3 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+              <div className="font-medium text-sm truncate">{documentTitle || 'Document'}</div>
+              <div className="text-xs text-gray-500">{progress}%</div>
+            </div>
+            <div className="h-64 overflow-auto flex justify-center items-start p-3 bg-gray-50 dark:bg-gray-900">
+              {fileUrl && !error ? (
+                <div ref={documentRef}>
+                  <Document file={fileUrl} onLoadSuccess={onLoadSuccess} onLoadError={onLoadError} loading={<div className="flex items-center justify-center p-4"><div className="animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-600"></div></div>}>
+                    <Page pageNumber={pageNumber} scale={0.8} rotate={rotation} renderTextLayer={false} renderAnnotationLayer={false} />
+                  </Document>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center h-full text-center space-y-2">
+                  <BookOpen className="w-8 h-8 text-gray-400" />
+                  <div className="text-xs text-gray-500">No Document Loaded</div>
+                </div>
+              )}
+            </div>
+          </div>
           {/* PostgreSQL Search Section */}
           {id === 'postgres-official' && (
             <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">

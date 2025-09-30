@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { Upload, FileText, File, CheckCircle, XCircle, Loader, Trash2, AlertCircle, RefreshCw } from 'lucide-react'
 import { apiGet, apiUpload, apiUploadWithProgress, getDocuments, deleteDocument } from '../lib/api'
+import ChatWidget from '../components/ChatWidget.jsx'
 
 const ACCEPT = {
   pdf: 'application/pdf',
@@ -25,6 +26,12 @@ export default function UploadPage() {
   const [deletingDocument, setDeletingDocument] = useState(null)
   const [file, setFile] = useState(null)
   const fileInputRef = useRef(null)
+
+  // Hide global floating chat; we'll render embedded full-size chat here
+  useEffect(() => {
+    try { document.body.classList.add('hide-floating-chat') } catch {}
+    return () => { try { document.body.classList.remove('hide-floating-chat') } catch {} }
+  }, [])
 
   useEffect(() => {
     loadDocs()
@@ -271,7 +278,9 @@ export default function UploadPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8">
+    <div className="grid grid-cols-12 gap-6 h-[calc(100vh-8rem)]">
+      {/* Sidebar: Upload and Documents */}
+      <div className="col-span-12 lg:col-span-4 space-y-8 overflow-y-auto pr-1">
       {/* Header */}
       <div className="text-center space-y-4">
         <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
@@ -651,6 +660,12 @@ export default function UploadPage() {
             </ul>
           )}
         </div>
+      </div>
+      </div>
+
+      {/* Main: Full Chat */}
+      <div className="col-span-12 lg:col-span-8 h-full">
+        <ChatWidget fullScreen />
       </div>
     </div>
   )
