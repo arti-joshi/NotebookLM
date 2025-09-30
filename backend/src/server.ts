@@ -75,9 +75,8 @@ const documentService = new DocumentService(prisma)
 
 // Initialize enhanced RAG service (tuned)
 const ragService = new RAGService(prisma, {
-  // Retrieval window
-  maxResults: 10,
-  similarityThreshold: 0.4,
+  // Retrieval window - using config defaults (maxResults: 20, similarityThreshold: 0.25)
+  // maxResults and similarityThreshold will use config.retrieval values
   enableKeywordSearch: true,
   enableQueryExpansion: true,
   enableHybridSearch: true,

@@ -7,8 +7,7 @@ const prisma = new PrismaClient();
 
 // Initialize the RAG service with optimal settings
 const ragService = new RAGService(prisma, {
-  maxResults: 10,
-  similarityThreshold: 0.35, // Adjusted for better relevance
+  // Using config defaults: maxResults: 20, similarityThreshold: 0.25
   enableKeywordSearch: true,
   enableQueryExpansion: true,
   enableHybridSearch: true,

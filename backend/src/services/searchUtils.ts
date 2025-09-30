@@ -3,6 +3,9 @@
  * Provides enhanced query expansion and search capabilities
  */
 
+import { correctSpelling } from './spellCorrectionService.js';
+import { config } from '../config/index.js';
+
 interface QueryVariant {
   text: string;
   weight: number;  // Higher weight = more important in final scoring
@@ -12,22 +15,32 @@ interface QueryVariant {
  * Generates semantic variations of the query to improve recall
  */
 export function generateQueryVariants(query: string): QueryVariant[] {
+  // Apply spell correction first if enabled
+  const correctedQuery = config.rag.enableSpellCorrection 
+    ? correctSpelling(query) 
+    : query;
+  
   const variants: QueryVariant[] = [
-    { text: query, weight: 1.0 } // Original query gets full weight
+    { text: correctedQuery, weight: 1.0 } // Corrected query gets full weight
   ];
+  
+  // If spell correction was applied, also include original for fallback
+  if (correctedQuery !== query) {
+    variants.push({ text: query, weight: 0.9 });
+  }
 
-  // Remove question words and common prefixes
-  const cleaned = query
+  // Remove question words and common prefixes from corrected query
+  const cleaned = correctedQuery
     .replace(/^(what|who|where|when|why|how|tell me|show me|find|search for)/i, '')
     .trim();
-  if (cleaned !== query) {
+  if (cleaned !== correctedQuery) {
     variants.push({ text: cleaned, weight: 0.9 });
   }
 
-  // Extract and combine key entities
-  const dates = query.match(/\d+\s*(?:CE|AD|BCE|BC)/gi) || [];
-  const locations = query.match(/(?:at|in|near)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)/g) || [];
-  const names = query.match(/[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*/g) || [];
+  // Extract and combine key entities from corrected query
+  const dates = correctedQuery.match(/\d+\s*(?:CE|AD|BCE|BC)/gi) || [];
+  const locations = correctedQuery.match(/(?:at|in|near)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)/g) || [];
+  const names = correctedQuery.match(/[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*/g) || [];
 
   const entities = [...dates, ...locations, ...names];
   if (entities.length > 1) {
@@ -37,8 +50,8 @@ export function generateQueryVariants(query: string): QueryVariant[] {
     });
   }
 
-  // Handle birth/date queries
-  const birthMatch = query.match(/(?:born|birth)\s+(?:in|at|near)\s+(.+)/i);
+  // Handle birth/date queries from corrected query
+  const birthMatch = correctedQuery.match(/(?:born|birth)\s+(?:in|at|near)\s+(.+)/i);
   if (birthMatch) {
     variants.push({ 
       text: birthMatch[1],
@@ -55,8 +68,8 @@ export function generateQueryVariants(query: string): QueryVariant[] {
     }
   }
 
-  // Extract person queries
-  const personMatch = query.match(/(?:who|about)\s+(?:is|was)\s+([^?]+)/i);
+  // Extract person queries from corrected query
+  const personMatch = correctedQuery.match(/(?:who|about)\s+(?:is|was)\s+([^?]+)/i);
   if (personMatch) {
     variants.push({ 
       text: personMatch[1].trim(),
@@ -71,24 +84,29 @@ export function generateQueryVariants(query: string): QueryVariant[] {
  * Extracts keywords for hybrid search, with weights
  */
 export function extractWeightedKeywords(query: string): Map<string, number> {
+  // Apply spell correction first if enabled
+  const correctedQuery = config.rag.enableSpellCorrection 
+    ? correctSpelling(query) 
+    : query;
+  
   const keywords = new Map<string, number>();
   
-  // Extract dates (highest priority)
-  const dates = query.match(/\d+\s*(?:CE|AD|BCE|BC)/gi) || [];
+  // Extract dates (highest priority) from corrected query
+  const dates = correctedQuery.match(/\d+\s*(?:CE|AD|BCE|BC)/gi) || [];
   dates.forEach(date => {
     const normalized = date.replace(/\s+/g, '').toUpperCase();
     keywords.set(normalized, 1.0);
   });
 
-  // Extract locations (high priority)
-  const locations = query.match(/(?:at|in|near)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)/g) || [];
+  // Extract locations (high priority) from corrected query
+  const locations = correctedQuery.match(/(?:at|in|near)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)/g) || [];
   locations.forEach(loc => {
     const normalized = loc.replace(/(?:at|in|near)\s+/i, '').trim();
     keywords.set(normalized, 0.9);
   });
 
-  // Extract proper nouns (medium-high priority)
-  const names = query.match(/[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*/g) || [];
+  // Extract proper nouns (medium-high priority) from corrected query
+  const names = correctedQuery.match(/[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*/g) || [];
   names.forEach(name => {
     if (!keywords.has(name)) { // Don't override dates/locations
       keywords.set(name, 0.8);
@@ -103,8 +121,8 @@ export function extractWeightedKeywords(query: string): Map<string, number> {
     'should', 'may', 'might', 'can', 'what', 'where', 'when', 'who', 'how', 'why'
   ]);
 
-  // Extract remaining meaningful words (lower priority)
-  const words = query
+  // Extract remaining meaningful words (lower priority) from corrected query
+  const words = correctedQuery
     .toLowerCase()
     .replace(/[^\w\s]/g, ' ')
     .split(/\s+/)

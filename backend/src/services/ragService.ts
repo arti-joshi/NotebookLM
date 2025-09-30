@@ -6,6 +6,7 @@ import { PrismaClient } from '../../generated/prisma';
 import { GoogleGenerativeAIEmbeddings } from '@langchain/google-genai';
 import { generateQueryVariants, extractWeightedKeywords } from './searchUtils';
 import { getEmbedding } from './embeddingService';
+import { config } from '../config/index.js';
 
 interface RetrievalResult {
   chunk: string;
@@ -283,31 +284,31 @@ export class RAGService {
     }).sort((a, b) => (b.rerankScore || 0) - (a.rerankScore || 0));
   }
 
-  constructor(prisma: PrismaClient, config: RAGServiceConfig = {}) {
+  constructor(prisma: PrismaClient, serviceConfig: RAGServiceConfig = {}) {
     this.prisma = prisma;
     this.config = {
-      maxResults: config.maxResults ?? 10,
-      similarityThreshold: config.similarityThreshold ?? 0.25,
-      enableKeywordSearch: config.enableKeywordSearch ?? true,
-      enableQueryExpansion: config.enableQueryExpansion ?? true,
-      enableHybridSearch: config.enableHybridSearch ?? true,
-      includeSourceContext: config.includeSourceContext ?? true,
-      contextWindowSize: config.contextWindowSize ?? 2,
-      tocPenalty: config.tocPenalty ?? 0.05,
-      narrativeBoost: config.narrativeBoost ?? 0.05,
-      debugRetrieval: config.debugRetrieval ?? false,
+      maxResults: serviceConfig.maxResults ?? config.retrieval.maxResults,
+      similarityThreshold: serviceConfig.similarityThreshold ?? config.retrieval.similarityThreshold,
+      enableKeywordSearch: serviceConfig.enableKeywordSearch ?? true,
+      enableQueryExpansion: serviceConfig.enableQueryExpansion ?? true,
+      enableHybridSearch: serviceConfig.enableHybridSearch ?? true,
+      includeSourceContext: serviceConfig.includeSourceContext ?? true,
+      contextWindowSize: serviceConfig.contextWindowSize ?? 2,
+      tocPenalty: serviceConfig.tocPenalty ?? 0.05,
+      narrativeBoost: serviceConfig.narrativeBoost ?? 0.05,
+      debugRetrieval: serviceConfig.debugRetrieval ?? false,
       // Reranking and boosting defaults
-      enableReranking: config.enableReranking ?? true,
-      keywordDensityWeight: config.keywordDensityWeight ?? 0.1,
-      positionWeight: config.positionWeight ?? 0.05,
-      sectionImportanceWeight: config.sectionImportanceWeight ?? 0.08,
-      recencyBoost: config.recencyBoost ?? 0.03,
-      exactMatchBoost: config.exactMatchBoost ?? 0.15
+      enableReranking: serviceConfig.enableReranking ?? config.retrieval.rerankingEnabled,
+      keywordDensityWeight: serviceConfig.keywordDensityWeight ?? 0.1,
+      positionWeight: serviceConfig.positionWeight ?? 0.05,
+      sectionImportanceWeight: serviceConfig.sectionImportanceWeight ?? 0.08,
+      recencyBoost: serviceConfig.recencyBoost ?? 0.03,
+      exactMatchBoost: serviceConfig.exactMatchBoost ?? 0.15
     };
 
-    if (config.apiKey) {
+    if (serviceConfig.apiKey) {
       this.embeddings = new GoogleGenerativeAIEmbeddings({
-        apiKey: config.apiKey,
+        apiKey: serviceConfig.apiKey,
         modelName: "text-embedding-004"  // Match model used in other services
       });
     }
@@ -503,8 +504,8 @@ export class RAGService {
     // Sort by finalScore descending
     adjustedResults.sort((a, b) => (b.finalScore || 0) - (a.finalScore || 0));
 
-    // Per-source cap to diversify results
-    const maxPerSource = 4;
+    // Per-source cap to diversify results (dynamically derived from maxResults)
+    const maxPerSource = Math.ceil(this.config.maxResults * 0.75); // Allow 75% of maxResults per source
     const perSourceCount = new Map<string, number>();
     const diversified: RetrievalResult[] = [];
     for (const r of adjustedResults) {
@@ -514,6 +515,12 @@ export class RAGService {
         diversified.push(r);
         perSourceCount.set(src, n + 1);
       }
+    }
+    
+    // Debug logging for diversification
+    if (this.config.debugRetrieval) {
+      console.log(`🔄 Diversification: maxPerSource=${maxPerSource}, totalCandidates=${adjustedResults.length}, diversified=${diversified.length}`);
+      console.log(`📊 Per-source counts:`, Object.fromEntries(perSourceCount));
     }
     
     // Debug logging
