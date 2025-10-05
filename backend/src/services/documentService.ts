@@ -150,24 +150,39 @@ export class DocumentService {
    * Extract section/heading from content
    */
   private extractSection(content: string): string | undefined {
-    // Look for markdown headers
-    const headerMatch = content.match(/^#+\s*(.+)$/m);
-    if (headerMatch) {
-      return headerMatch[1].trim();
+    // 1) Markdown headers
+    const md = content.match(/^#+\s*(.+)$/m);
+    if (md) return md[1].trim();
+
+    // 2) HTML headers
+    const html = content.match(/<h[1-6][^>]*>(.+?)<\/h[1-6]>/i);
+    if (html) return html[1].replace(/<[^>]*>/g, '').trim();
+
+    // 3) Early-line numeric section patterns (e.g., "5.5.4. Primary Keys")
+    const lines = content.split(/\r?\n/).map(l => l.trim()).filter(Boolean).slice(0, 12);
+    for (const raw of lines) {
+      // Remove dotted leaders and trailing page numbers
+      const noDots = raw.replace(/\.{2,}\s*\d{1,4}\s*$/, '').trim();
+      // Match leading numeric outline
+      const m = noDots.match(/^\d+(?:\.\d+){0,4}\.?\s+(.{3,120})$/);
+      if (m) {
+        const title = m[1].trim();
+        if (title && /[A-Za-z]/.test(title)) return title;
+      }
+      // Title-case heuristic (likely a heading)
+      if (noDots.length <= 120) {
+        const words = noDots.split(/\s+/);
+        const capWords = words.filter(w => /^[A-Z][a-zA-Z0-9_\-()]*$/.test(w)).length;
+        if (capWords >= Math.ceil(words.length * 0.5) && capWords >= 2) {
+          return noDots;
+        }
+      }
     }
-    
-    // Look for HTML headers
-    const htmlHeaderMatch = content.match(/<h[1-6][^>]*>(.+?)<\/h[1-6]>/i);
-    if (htmlHeaderMatch) {
-      return htmlHeaderMatch[1].replace(/<[^>]*>/g, '').trim();
-    }
-    
-    // Look for bold text that might be a section
-    const boldMatch = content.match(/\*\*(.+?)\*\*/);
-    if (boldMatch) {
-      return boldMatch[1].trim();
-    }
-    
+
+    // 4) Bold inline fallback
+    const bold = content.match(/\*\*(.+?)\*\*/);
+    if (bold) return bold[1].trim();
+
     return undefined;
   }
 

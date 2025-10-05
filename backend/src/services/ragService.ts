@@ -228,7 +228,7 @@ export class RAGService {
       rerankScore += exactMatchBoost;
 
       // 3) Position
-      const positionScore = this.calculatePositionScore(result.chunkIndex, totalChunks);
+      const positionScore = this.calculatePositionScore(result.chunkIndex ?? null, totalChunks);
       rerankScore += positionScore * (this.config.positionWeight ?? 0);
 
       // 4) Section importance
@@ -355,6 +355,7 @@ export class RAGService {
         source: string;
         chunkIndex: number;
         pageStart: number | null;
+        section: string | null;
         chunkingConfig: any;
         distance: number;
       }>>`
@@ -364,6 +365,7 @@ export class RAGService {
           e.source,
           e."chunkIndex",
           e."pageStart",
+          e.section,
           e."chunkingConfig",
           e.embedding_vec <=> ${vec}::vector as distance
         FROM "Embedding" e
@@ -380,7 +382,10 @@ export class RAGService {
         source: r.source || '',
         chunkIndex: r.chunkIndex,
         pageNumber: r.pageStart ?? undefined,
-        metadata: r.chunkingConfig,
+        metadata: {
+          ...(r.chunkingConfig || {}),
+          section: (r.chunkingConfig?.section ?? r.section) || undefined
+        },
         score: 1 - r.distance,  // Convert distance to similarity score
         method: 'vector' as const
       }));
@@ -399,16 +404,21 @@ export class RAGService {
           { userId },
           { document: { isSystemDocument: true } }
         ],
-        OR: keywords.map(keyword => ({
-          chunk: { contains: keyword, mode: 'insensitive' }
-        }))
+        AND: [
+          {
+            OR: keywords.map(keyword => ({
+              chunk: { contains: keyword, mode: 'insensitive' }
+            }))
+          }
+        ]
       },
       select: {
         chunk: true,
         source: true,
         chunkIndex: true,
         pageStart: true,
-        chunkingConfig: true
+        chunkingConfig: true,
+        section: true
       }
     });
 
@@ -417,7 +427,10 @@ export class RAGService {
       source: doc.source || '',
       chunkIndex: doc.chunkIndex,
       pageNumber: doc.pageStart ?? undefined,
-      metadata: doc.chunkingConfig as any,
+      metadata: {
+        ...(doc.chunkingConfig as any),
+        section: ((doc as any).chunkingConfig?.section ?? (doc as any).section) || undefined
+      },
       score: 0.5,
       method: 'keyword' as const
     }));
@@ -527,21 +540,26 @@ export class RAGService {
     if (this.config.debugRetrieval) {
       console.log('🔍 Retrieval debug for query:', query);
       console.log('🎯 Reranking enabled:', this.config.enableReranking);
-      console.table(adjustedResults.slice(0, Math.min(15, adjustedResults.length)).map(r => ({
-        source: r.source,
-        pageNumber: (r as any).pageNumber ?? 'n/a',
-        chunkIndex: r.chunkIndex ?? 'n/a',
-        score: (r.score ?? 0).toFixed(4),
-        rerankScore: (r.rerankScore ?? r.score ?? 0).toFixed(4),
-        finalScore: (r.finalScore ?? 0).toFixed(4),
-        keywordDensity: (r.keywordDensity ?? 0).toFixed(3),
-        exactMatch: (r.exactMatchBoost ?? 0).toFixed(3),
-        position: (r.positionScore ?? 0).toFixed(3),
-        section: (r.sectionScore ?? 0).toFixed(3),
-        isTOC: r.isTOC,
-        isNarrative: r.isNarrative,
-        preview: (r.preview ?? '').slice(0, 120)
-      })));
+      console.table(adjustedResults.slice(0, Math.min(15, adjustedResults.length)).map(r => {
+        const meta: any = r.metadata || {};
+        const section = meta.section || meta.Header_1 || meta.Header_2 || meta.Header_3 || 'n/a';
+        return {
+          source: r.source,
+          pageNumber: (r as any).pageNumber ?? 'n/a',
+          section,
+          chunkIndex: r.chunkIndex ?? 'n/a',
+          score: (r.score ?? 0).toFixed(4),
+          rerankScore: (r.rerankScore ?? r.score ?? 0).toFixed(4),
+          finalScore: (r.finalScore ?? 0).toFixed(4),
+          keywordDensity: (r.keywordDensity ?? 0).toFixed(3),
+          exactMatch: (r.exactMatchBoost ?? 0).toFixed(3),
+          position: (r.positionScore ?? 0).toFixed(3),
+          sectionScore: (r.sectionScore ?? 0).toFixed(3),
+          isTOC: r.isTOC,
+          isNarrative: r.isNarrative,
+          preview: (r.preview ?? '').slice(0, 120)
+        };
+      }));
     }
     
     const finalResults = diversified.slice(0, this.config.maxResults);
@@ -622,14 +640,7 @@ export class RAGService {
         totalResults: finalResults.length,
         sourceCounts: Object.fromEntries(
           Object.entries(sourceGroups).map(([source, results]) => [source, results.length])
-        ),
-        topCandidates: adjustedResults.slice(0, 10).map(r => ({
-          source: r.source,
-          chunkIndex: r.chunkIndex,
-          pageNumber: (r as any).pageNumber,
-          score: r.score,
-          finalScore: r.finalScore
-        }))
+        )
       }
     };
   }

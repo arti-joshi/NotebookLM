@@ -1,9 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { MessageCircle, Send, X, Bot, User, Minimize2, Maximize2 } from 'lucide-react'
 import { callApi } from '../lib/api'
-import { CitationList } from './CitationBadge'
 import { ErrorBoundary } from './ErrorBoundary'
-import './CitationBadge.css'
 
 function ChatWidgetContent({ fullScreen = false }) {
   const [isOpen, setIsOpen] = useState(false)
@@ -11,7 +9,7 @@ function ChatWidgetContent({ fullScreen = false }) {
   const [messages, setMessages] = useState([
     { 
       role: 'assistant', 
-      content: 'Hi! I\'m your AI assistant. Ask me about your documents, request summaries, or get help with analysis.',
+      content: 'Hi! I\'m your AI assistant. Ask me about PostgreSQL.',
       timestamp: new Date()
     }
   ])
@@ -92,8 +90,7 @@ function ChatWidgetContent({ fullScreen = false }) {
       setMessages((prevMessages) => [...prevMessages, { 
         role: 'assistant', 
         content: assistantReply,
-        timestamp: new Date(),
-        citations: data.citations
+        timestamp: new Date()
       }])
     } catch (error) {
       console.error('Chat Error:', error)
@@ -197,9 +194,6 @@ function ChatWidgetContent({ fullScreen = false }) {
                       : 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-bl-md'
                   }`}>
                     {m.content}
-                    {m.role === 'assistant' && m.citations && (
-                      <CitationList citations={m.citations} />
-                    )}
                   </div>
                 </div>
                 <div className={`text-xs text-gray-400 mt-1 ${m.role === 'user' ? 'text-right' : 'text-left'}`}>
@@ -359,9 +353,6 @@ function ChatWidgetContent({ fullScreen = false }) {
                               : 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-bl-md'
                           }`}>
                             {m.content}
-                            {m.role === 'assistant' && m.citations && (
-                              <CitationList citations={m.citations} />
-                            )}
                           </div>
                         </div>
                         <div className={`text-xs text-gray-400 mt-1 ${m.role === 'user' ? 'text-right' : 'text-left'}`}>

@@ -1265,18 +1265,19 @@ app.post('/ai/chat', auth, asyncHandler(async (req: Request, res: Response) => {
 
   let context = ''
   const contextParts: { source?: string, chunk: string, score?: number, method?: string }[] = []
+  let ragResult: any = null
   
   // Use enhanced RAG service with hybrid search
   const ragStartTime = Date.now()
   try {
     console.log(`[ai/chat] Starting RAG retrieval...`)
-    const ragResult = await withTimeout(
+    ragResult = await withTimeout(
       ragService.retrieveContext(userMessage, DEMO_USER_ID), 
       CHAT_EMBED_TIMEOUT_MS
     )
     
     context = ragResult.context
-    ragResult.results.forEach(r => contextParts.push({ 
+    ragResult.results.forEach((r: any) => contextParts.push({ 
       source: r.source, 
       chunk: r.chunk,
       score: r.score,
@@ -1286,19 +1287,20 @@ app.post('/ai/chat', auth, asyncHandler(async (req: Request, res: Response) => {
     // Enhanced debug logging
     console.log(`[ai/chat] RAG Retrieval Success:
 - Query: "${userMessage}"
-- Methods Used: ${ragResult.results.map(r => r.method).join(', ')}
+- Methods Used: ${ragResult.results.map((r: any) => r.method).join(', ')}
 - Results Found: ${ragResult.results.length}
 - Top Keywords: ${ragResult.debug.keywords.join(', ')}
 - Processing Time: ${Date.now() - ragStartTime}ms
-- Sources: ${ragResult.results.map(r => r.source).filter(Boolean).join(', ')}`)
+- Sources: ${ragResult.results.map((r: any) => r.source).filter(Boolean).join(', ')}`)
     
     // Log individual chunk details
-    ragResult.results.slice(0, 5).forEach((r, i) => {
+    ragResult.results.slice(0, 5).forEach((r: any, i: number) => {
       const meta: any = r.metadata || {}
+      const section = meta?.section || meta?.Header_1 || meta?.Header_2 || meta?.Header_3 || 'n/a'
       console.log(`[ai/chat] Top${i + 1}:
  - Method: ${r.method}
  - Score: ${r.score?.toFixed(4) || 'N/A'} Final: ${(r as any).finalScore?.toFixed?.(4) || 'N/A'}
- - Source: ${r.source || 'unknown'} Page: ${meta?.pageNumber ?? meta?.loc?.pageNumber ?? 'n/a'} Index: ${r.chunkIndex ?? 'n/a'}
+ - Source: ${r.source || 'unknown'} Page: ${meta?.pageNumber ?? meta?.loc?.pageNumber ?? 'n/a'} Section: ${section} Index: ${r.chunkIndex ?? 'n/a'}
  - contentType: ${meta?.contentType ?? 'n/a'} sqlKeywords: ${Array.isArray(meta?.sqlKeywords) ? meta.sqlKeywords.slice(0,5).join(',') : 'n/a'}
  - Preview: ${r.chunk.substring(0, 140).replace(/\n/g, ' ')}...`)
     })
@@ -1374,7 +1376,7 @@ app.post('/ai/chat', auth, asyncHandler(async (req: Request, res: Response) => {
       messages: [
         {
           role: 'system',
-          content: 'You are a helpful assistant grounded in the provided CONTEXT. Use it to answer succinctly. If context is insufficient, say so and suggest what to upload.'
+          content: 'You are a PostgreSQL documentation assistant. Use ONLY the provided CONTEXT to answer succinctly and accurately. The CONTEXT includes page markers like [Page X]. CRITICAL: When stating any factual claim derived from CONTEXT, include an inline citation with the exact page number using the same format [Page X]. If the context is insufficient, say so and suggest what to upload.'
         },
         {
           role: 'user',
@@ -1389,8 +1391,10 @@ app.post('/ai/chat', auth, asyncHandler(async (req: Request, res: Response) => {
 - Generation provider: SambaNova
 - Processing Time: ${llmTime}ms
 - Status: Success`)
-    const answer = completion?.choices?.[0]?.message?.content || 'I could not generate a response.'
-    
+    let answer = completion?.choices?.[0]?.message?.content || 'I could not generate a response.'
+
+    // Citations disabled by request
+
     // Log final stats
     console.log(`[ai/chat] Request complete:
 - Total Time: ${Date.now() - startTime}ms

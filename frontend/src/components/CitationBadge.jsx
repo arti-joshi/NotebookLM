@@ -2,7 +2,8 @@ import React from 'react';
 import PropTypes from 'prop-types';
 
 export const CitationBadge = ({ source, section, page }) => {
-  const label = source === 'postgres-official' ? 'PostgreSQL docs' : 'User upload';
+  const isPostgres = typeof source === 'string' && /postgres/i.test(source);
+  const baseLabel = isPostgres ? 'PostgreSQL docs' : (typeof source === 'string' ? source.replace(/^.*[\\/]/, '') : 'Source');
   const metadata = [
     section && `${section}`,
     page !== undefined && `p.${page}`,
@@ -10,16 +11,16 @@ export const CitationBadge = ({ source, section, page }) => {
 
   return (
     <span
-      className={`citation-badge ${source === 'postgres-official' ? 'postgres' : 'user'}`}
-      title={metadata ? `${label} • ${metadata}` : label}
+      className={`citation-badge ${isPostgres ? 'postgres' : 'user'}`}
+      title={metadata ? `${baseLabel} • ${metadata}` : baseLabel}
     >
-      {label}
+      {baseLabel}{metadata ? ` — ${metadata}` : ''}
     </span>
   );
 };
 
 CitationBadge.propTypes = {
-  source: PropTypes.oneOf(['postgres-official', 'user-upload']).isRequired,
+  source: PropTypes.string.isRequired,
   section: PropTypes.string,
   page: PropTypes.number
 };
@@ -39,7 +40,7 @@ export const CitationList = ({ citations }) => {
 CitationList.propTypes = {
   citations: PropTypes.arrayOf(
     PropTypes.shape({
-      source: PropTypes.oneOf(['postgres-official', 'user-upload']).isRequired,
+      source: PropTypes.string.isRequired,
       section: PropTypes.string,
       page: PropTypes.number
     })
