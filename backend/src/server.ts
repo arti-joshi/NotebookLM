@@ -78,7 +78,7 @@ const ragService = new RAGService(prisma, {
   // Retrieval window - using config defaults (maxResults: 20, similarityThreshold: 0.25)
   // maxResults and similarityThreshold will use config.retrieval values
   enableKeywordSearch: true,
-  enableQueryExpansion: true,
+  enableQueryExpansion: false,
   enableHybridSearch: true,
 
   // Reranking & adjustments
@@ -301,7 +301,7 @@ async function resolveDemoUserId(): Promise<void> {
 }
 
 // Fast fallback timeouts (env overrideable)
-const CHAT_EMBED_TIMEOUT_MS = Number(process.env.CHAT_EMBED_TIMEOUT_MS || 3000)
+const CHAT_EMBED_TIMEOUT_MS = Number(process.env.CHAT_EMBED_TIMEOUT_MS || 10000)
 const CHAT_LLM_TIMEOUT_MS = Number(process.env.CHAT_LLM_TIMEOUT_MS || 15000)
 const SAMBA_MODEL = process.env.SAMBA_MODEL || 'Llama-4-Maverick-17B-128E-Instruct'
 
@@ -1374,10 +1374,39 @@ app.post('/ai/chat', auth, asyncHandler(async (req: Request, res: Response) => {
     const completion = await withTimeout(samba.chat.completions.create({
       model: SAMBA_MODEL,
       messages: [
-        {
-          role: 'system',
-          content: 'You are a PostgreSQL documentation assistant. Use ONLY the provided CONTEXT to answer succinctly and accurately. The CONTEXT includes page markers like [Page X]. CRITICAL: When stating any factual claim derived from CONTEXT, include an inline citation with the exact page number using the same format [Page X]. If the context is insufficient, say so and suggest what to upload.'
-        },
+      {
+        role: 'system',
+        content: `You are a PostgreSQL documentation assistant. Answer using ONLY the provided CONTEXT.
+
+MANDATORY CITATION FORMAT:
+The CONTEXT includes markers like [Page X] and section names. For EVERY factual statement, cite using this exact format:
+[Page X, Section: Y]
+
+Examples:
+✓ CORRECT: "A primary key uniquely identifies each row [Page 107, Section: Table Constraints]."
+✓ CORRECT: "Use CREATE TABLE to define a new table [Page 97, Section: Creating a New Table]."
+✗ WRONG: "A primary key uniquely identifies each row. [Page 107]"
+✗ WRONG: "A primary key uniquely identifies each row."
+
+CITATION PLACEMENT:
+- Place citations immediately after each fact
+- If section name is unavailable in context, use [Page X only]
+- Cite the most specific page where information appears
+- Do not group all citations at the end
+
+WHEN CONTEXT IS INSUFFICIENT:
+Say exactly: "This specific topic is not covered in the provided context. The PostgreSQL documentation may contain this information in a different section."
+
+NEVER say: "suggest uploading", "upload a document", or "I need more context"
+
+FORMAT RULES:
+- Be concise and technically precise
+- Include SQL code examples when relevant (use fenced code blocks)
+- Every claim needs [Page X, Section: Y]
+- Use bullet points only when listing 3+ items
+- Do not fabricate facts that are not present in CONTEXT
+`
+      },
         {
           role: 'user',
           content: `CONTEXT:\n${context}\n\nQUESTION: ${userMessage}`
