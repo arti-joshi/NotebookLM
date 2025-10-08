@@ -48,6 +48,21 @@ export type Embedding = $Result.DefaultSelection<Prisma.$EmbeddingPayload>
  * 
  */
 export type RetrievalLog = $Result.DefaultSelection<Prisma.$RetrievalLogPayload>
+/**
+ * Model Topic
+ * 
+ */
+export type Topic = $Result.DefaultSelection<Prisma.$TopicPayload>
+/**
+ * Model TopicInteraction
+ * 
+ */
+export type TopicInteraction = $Result.DefaultSelection<Prisma.$TopicInteractionPayload>
+/**
+ * Model TopicMastery
+ * 
+ */
+export type TopicMastery = $Result.DefaultSelection<Prisma.$TopicMasteryPayload>
 
 /**
  * Enums
@@ -71,6 +86,17 @@ export const DocumentStatus: {
 
 export type DocumentStatus = (typeof DocumentStatus)[keyof typeof DocumentStatus]
 
+
+export const MasteryStatus: {
+  NOT_STARTED: 'NOT_STARTED',
+  BEGINNER: 'BEGINNER',
+  LEARNING: 'LEARNING',
+  PROFICIENT: 'PROFICIENT',
+  MASTERED: 'MASTERED'
+};
+
+export type MasteryStatus = (typeof MasteryStatus)[keyof typeof MasteryStatus]
+
 }
 
 export type Role = $Enums.Role
@@ -80,6 +106,10 @@ export const Role: typeof $Enums.Role
 export type DocumentStatus = $Enums.DocumentStatus
 
 export const DocumentStatus: typeof $Enums.DocumentStatus
+
+export type MasteryStatus = $Enums.MasteryStatus
+
+export const MasteryStatus: typeof $Enums.MasteryStatus
 
 /**
  * ##  Prisma Client ʲˢ
@@ -273,6 +303,36 @@ export class PrismaClient<
     * ```
     */
   get retrievalLog(): Prisma.RetrievalLogDelegate<ExtArgs>;
+
+  /**
+   * `prisma.topic`: Exposes CRUD operations for the **Topic** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more Topics
+    * const topics = await prisma.topic.findMany()
+    * ```
+    */
+  get topic(): Prisma.TopicDelegate<ExtArgs>;
+
+  /**
+   * `prisma.topicInteraction`: Exposes CRUD operations for the **TopicInteraction** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more TopicInteractions
+    * const topicInteractions = await prisma.topicInteraction.findMany()
+    * ```
+    */
+  get topicInteraction(): Prisma.TopicInteractionDelegate<ExtArgs>;
+
+  /**
+   * `prisma.topicMastery`: Exposes CRUD operations for the **TopicMastery** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more TopicMasteries
+    * const topicMasteries = await prisma.topicMastery.findMany()
+    * ```
+    */
+  get topicMastery(): Prisma.TopicMasteryDelegate<ExtArgs>;
 }
 
 export namespace Prisma {
@@ -720,7 +780,10 @@ export namespace Prisma {
     Progress: 'Progress',
     Document: 'Document',
     Embedding: 'Embedding',
-    RetrievalLog: 'RetrievalLog'
+    RetrievalLog: 'RetrievalLog',
+    Topic: 'Topic',
+    TopicInteraction: 'TopicInteraction',
+    TopicMastery: 'TopicMastery'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -736,7 +799,7 @@ export namespace Prisma {
 
   export type TypeMap<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, ClientOptions = {}> = {
     meta: {
-      modelProps: "user" | "refreshToken" | "note" | "progress" | "document" | "embedding" | "retrievalLog"
+      modelProps: "user" | "refreshToken" | "note" | "progress" | "document" | "embedding" | "retrievalLog" | "topic" | "topicInteraction" | "topicMastery"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -1230,6 +1293,200 @@ export namespace Prisma {
           }
         }
       }
+      Topic: {
+        payload: Prisma.$TopicPayload<ExtArgs>
+        fields: Prisma.TopicFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.TopicFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TopicPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.TopicFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TopicPayload>
+          }
+          findFirst: {
+            args: Prisma.TopicFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TopicPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.TopicFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TopicPayload>
+          }
+          findMany: {
+            args: Prisma.TopicFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TopicPayload>[]
+          }
+          create: {
+            args: Prisma.TopicCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TopicPayload>
+          }
+          createMany: {
+            args: Prisma.TopicCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.TopicCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TopicPayload>[]
+          }
+          delete: {
+            args: Prisma.TopicDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TopicPayload>
+          }
+          update: {
+            args: Prisma.TopicUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TopicPayload>
+          }
+          deleteMany: {
+            args: Prisma.TopicDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.TopicUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.TopicUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TopicPayload>
+          }
+          aggregate: {
+            args: Prisma.TopicAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateTopic>
+          }
+          groupBy: {
+            args: Prisma.TopicGroupByArgs<ExtArgs>
+            result: $Utils.Optional<TopicGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.TopicCountArgs<ExtArgs>
+            result: $Utils.Optional<TopicCountAggregateOutputType> | number
+          }
+        }
+      }
+      TopicInteraction: {
+        payload: Prisma.$TopicInteractionPayload<ExtArgs>
+        fields: Prisma.TopicInteractionFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.TopicInteractionFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TopicInteractionPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.TopicInteractionFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TopicInteractionPayload>
+          }
+          findFirst: {
+            args: Prisma.TopicInteractionFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TopicInteractionPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.TopicInteractionFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TopicInteractionPayload>
+          }
+          findMany: {
+            args: Prisma.TopicInteractionFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TopicInteractionPayload>[]
+          }
+          delete: {
+            args: Prisma.TopicInteractionDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TopicInteractionPayload>
+          }
+          update: {
+            args: Prisma.TopicInteractionUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TopicInteractionPayload>
+          }
+          deleteMany: {
+            args: Prisma.TopicInteractionDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.TopicInteractionUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          aggregate: {
+            args: Prisma.TopicInteractionAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateTopicInteraction>
+          }
+          groupBy: {
+            args: Prisma.TopicInteractionGroupByArgs<ExtArgs>
+            result: $Utils.Optional<TopicInteractionGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.TopicInteractionCountArgs<ExtArgs>
+            result: $Utils.Optional<TopicInteractionCountAggregateOutputType> | number
+          }
+        }
+      }
+      TopicMastery: {
+        payload: Prisma.$TopicMasteryPayload<ExtArgs>
+        fields: Prisma.TopicMasteryFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.TopicMasteryFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TopicMasteryPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.TopicMasteryFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TopicMasteryPayload>
+          }
+          findFirst: {
+            args: Prisma.TopicMasteryFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TopicMasteryPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.TopicMasteryFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TopicMasteryPayload>
+          }
+          findMany: {
+            args: Prisma.TopicMasteryFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TopicMasteryPayload>[]
+          }
+          create: {
+            args: Prisma.TopicMasteryCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TopicMasteryPayload>
+          }
+          createMany: {
+            args: Prisma.TopicMasteryCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.TopicMasteryCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TopicMasteryPayload>[]
+          }
+          delete: {
+            args: Prisma.TopicMasteryDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TopicMasteryPayload>
+          }
+          update: {
+            args: Prisma.TopicMasteryUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TopicMasteryPayload>
+          }
+          deleteMany: {
+            args: Prisma.TopicMasteryDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.TopicMasteryUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.TopicMasteryUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$TopicMasteryPayload>
+          }
+          aggregate: {
+            args: Prisma.TopicMasteryAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateTopicMastery>
+          }
+          groupBy: {
+            args: Prisma.TopicMasteryGroupByArgs<ExtArgs>
+            result: $Utils.Optional<TopicMasteryGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.TopicMasteryCountArgs<ExtArgs>
+            result: $Utils.Optional<TopicMasteryCountAggregateOutputType> | number
+          }
+        }
+      }
     }
   } & {
     other: {
@@ -1396,6 +1653,8 @@ export namespace Prisma {
     documents: number
     embeddings: number
     refreshTokens: number
+    topicInteractions: number
+    topicMasteries: number
   }
 
   export type UserCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -1404,6 +1663,8 @@ export namespace Prisma {
     documents?: boolean | UserCountOutputTypeCountDocumentsArgs
     embeddings?: boolean | UserCountOutputTypeCountEmbeddingsArgs
     refreshTokens?: boolean | UserCountOutputTypeCountRefreshTokensArgs
+    topicInteractions?: boolean | UserCountOutputTypeCountTopicInteractionsArgs
+    topicMasteries?: boolean | UserCountOutputTypeCountTopicMasteriesArgs
   }
 
   // Custom InputTypes
@@ -1452,6 +1713,20 @@ export namespace Prisma {
     where?: RefreshTokenWhereInput
   }
 
+  /**
+   * UserCountOutputType without action
+   */
+  export type UserCountOutputTypeCountTopicInteractionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: TopicInteractionWhereInput
+  }
+
+  /**
+   * UserCountOutputType without action
+   */
+  export type UserCountOutputTypeCountTopicMasteriesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: TopicMasteryWhereInput
+  }
+
 
   /**
    * Count Type DocumentCountOutputType
@@ -1481,6 +1756,55 @@ export namespace Prisma {
    */
   export type DocumentCountOutputTypeCountEmbeddingsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: EmbeddingWhereInput
+  }
+
+
+  /**
+   * Count Type TopicCountOutputType
+   */
+
+  export type TopicCountOutputType = {
+    children: number
+    interactions: number
+    masteries: number
+  }
+
+  export type TopicCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    children?: boolean | TopicCountOutputTypeCountChildrenArgs
+    interactions?: boolean | TopicCountOutputTypeCountInteractionsArgs
+    masteries?: boolean | TopicCountOutputTypeCountMasteriesArgs
+  }
+
+  // Custom InputTypes
+  /**
+   * TopicCountOutputType without action
+   */
+  export type TopicCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TopicCountOutputType
+     */
+    select?: TopicCountOutputTypeSelect<ExtArgs> | null
+  }
+
+  /**
+   * TopicCountOutputType without action
+   */
+  export type TopicCountOutputTypeCountChildrenArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: TopicWhereInput
+  }
+
+  /**
+   * TopicCountOutputType without action
+   */
+  export type TopicCountOutputTypeCountInteractionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: TopicInteractionWhereInput
+  }
+
+  /**
+   * TopicCountOutputType without action
+   */
+  export type TopicCountOutputTypeCountMasteriesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: TopicMasteryWhereInput
   }
 
 
@@ -1755,6 +2079,8 @@ export namespace Prisma {
     documents?: boolean | User$documentsArgs<ExtArgs>
     embeddings?: boolean | User$embeddingsArgs<ExtArgs>
     refreshTokens?: boolean | User$refreshTokensArgs<ExtArgs>
+    topicInteractions?: boolean | User$topicInteractionsArgs<ExtArgs>
+    topicMasteries?: boolean | User$topicMasteriesArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["user"]>
 
@@ -1796,6 +2122,8 @@ export namespace Prisma {
     documents?: boolean | User$documentsArgs<ExtArgs>
     embeddings?: boolean | User$embeddingsArgs<ExtArgs>
     refreshTokens?: boolean | User$refreshTokensArgs<ExtArgs>
+    topicInteractions?: boolean | User$topicInteractionsArgs<ExtArgs>
+    topicMasteries?: boolean | User$topicMasteriesArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type UserIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
@@ -1808,6 +2136,8 @@ export namespace Prisma {
       documents: Prisma.$DocumentPayload<ExtArgs>[]
       embeddings: Prisma.$EmbeddingPayload<ExtArgs>[]
       refreshTokens: Prisma.$RefreshTokenPayload<ExtArgs>[]
+      topicInteractions: Prisma.$TopicInteractionPayload<ExtArgs>[]
+      topicMasteries: Prisma.$TopicMasteryPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -2192,6 +2522,8 @@ export namespace Prisma {
     documents<T extends User$documentsArgs<ExtArgs> = {}>(args?: Subset<T, User$documentsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$DocumentPayload<ExtArgs>, T, "findMany"> | Null>
     embeddings<T extends User$embeddingsArgs<ExtArgs> = {}>(args?: Subset<T, User$embeddingsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$EmbeddingPayload<ExtArgs>, T, "findMany"> | Null>
     refreshTokens<T extends User$refreshTokensArgs<ExtArgs> = {}>(args?: Subset<T, User$refreshTokensArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$RefreshTokenPayload<ExtArgs>, T, "findMany"> | Null>
+    topicInteractions<T extends User$topicInteractionsArgs<ExtArgs> = {}>(args?: Subset<T, User$topicInteractionsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TopicInteractionPayload<ExtArgs>, T, "findMany"> | Null>
+    topicMasteries<T extends User$topicMasteriesArgs<ExtArgs> = {}>(args?: Subset<T, User$topicMasteriesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TopicMasteryPayload<ExtArgs>, T, "findMany"> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -2645,6 +2977,46 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: RefreshTokenScalarFieldEnum | RefreshTokenScalarFieldEnum[]
+  }
+
+  /**
+   * User.topicInteractions
+   */
+  export type User$topicInteractionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TopicInteraction
+     */
+    select?: TopicInteractionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TopicInteractionInclude<ExtArgs> | null
+    where?: TopicInteractionWhereInput
+    orderBy?: TopicInteractionOrderByWithRelationInput | TopicInteractionOrderByWithRelationInput[]
+    cursor?: TopicInteractionWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: TopicInteractionScalarFieldEnum | TopicInteractionScalarFieldEnum[]
+  }
+
+  /**
+   * User.topicMasteries
+   */
+  export type User$topicMasteriesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TopicMastery
+     */
+    select?: TopicMasterySelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TopicMasteryInclude<ExtArgs> | null
+    where?: TopicMasteryWhereInput
+    orderBy?: TopicMasteryOrderByWithRelationInput | TopicMasteryOrderByWithRelationInput[]
+    cursor?: TopicMasteryWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: TopicMasteryScalarFieldEnum | TopicMasteryScalarFieldEnum[]
   }
 
   /**
@@ -8764,6 +9136,3162 @@ export namespace Prisma {
 
 
   /**
+   * Model Topic
+   */
+
+  export type AggregateTopic = {
+    _count: TopicCountAggregateOutputType | null
+    _avg: TopicAvgAggregateOutputType | null
+    _sum: TopicSumAggregateOutputType | null
+    _min: TopicMinAggregateOutputType | null
+    _max: TopicMaxAggregateOutputType | null
+  }
+
+  export type TopicAvgAggregateOutputType = {
+    level: number | null
+    chapterNum: number | null
+    expectedQuestions: number | null
+  }
+
+  export type TopicSumAggregateOutputType = {
+    level: number | null
+    chapterNum: number | null
+    expectedQuestions: number | null
+  }
+
+  export type TopicMinAggregateOutputType = {
+    id: string | null
+    level: number | null
+    name: string | null
+    slug: string | null
+    parentId: string | null
+    chapterNum: number | null
+    expectedQuestions: number | null
+    createdAt: Date | null
+  }
+
+  export type TopicMaxAggregateOutputType = {
+    id: string | null
+    level: number | null
+    name: string | null
+    slug: string | null
+    parentId: string | null
+    chapterNum: number | null
+    expectedQuestions: number | null
+    createdAt: Date | null
+  }
+
+  export type TopicCountAggregateOutputType = {
+    id: number
+    level: number
+    name: number
+    slug: number
+    parentId: number
+    chapterNum: number
+    keywords: number
+    aliases: number
+    expectedQuestions: number
+    createdAt: number
+    _all: number
+  }
+
+
+  export type TopicAvgAggregateInputType = {
+    level?: true
+    chapterNum?: true
+    expectedQuestions?: true
+  }
+
+  export type TopicSumAggregateInputType = {
+    level?: true
+    chapterNum?: true
+    expectedQuestions?: true
+  }
+
+  export type TopicMinAggregateInputType = {
+    id?: true
+    level?: true
+    name?: true
+    slug?: true
+    parentId?: true
+    chapterNum?: true
+    expectedQuestions?: true
+    createdAt?: true
+  }
+
+  export type TopicMaxAggregateInputType = {
+    id?: true
+    level?: true
+    name?: true
+    slug?: true
+    parentId?: true
+    chapterNum?: true
+    expectedQuestions?: true
+    createdAt?: true
+  }
+
+  export type TopicCountAggregateInputType = {
+    id?: true
+    level?: true
+    name?: true
+    slug?: true
+    parentId?: true
+    chapterNum?: true
+    keywords?: true
+    aliases?: true
+    expectedQuestions?: true
+    createdAt?: true
+    _all?: true
+  }
+
+  export type TopicAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which Topic to aggregate.
+     */
+    where?: TopicWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Topics to fetch.
+     */
+    orderBy?: TopicOrderByWithRelationInput | TopicOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: TopicWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Topics from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Topics.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned Topics
+    **/
+    _count?: true | TopicCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: TopicAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: TopicSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: TopicMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: TopicMaxAggregateInputType
+  }
+
+  export type GetTopicAggregateType<T extends TopicAggregateArgs> = {
+        [P in keyof T & keyof AggregateTopic]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateTopic[P]>
+      : GetScalarType<T[P], AggregateTopic[P]>
+  }
+
+
+
+
+  export type TopicGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: TopicWhereInput
+    orderBy?: TopicOrderByWithAggregationInput | TopicOrderByWithAggregationInput[]
+    by: TopicScalarFieldEnum[] | TopicScalarFieldEnum
+    having?: TopicScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: TopicCountAggregateInputType | true
+    _avg?: TopicAvgAggregateInputType
+    _sum?: TopicSumAggregateInputType
+    _min?: TopicMinAggregateInputType
+    _max?: TopicMaxAggregateInputType
+  }
+
+  export type TopicGroupByOutputType = {
+    id: string
+    level: number
+    name: string
+    slug: string
+    parentId: string | null
+    chapterNum: number | null
+    keywords: string[]
+    aliases: string[]
+    expectedQuestions: number
+    createdAt: Date
+    _count: TopicCountAggregateOutputType | null
+    _avg: TopicAvgAggregateOutputType | null
+    _sum: TopicSumAggregateOutputType | null
+    _min: TopicMinAggregateOutputType | null
+    _max: TopicMaxAggregateOutputType | null
+  }
+
+  type GetTopicGroupByPayload<T extends TopicGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<TopicGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof TopicGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], TopicGroupByOutputType[P]>
+            : GetScalarType<T[P], TopicGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type TopicSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    level?: boolean
+    name?: boolean
+    slug?: boolean
+    parentId?: boolean
+    chapterNum?: boolean
+    keywords?: boolean
+    aliases?: boolean
+    expectedQuestions?: boolean
+    createdAt?: boolean
+    parent?: boolean | Topic$parentArgs<ExtArgs>
+    children?: boolean | Topic$childrenArgs<ExtArgs>
+    interactions?: boolean | Topic$interactionsArgs<ExtArgs>
+    masteries?: boolean | Topic$masteriesArgs<ExtArgs>
+    _count?: boolean | TopicCountOutputTypeDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["topic"]>
+
+  export type TopicSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    level?: boolean
+    name?: boolean
+    slug?: boolean
+    parentId?: boolean
+    chapterNum?: boolean
+    keywords?: boolean
+    aliases?: boolean
+    expectedQuestions?: boolean
+    createdAt?: boolean
+    parent?: boolean | Topic$parentArgs<ExtArgs>
+  }, ExtArgs["result"]["topic"]>
+
+  export type TopicSelectScalar = {
+    id?: boolean
+    level?: boolean
+    name?: boolean
+    slug?: boolean
+    parentId?: boolean
+    chapterNum?: boolean
+    keywords?: boolean
+    aliases?: boolean
+    expectedQuestions?: boolean
+    createdAt?: boolean
+  }
+
+  export type TopicInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    parent?: boolean | Topic$parentArgs<ExtArgs>
+    children?: boolean | Topic$childrenArgs<ExtArgs>
+    interactions?: boolean | Topic$interactionsArgs<ExtArgs>
+    masteries?: boolean | Topic$masteriesArgs<ExtArgs>
+    _count?: boolean | TopicCountOutputTypeDefaultArgs<ExtArgs>
+  }
+  export type TopicIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    parent?: boolean | Topic$parentArgs<ExtArgs>
+  }
+
+  export type $TopicPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "Topic"
+    objects: {
+      parent: Prisma.$TopicPayload<ExtArgs> | null
+      children: Prisma.$TopicPayload<ExtArgs>[]
+      interactions: Prisma.$TopicInteractionPayload<ExtArgs>[]
+      masteries: Prisma.$TopicMasteryPayload<ExtArgs>[]
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      level: number
+      name: string
+      slug: string
+      parentId: string | null
+      chapterNum: number | null
+      keywords: string[]
+      aliases: string[]
+      expectedQuestions: number
+      createdAt: Date
+    }, ExtArgs["result"]["topic"]>
+    composites: {}
+  }
+
+  type TopicGetPayload<S extends boolean | null | undefined | TopicDefaultArgs> = $Result.GetResult<Prisma.$TopicPayload, S>
+
+  type TopicCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = 
+    Omit<TopicFindManyArgs, 'select' | 'include' | 'distinct'> & {
+      select?: TopicCountAggregateInputType | true
+    }
+
+  export interface TopicDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['Topic'], meta: { name: 'Topic' } }
+    /**
+     * Find zero or one Topic that matches the filter.
+     * @param {TopicFindUniqueArgs} args - Arguments to find a Topic
+     * @example
+     * // Get one Topic
+     * const topic = await prisma.topic.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends TopicFindUniqueArgs>(args: SelectSubset<T, TopicFindUniqueArgs<ExtArgs>>): Prisma__TopicClient<$Result.GetResult<Prisma.$TopicPayload<ExtArgs>, T, "findUnique"> | null, null, ExtArgs>
+
+    /**
+     * Find one Topic that matches the filter or throw an error with `error.code='P2025'` 
+     * if no matches were found.
+     * @param {TopicFindUniqueOrThrowArgs} args - Arguments to find a Topic
+     * @example
+     * // Get one Topic
+     * const topic = await prisma.topic.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends TopicFindUniqueOrThrowArgs>(args: SelectSubset<T, TopicFindUniqueOrThrowArgs<ExtArgs>>): Prisma__TopicClient<$Result.GetResult<Prisma.$TopicPayload<ExtArgs>, T, "findUniqueOrThrow">, never, ExtArgs>
+
+    /**
+     * Find the first Topic that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TopicFindFirstArgs} args - Arguments to find a Topic
+     * @example
+     * // Get one Topic
+     * const topic = await prisma.topic.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends TopicFindFirstArgs>(args?: SelectSubset<T, TopicFindFirstArgs<ExtArgs>>): Prisma__TopicClient<$Result.GetResult<Prisma.$TopicPayload<ExtArgs>, T, "findFirst"> | null, null, ExtArgs>
+
+    /**
+     * Find the first Topic that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TopicFindFirstOrThrowArgs} args - Arguments to find a Topic
+     * @example
+     * // Get one Topic
+     * const topic = await prisma.topic.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends TopicFindFirstOrThrowArgs>(args?: SelectSubset<T, TopicFindFirstOrThrowArgs<ExtArgs>>): Prisma__TopicClient<$Result.GetResult<Prisma.$TopicPayload<ExtArgs>, T, "findFirstOrThrow">, never, ExtArgs>
+
+    /**
+     * Find zero or more Topics that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TopicFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all Topics
+     * const topics = await prisma.topic.findMany()
+     * 
+     * // Get first 10 Topics
+     * const topics = await prisma.topic.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const topicWithIdOnly = await prisma.topic.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends TopicFindManyArgs>(args?: SelectSubset<T, TopicFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TopicPayload<ExtArgs>, T, "findMany">>
+
+    /**
+     * Create a Topic.
+     * @param {TopicCreateArgs} args - Arguments to create a Topic.
+     * @example
+     * // Create one Topic
+     * const Topic = await prisma.topic.create({
+     *   data: {
+     *     // ... data to create a Topic
+     *   }
+     * })
+     * 
+     */
+    create<T extends TopicCreateArgs>(args: SelectSubset<T, TopicCreateArgs<ExtArgs>>): Prisma__TopicClient<$Result.GetResult<Prisma.$TopicPayload<ExtArgs>, T, "create">, never, ExtArgs>
+
+    /**
+     * Create many Topics.
+     * @param {TopicCreateManyArgs} args - Arguments to create many Topics.
+     * @example
+     * // Create many Topics
+     * const topic = await prisma.topic.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends TopicCreateManyArgs>(args?: SelectSubset<T, TopicCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many Topics and returns the data saved in the database.
+     * @param {TopicCreateManyAndReturnArgs} args - Arguments to create many Topics.
+     * @example
+     * // Create many Topics
+     * const topic = await prisma.topic.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many Topics and only return the `id`
+     * const topicWithIdOnly = await prisma.topic.createManyAndReturn({ 
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends TopicCreateManyAndReturnArgs>(args?: SelectSubset<T, TopicCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TopicPayload<ExtArgs>, T, "createManyAndReturn">>
+
+    /**
+     * Delete a Topic.
+     * @param {TopicDeleteArgs} args - Arguments to delete one Topic.
+     * @example
+     * // Delete one Topic
+     * const Topic = await prisma.topic.delete({
+     *   where: {
+     *     // ... filter to delete one Topic
+     *   }
+     * })
+     * 
+     */
+    delete<T extends TopicDeleteArgs>(args: SelectSubset<T, TopicDeleteArgs<ExtArgs>>): Prisma__TopicClient<$Result.GetResult<Prisma.$TopicPayload<ExtArgs>, T, "delete">, never, ExtArgs>
+
+    /**
+     * Update one Topic.
+     * @param {TopicUpdateArgs} args - Arguments to update one Topic.
+     * @example
+     * // Update one Topic
+     * const topic = await prisma.topic.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends TopicUpdateArgs>(args: SelectSubset<T, TopicUpdateArgs<ExtArgs>>): Prisma__TopicClient<$Result.GetResult<Prisma.$TopicPayload<ExtArgs>, T, "update">, never, ExtArgs>
+
+    /**
+     * Delete zero or more Topics.
+     * @param {TopicDeleteManyArgs} args - Arguments to filter Topics to delete.
+     * @example
+     * // Delete a few Topics
+     * const { count } = await prisma.topic.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends TopicDeleteManyArgs>(args?: SelectSubset<T, TopicDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more Topics.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TopicUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many Topics
+     * const topic = await prisma.topic.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends TopicUpdateManyArgs>(args: SelectSubset<T, TopicUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one Topic.
+     * @param {TopicUpsertArgs} args - Arguments to update or create a Topic.
+     * @example
+     * // Update or create a Topic
+     * const topic = await prisma.topic.upsert({
+     *   create: {
+     *     // ... data to create a Topic
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the Topic we want to update
+     *   }
+     * })
+     */
+    upsert<T extends TopicUpsertArgs>(args: SelectSubset<T, TopicUpsertArgs<ExtArgs>>): Prisma__TopicClient<$Result.GetResult<Prisma.$TopicPayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+
+    /**
+     * Count the number of Topics.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TopicCountArgs} args - Arguments to filter Topics to count.
+     * @example
+     * // Count the number of Topics
+     * const count = await prisma.topic.count({
+     *   where: {
+     *     // ... the filter for the Topics we want to count
+     *   }
+     * })
+    **/
+    count<T extends TopicCountArgs>(
+      args?: Subset<T, TopicCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], TopicCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a Topic.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TopicAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends TopicAggregateArgs>(args: Subset<T, TopicAggregateArgs>): Prisma.PrismaPromise<GetTopicAggregateType<T>>
+
+    /**
+     * Group by Topic.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TopicGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends TopicGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: TopicGroupByArgs['orderBy'] }
+        : { orderBy?: TopicGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, TopicGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetTopicGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the Topic model
+   */
+  readonly fields: TopicFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for Topic.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__TopicClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    parent<T extends Topic$parentArgs<ExtArgs> = {}>(args?: Subset<T, Topic$parentArgs<ExtArgs>>): Prisma__TopicClient<$Result.GetResult<Prisma.$TopicPayload<ExtArgs>, T, "findUniqueOrThrow"> | null, null, ExtArgs>
+    children<T extends Topic$childrenArgs<ExtArgs> = {}>(args?: Subset<T, Topic$childrenArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TopicPayload<ExtArgs>, T, "findMany"> | Null>
+    interactions<T extends Topic$interactionsArgs<ExtArgs> = {}>(args?: Subset<T, Topic$interactionsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TopicInteractionPayload<ExtArgs>, T, "findMany"> | Null>
+    masteries<T extends Topic$masteriesArgs<ExtArgs> = {}>(args?: Subset<T, Topic$masteriesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TopicMasteryPayload<ExtArgs>, T, "findMany"> | Null>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the Topic model
+   */ 
+  interface TopicFieldRefs {
+    readonly id: FieldRef<"Topic", 'String'>
+    readonly level: FieldRef<"Topic", 'Int'>
+    readonly name: FieldRef<"Topic", 'String'>
+    readonly slug: FieldRef<"Topic", 'String'>
+    readonly parentId: FieldRef<"Topic", 'String'>
+    readonly chapterNum: FieldRef<"Topic", 'Int'>
+    readonly keywords: FieldRef<"Topic", 'String[]'>
+    readonly aliases: FieldRef<"Topic", 'String[]'>
+    readonly expectedQuestions: FieldRef<"Topic", 'Int'>
+    readonly createdAt: FieldRef<"Topic", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * Topic findUnique
+   */
+  export type TopicFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Topic
+     */
+    select?: TopicSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TopicInclude<ExtArgs> | null
+    /**
+     * Filter, which Topic to fetch.
+     */
+    where: TopicWhereUniqueInput
+  }
+
+  /**
+   * Topic findUniqueOrThrow
+   */
+  export type TopicFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Topic
+     */
+    select?: TopicSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TopicInclude<ExtArgs> | null
+    /**
+     * Filter, which Topic to fetch.
+     */
+    where: TopicWhereUniqueInput
+  }
+
+  /**
+   * Topic findFirst
+   */
+  export type TopicFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Topic
+     */
+    select?: TopicSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TopicInclude<ExtArgs> | null
+    /**
+     * Filter, which Topic to fetch.
+     */
+    where?: TopicWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Topics to fetch.
+     */
+    orderBy?: TopicOrderByWithRelationInput | TopicOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for Topics.
+     */
+    cursor?: TopicWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Topics from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Topics.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Topics.
+     */
+    distinct?: TopicScalarFieldEnum | TopicScalarFieldEnum[]
+  }
+
+  /**
+   * Topic findFirstOrThrow
+   */
+  export type TopicFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Topic
+     */
+    select?: TopicSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TopicInclude<ExtArgs> | null
+    /**
+     * Filter, which Topic to fetch.
+     */
+    where?: TopicWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Topics to fetch.
+     */
+    orderBy?: TopicOrderByWithRelationInput | TopicOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for Topics.
+     */
+    cursor?: TopicWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Topics from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Topics.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Topics.
+     */
+    distinct?: TopicScalarFieldEnum | TopicScalarFieldEnum[]
+  }
+
+  /**
+   * Topic findMany
+   */
+  export type TopicFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Topic
+     */
+    select?: TopicSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TopicInclude<ExtArgs> | null
+    /**
+     * Filter, which Topics to fetch.
+     */
+    where?: TopicWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Topics to fetch.
+     */
+    orderBy?: TopicOrderByWithRelationInput | TopicOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing Topics.
+     */
+    cursor?: TopicWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Topics from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Topics.
+     */
+    skip?: number
+    distinct?: TopicScalarFieldEnum | TopicScalarFieldEnum[]
+  }
+
+  /**
+   * Topic create
+   */
+  export type TopicCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Topic
+     */
+    select?: TopicSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TopicInclude<ExtArgs> | null
+    /**
+     * The data needed to create a Topic.
+     */
+    data: XOR<TopicCreateInput, TopicUncheckedCreateInput>
+  }
+
+  /**
+   * Topic createMany
+   */
+  export type TopicCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many Topics.
+     */
+    data: TopicCreateManyInput | TopicCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * Topic createManyAndReturn
+   */
+  export type TopicCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Topic
+     */
+    select?: TopicSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * The data used to create many Topics.
+     */
+    data: TopicCreateManyInput | TopicCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TopicIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * Topic update
+   */
+  export type TopicUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Topic
+     */
+    select?: TopicSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TopicInclude<ExtArgs> | null
+    /**
+     * The data needed to update a Topic.
+     */
+    data: XOR<TopicUpdateInput, TopicUncheckedUpdateInput>
+    /**
+     * Choose, which Topic to update.
+     */
+    where: TopicWhereUniqueInput
+  }
+
+  /**
+   * Topic updateMany
+   */
+  export type TopicUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update Topics.
+     */
+    data: XOR<TopicUpdateManyMutationInput, TopicUncheckedUpdateManyInput>
+    /**
+     * Filter which Topics to update
+     */
+    where?: TopicWhereInput
+  }
+
+  /**
+   * Topic upsert
+   */
+  export type TopicUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Topic
+     */
+    select?: TopicSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TopicInclude<ExtArgs> | null
+    /**
+     * The filter to search for the Topic to update in case it exists.
+     */
+    where: TopicWhereUniqueInput
+    /**
+     * In case the Topic found by the `where` argument doesn't exist, create a new Topic with this data.
+     */
+    create: XOR<TopicCreateInput, TopicUncheckedCreateInput>
+    /**
+     * In case the Topic was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<TopicUpdateInput, TopicUncheckedUpdateInput>
+  }
+
+  /**
+   * Topic delete
+   */
+  export type TopicDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Topic
+     */
+    select?: TopicSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TopicInclude<ExtArgs> | null
+    /**
+     * Filter which Topic to delete.
+     */
+    where: TopicWhereUniqueInput
+  }
+
+  /**
+   * Topic deleteMany
+   */
+  export type TopicDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which Topics to delete
+     */
+    where?: TopicWhereInput
+  }
+
+  /**
+   * Topic.parent
+   */
+  export type Topic$parentArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Topic
+     */
+    select?: TopicSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TopicInclude<ExtArgs> | null
+    where?: TopicWhereInput
+  }
+
+  /**
+   * Topic.children
+   */
+  export type Topic$childrenArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Topic
+     */
+    select?: TopicSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TopicInclude<ExtArgs> | null
+    where?: TopicWhereInput
+    orderBy?: TopicOrderByWithRelationInput | TopicOrderByWithRelationInput[]
+    cursor?: TopicWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: TopicScalarFieldEnum | TopicScalarFieldEnum[]
+  }
+
+  /**
+   * Topic.interactions
+   */
+  export type Topic$interactionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TopicInteraction
+     */
+    select?: TopicInteractionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TopicInteractionInclude<ExtArgs> | null
+    where?: TopicInteractionWhereInput
+    orderBy?: TopicInteractionOrderByWithRelationInput | TopicInteractionOrderByWithRelationInput[]
+    cursor?: TopicInteractionWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: TopicInteractionScalarFieldEnum | TopicInteractionScalarFieldEnum[]
+  }
+
+  /**
+   * Topic.masteries
+   */
+  export type Topic$masteriesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TopicMastery
+     */
+    select?: TopicMasterySelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TopicMasteryInclude<ExtArgs> | null
+    where?: TopicMasteryWhereInput
+    orderBy?: TopicMasteryOrderByWithRelationInput | TopicMasteryOrderByWithRelationInput[]
+    cursor?: TopicMasteryWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: TopicMasteryScalarFieldEnum | TopicMasteryScalarFieldEnum[]
+  }
+
+  /**
+   * Topic without action
+   */
+  export type TopicDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Topic
+     */
+    select?: TopicSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TopicInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model TopicInteraction
+   */
+
+  export type AggregateTopicInteraction = {
+    _count: TopicInteractionCountAggregateOutputType | null
+    _avg: TopicInteractionAvgAggregateOutputType | null
+    _sum: TopicInteractionSumAggregateOutputType | null
+    _min: TopicInteractionMinAggregateOutputType | null
+    _max: TopicInteractionMaxAggregateOutputType | null
+  }
+
+  export type TopicInteractionAvgAggregateOutputType = {
+    mappingConfidence: number | null
+    ragTopScore: number | null
+    answerLength: number | null
+    citationCount: number | null
+    timeSpentMs: number | null
+  }
+
+  export type TopicInteractionSumAggregateOutputType = {
+    mappingConfidence: number | null
+    ragTopScore: number | null
+    answerLength: number | null
+    citationCount: number | null
+    timeSpentMs: number | null
+  }
+
+  export type TopicInteractionMinAggregateOutputType = {
+    id: string | null
+    userId: string | null
+    topicId: string | null
+    query: string | null
+    mappingConfidence: number | null
+    ragConfidence: string | null
+    ragTopScore: number | null
+    answerLength: number | null
+    citationCount: number | null
+    timeSpentMs: number | null
+    hadFollowUp: boolean | null
+    createdAt: Date | null
+  }
+
+  export type TopicInteractionMaxAggregateOutputType = {
+    id: string | null
+    userId: string | null
+    topicId: string | null
+    query: string | null
+    mappingConfidence: number | null
+    ragConfidence: string | null
+    ragTopScore: number | null
+    answerLength: number | null
+    citationCount: number | null
+    timeSpentMs: number | null
+    hadFollowUp: boolean | null
+    createdAt: Date | null
+  }
+
+  export type TopicInteractionCountAggregateOutputType = {
+    id: number
+    userId: number
+    topicId: number
+    query: number
+    mappingConfidence: number
+    ragConfidence: number
+    ragTopScore: number
+    citedSections: number
+    answerLength: number
+    citationCount: number
+    timeSpentMs: number
+    hadFollowUp: number
+    createdAt: number
+    _all: number
+  }
+
+
+  export type TopicInteractionAvgAggregateInputType = {
+    mappingConfidence?: true
+    ragTopScore?: true
+    answerLength?: true
+    citationCount?: true
+    timeSpentMs?: true
+  }
+
+  export type TopicInteractionSumAggregateInputType = {
+    mappingConfidence?: true
+    ragTopScore?: true
+    answerLength?: true
+    citationCount?: true
+    timeSpentMs?: true
+  }
+
+  export type TopicInteractionMinAggregateInputType = {
+    id?: true
+    userId?: true
+    topicId?: true
+    query?: true
+    mappingConfidence?: true
+    ragConfidence?: true
+    ragTopScore?: true
+    answerLength?: true
+    citationCount?: true
+    timeSpentMs?: true
+    hadFollowUp?: true
+    createdAt?: true
+  }
+
+  export type TopicInteractionMaxAggregateInputType = {
+    id?: true
+    userId?: true
+    topicId?: true
+    query?: true
+    mappingConfidence?: true
+    ragConfidence?: true
+    ragTopScore?: true
+    answerLength?: true
+    citationCount?: true
+    timeSpentMs?: true
+    hadFollowUp?: true
+    createdAt?: true
+  }
+
+  export type TopicInteractionCountAggregateInputType = {
+    id?: true
+    userId?: true
+    topicId?: true
+    query?: true
+    mappingConfidence?: true
+    ragConfidence?: true
+    ragTopScore?: true
+    citedSections?: true
+    answerLength?: true
+    citationCount?: true
+    timeSpentMs?: true
+    hadFollowUp?: true
+    createdAt?: true
+    _all?: true
+  }
+
+  export type TopicInteractionAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which TopicInteraction to aggregate.
+     */
+    where?: TopicInteractionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of TopicInteractions to fetch.
+     */
+    orderBy?: TopicInteractionOrderByWithRelationInput | TopicInteractionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: TopicInteractionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` TopicInteractions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` TopicInteractions.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned TopicInteractions
+    **/
+    _count?: true | TopicInteractionCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: TopicInteractionAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: TopicInteractionSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: TopicInteractionMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: TopicInteractionMaxAggregateInputType
+  }
+
+  export type GetTopicInteractionAggregateType<T extends TopicInteractionAggregateArgs> = {
+        [P in keyof T & keyof AggregateTopicInteraction]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateTopicInteraction[P]>
+      : GetScalarType<T[P], AggregateTopicInteraction[P]>
+  }
+
+
+
+
+  export type TopicInteractionGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: TopicInteractionWhereInput
+    orderBy?: TopicInteractionOrderByWithAggregationInput | TopicInteractionOrderByWithAggregationInput[]
+    by: TopicInteractionScalarFieldEnum[] | TopicInteractionScalarFieldEnum
+    having?: TopicInteractionScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: TopicInteractionCountAggregateInputType | true
+    _avg?: TopicInteractionAvgAggregateInputType
+    _sum?: TopicInteractionSumAggregateInputType
+    _min?: TopicInteractionMinAggregateInputType
+    _max?: TopicInteractionMaxAggregateInputType
+  }
+
+  export type TopicInteractionGroupByOutputType = {
+    id: string
+    userId: string
+    topicId: string
+    query: string
+    mappingConfidence: number
+    ragConfidence: string
+    ragTopScore: number
+    citedSections: string[]
+    answerLength: number
+    citationCount: number
+    timeSpentMs: number | null
+    hadFollowUp: boolean
+    createdAt: Date
+    _count: TopicInteractionCountAggregateOutputType | null
+    _avg: TopicInteractionAvgAggregateOutputType | null
+    _sum: TopicInteractionSumAggregateOutputType | null
+    _min: TopicInteractionMinAggregateOutputType | null
+    _max: TopicInteractionMaxAggregateOutputType | null
+  }
+
+  type GetTopicInteractionGroupByPayload<T extends TopicInteractionGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<TopicInteractionGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof TopicInteractionGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], TopicInteractionGroupByOutputType[P]>
+            : GetScalarType<T[P], TopicInteractionGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type TopicInteractionSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    userId?: boolean
+    topicId?: boolean
+    query?: boolean
+    mappingConfidence?: boolean
+    ragConfidence?: boolean
+    ragTopScore?: boolean
+    citedSections?: boolean
+    answerLength?: boolean
+    citationCount?: boolean
+    timeSpentMs?: boolean
+    hadFollowUp?: boolean
+    createdAt?: boolean
+    user?: boolean | UserDefaultArgs<ExtArgs>
+    topic?: boolean | TopicDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["topicInteraction"]>
+
+
+  export type TopicInteractionSelectScalar = {
+    id?: boolean
+    userId?: boolean
+    topicId?: boolean
+    query?: boolean
+    mappingConfidence?: boolean
+    ragConfidence?: boolean
+    ragTopScore?: boolean
+    citedSections?: boolean
+    answerLength?: boolean
+    citationCount?: boolean
+    timeSpentMs?: boolean
+    hadFollowUp?: boolean
+    createdAt?: boolean
+  }
+
+  export type TopicInteractionInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
+    topic?: boolean | TopicDefaultArgs<ExtArgs>
+  }
+
+  export type $TopicInteractionPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "TopicInteraction"
+    objects: {
+      user: Prisma.$UserPayload<ExtArgs>
+      topic: Prisma.$TopicPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      userId: string
+      topicId: string
+      query: string
+      mappingConfidence: number
+      ragConfidence: string
+      ragTopScore: number
+      citedSections: string[]
+      answerLength: number
+      citationCount: number
+      timeSpentMs: number | null
+      hadFollowUp: boolean
+      createdAt: Date
+    }, ExtArgs["result"]["topicInteraction"]>
+    composites: {}
+  }
+
+  type TopicInteractionGetPayload<S extends boolean | null | undefined | TopicInteractionDefaultArgs> = $Result.GetResult<Prisma.$TopicInteractionPayload, S>
+
+  type TopicInteractionCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = 
+    Omit<TopicInteractionFindManyArgs, 'select' | 'include' | 'distinct'> & {
+      select?: TopicInteractionCountAggregateInputType | true
+    }
+
+  export interface TopicInteractionDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['TopicInteraction'], meta: { name: 'TopicInteraction' } }
+    /**
+     * Find zero or one TopicInteraction that matches the filter.
+     * @param {TopicInteractionFindUniqueArgs} args - Arguments to find a TopicInteraction
+     * @example
+     * // Get one TopicInteraction
+     * const topicInteraction = await prisma.topicInteraction.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends TopicInteractionFindUniqueArgs>(args: SelectSubset<T, TopicInteractionFindUniqueArgs<ExtArgs>>): Prisma__TopicInteractionClient<$Result.GetResult<Prisma.$TopicInteractionPayload<ExtArgs>, T, "findUnique"> | null, null, ExtArgs>
+
+    /**
+     * Find one TopicInteraction that matches the filter or throw an error with `error.code='P2025'` 
+     * if no matches were found.
+     * @param {TopicInteractionFindUniqueOrThrowArgs} args - Arguments to find a TopicInteraction
+     * @example
+     * // Get one TopicInteraction
+     * const topicInteraction = await prisma.topicInteraction.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends TopicInteractionFindUniqueOrThrowArgs>(args: SelectSubset<T, TopicInteractionFindUniqueOrThrowArgs<ExtArgs>>): Prisma__TopicInteractionClient<$Result.GetResult<Prisma.$TopicInteractionPayload<ExtArgs>, T, "findUniqueOrThrow">, never, ExtArgs>
+
+    /**
+     * Find the first TopicInteraction that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TopicInteractionFindFirstArgs} args - Arguments to find a TopicInteraction
+     * @example
+     * // Get one TopicInteraction
+     * const topicInteraction = await prisma.topicInteraction.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends TopicInteractionFindFirstArgs>(args?: SelectSubset<T, TopicInteractionFindFirstArgs<ExtArgs>>): Prisma__TopicInteractionClient<$Result.GetResult<Prisma.$TopicInteractionPayload<ExtArgs>, T, "findFirst"> | null, null, ExtArgs>
+
+    /**
+     * Find the first TopicInteraction that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TopicInteractionFindFirstOrThrowArgs} args - Arguments to find a TopicInteraction
+     * @example
+     * // Get one TopicInteraction
+     * const topicInteraction = await prisma.topicInteraction.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends TopicInteractionFindFirstOrThrowArgs>(args?: SelectSubset<T, TopicInteractionFindFirstOrThrowArgs<ExtArgs>>): Prisma__TopicInteractionClient<$Result.GetResult<Prisma.$TopicInteractionPayload<ExtArgs>, T, "findFirstOrThrow">, never, ExtArgs>
+
+    /**
+     * Find zero or more TopicInteractions that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TopicInteractionFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all TopicInteractions
+     * const topicInteractions = await prisma.topicInteraction.findMany()
+     * 
+     * // Get first 10 TopicInteractions
+     * const topicInteractions = await prisma.topicInteraction.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const topicInteractionWithIdOnly = await prisma.topicInteraction.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends TopicInteractionFindManyArgs>(args?: SelectSubset<T, TopicInteractionFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TopicInteractionPayload<ExtArgs>, T, "findMany">>
+
+    /**
+     * Delete a TopicInteraction.
+     * @param {TopicInteractionDeleteArgs} args - Arguments to delete one TopicInteraction.
+     * @example
+     * // Delete one TopicInteraction
+     * const TopicInteraction = await prisma.topicInteraction.delete({
+     *   where: {
+     *     // ... filter to delete one TopicInteraction
+     *   }
+     * })
+     * 
+     */
+    delete<T extends TopicInteractionDeleteArgs>(args: SelectSubset<T, TopicInteractionDeleteArgs<ExtArgs>>): Prisma__TopicInteractionClient<$Result.GetResult<Prisma.$TopicInteractionPayload<ExtArgs>, T, "delete">, never, ExtArgs>
+
+    /**
+     * Update one TopicInteraction.
+     * @param {TopicInteractionUpdateArgs} args - Arguments to update one TopicInteraction.
+     * @example
+     * // Update one TopicInteraction
+     * const topicInteraction = await prisma.topicInteraction.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends TopicInteractionUpdateArgs>(args: SelectSubset<T, TopicInteractionUpdateArgs<ExtArgs>>): Prisma__TopicInteractionClient<$Result.GetResult<Prisma.$TopicInteractionPayload<ExtArgs>, T, "update">, never, ExtArgs>
+
+    /**
+     * Delete zero or more TopicInteractions.
+     * @param {TopicInteractionDeleteManyArgs} args - Arguments to filter TopicInteractions to delete.
+     * @example
+     * // Delete a few TopicInteractions
+     * const { count } = await prisma.topicInteraction.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends TopicInteractionDeleteManyArgs>(args?: SelectSubset<T, TopicInteractionDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more TopicInteractions.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TopicInteractionUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many TopicInteractions
+     * const topicInteraction = await prisma.topicInteraction.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends TopicInteractionUpdateManyArgs>(args: SelectSubset<T, TopicInteractionUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+
+    /**
+     * Count the number of TopicInteractions.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TopicInteractionCountArgs} args - Arguments to filter TopicInteractions to count.
+     * @example
+     * // Count the number of TopicInteractions
+     * const count = await prisma.topicInteraction.count({
+     *   where: {
+     *     // ... the filter for the TopicInteractions we want to count
+     *   }
+     * })
+    **/
+    count<T extends TopicInteractionCountArgs>(
+      args?: Subset<T, TopicInteractionCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], TopicInteractionCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a TopicInteraction.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TopicInteractionAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends TopicInteractionAggregateArgs>(args: Subset<T, TopicInteractionAggregateArgs>): Prisma.PrismaPromise<GetTopicInteractionAggregateType<T>>
+
+    /**
+     * Group by TopicInteraction.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TopicInteractionGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends TopicInteractionGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: TopicInteractionGroupByArgs['orderBy'] }
+        : { orderBy?: TopicInteractionGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, TopicInteractionGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetTopicInteractionGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the TopicInteraction model
+   */
+  readonly fields: TopicInteractionFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for TopicInteraction.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__TopicInteractionClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    user<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow"> | Null, Null, ExtArgs>
+    topic<T extends TopicDefaultArgs<ExtArgs> = {}>(args?: Subset<T, TopicDefaultArgs<ExtArgs>>): Prisma__TopicClient<$Result.GetResult<Prisma.$TopicPayload<ExtArgs>, T, "findUniqueOrThrow"> | Null, Null, ExtArgs>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the TopicInteraction model
+   */ 
+  interface TopicInteractionFieldRefs {
+    readonly id: FieldRef<"TopicInteraction", 'String'>
+    readonly userId: FieldRef<"TopicInteraction", 'String'>
+    readonly topicId: FieldRef<"TopicInteraction", 'String'>
+    readonly query: FieldRef<"TopicInteraction", 'String'>
+    readonly mappingConfidence: FieldRef<"TopicInteraction", 'Float'>
+    readonly ragConfidence: FieldRef<"TopicInteraction", 'String'>
+    readonly ragTopScore: FieldRef<"TopicInteraction", 'Float'>
+    readonly citedSections: FieldRef<"TopicInteraction", 'String[]'>
+    readonly answerLength: FieldRef<"TopicInteraction", 'Int'>
+    readonly citationCount: FieldRef<"TopicInteraction", 'Int'>
+    readonly timeSpentMs: FieldRef<"TopicInteraction", 'Int'>
+    readonly hadFollowUp: FieldRef<"TopicInteraction", 'Boolean'>
+    readonly createdAt: FieldRef<"TopicInteraction", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * TopicInteraction findUnique
+   */
+  export type TopicInteractionFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TopicInteraction
+     */
+    select?: TopicInteractionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TopicInteractionInclude<ExtArgs> | null
+    /**
+     * Filter, which TopicInteraction to fetch.
+     */
+    where: TopicInteractionWhereUniqueInput
+  }
+
+  /**
+   * TopicInteraction findUniqueOrThrow
+   */
+  export type TopicInteractionFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TopicInteraction
+     */
+    select?: TopicInteractionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TopicInteractionInclude<ExtArgs> | null
+    /**
+     * Filter, which TopicInteraction to fetch.
+     */
+    where: TopicInteractionWhereUniqueInput
+  }
+
+  /**
+   * TopicInteraction findFirst
+   */
+  export type TopicInteractionFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TopicInteraction
+     */
+    select?: TopicInteractionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TopicInteractionInclude<ExtArgs> | null
+    /**
+     * Filter, which TopicInteraction to fetch.
+     */
+    where?: TopicInteractionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of TopicInteractions to fetch.
+     */
+    orderBy?: TopicInteractionOrderByWithRelationInput | TopicInteractionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for TopicInteractions.
+     */
+    cursor?: TopicInteractionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` TopicInteractions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` TopicInteractions.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of TopicInteractions.
+     */
+    distinct?: TopicInteractionScalarFieldEnum | TopicInteractionScalarFieldEnum[]
+  }
+
+  /**
+   * TopicInteraction findFirstOrThrow
+   */
+  export type TopicInteractionFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TopicInteraction
+     */
+    select?: TopicInteractionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TopicInteractionInclude<ExtArgs> | null
+    /**
+     * Filter, which TopicInteraction to fetch.
+     */
+    where?: TopicInteractionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of TopicInteractions to fetch.
+     */
+    orderBy?: TopicInteractionOrderByWithRelationInput | TopicInteractionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for TopicInteractions.
+     */
+    cursor?: TopicInteractionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` TopicInteractions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` TopicInteractions.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of TopicInteractions.
+     */
+    distinct?: TopicInteractionScalarFieldEnum | TopicInteractionScalarFieldEnum[]
+  }
+
+  /**
+   * TopicInteraction findMany
+   */
+  export type TopicInteractionFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TopicInteraction
+     */
+    select?: TopicInteractionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TopicInteractionInclude<ExtArgs> | null
+    /**
+     * Filter, which TopicInteractions to fetch.
+     */
+    where?: TopicInteractionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of TopicInteractions to fetch.
+     */
+    orderBy?: TopicInteractionOrderByWithRelationInput | TopicInteractionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing TopicInteractions.
+     */
+    cursor?: TopicInteractionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` TopicInteractions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` TopicInteractions.
+     */
+    skip?: number
+    distinct?: TopicInteractionScalarFieldEnum | TopicInteractionScalarFieldEnum[]
+  }
+
+  /**
+   * TopicInteraction update
+   */
+  export type TopicInteractionUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TopicInteraction
+     */
+    select?: TopicInteractionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TopicInteractionInclude<ExtArgs> | null
+    /**
+     * The data needed to update a TopicInteraction.
+     */
+    data: XOR<TopicInteractionUpdateInput, TopicInteractionUncheckedUpdateInput>
+    /**
+     * Choose, which TopicInteraction to update.
+     */
+    where: TopicInteractionWhereUniqueInput
+  }
+
+  /**
+   * TopicInteraction updateMany
+   */
+  export type TopicInteractionUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update TopicInteractions.
+     */
+    data: XOR<TopicInteractionUpdateManyMutationInput, TopicInteractionUncheckedUpdateManyInput>
+    /**
+     * Filter which TopicInteractions to update
+     */
+    where?: TopicInteractionWhereInput
+  }
+
+  /**
+   * TopicInteraction delete
+   */
+  export type TopicInteractionDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TopicInteraction
+     */
+    select?: TopicInteractionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TopicInteractionInclude<ExtArgs> | null
+    /**
+     * Filter which TopicInteraction to delete.
+     */
+    where: TopicInteractionWhereUniqueInput
+  }
+
+  /**
+   * TopicInteraction deleteMany
+   */
+  export type TopicInteractionDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which TopicInteractions to delete
+     */
+    where?: TopicInteractionWhereInput
+  }
+
+  /**
+   * TopicInteraction without action
+   */
+  export type TopicInteractionDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TopicInteraction
+     */
+    select?: TopicInteractionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TopicInteractionInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model TopicMastery
+   */
+
+  export type AggregateTopicMastery = {
+    _count: TopicMasteryCountAggregateOutputType | null
+    _avg: TopicMasteryAvgAggregateOutputType | null
+    _sum: TopicMasterySumAggregateOutputType | null
+    _min: TopicMasteryMinAggregateOutputType | null
+    _max: TopicMasteryMaxAggregateOutputType | null
+  }
+
+  export type TopicMasteryAvgAggregateOutputType = {
+    masteryLevel: number | null
+    questionsAsked: number | null
+    coverageScore: number | null
+    depthScore: number | null
+    confidenceScore: number | null
+    diversityScore: number | null
+    retentionScore: number | null
+  }
+
+  export type TopicMasterySumAggregateOutputType = {
+    masteryLevel: number | null
+    questionsAsked: number | null
+    coverageScore: number | null
+    depthScore: number | null
+    confidenceScore: number | null
+    diversityScore: number | null
+    retentionScore: number | null
+  }
+
+  export type TopicMasteryMinAggregateOutputType = {
+    id: string | null
+    userId: string | null
+    topicId: string | null
+    masteryLevel: number | null
+    status: $Enums.MasteryStatus | null
+    questionsAsked: number | null
+    coverageScore: number | null
+    depthScore: number | null
+    confidenceScore: number | null
+    diversityScore: number | null
+    retentionScore: number | null
+    firstInteraction: Date | null
+    lastInteraction: Date | null
+    completedAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type TopicMasteryMaxAggregateOutputType = {
+    id: string | null
+    userId: string | null
+    topicId: string | null
+    masteryLevel: number | null
+    status: $Enums.MasteryStatus | null
+    questionsAsked: number | null
+    coverageScore: number | null
+    depthScore: number | null
+    confidenceScore: number | null
+    diversityScore: number | null
+    retentionScore: number | null
+    firstInteraction: Date | null
+    lastInteraction: Date | null
+    completedAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type TopicMasteryCountAggregateOutputType = {
+    id: number
+    userId: number
+    topicId: number
+    masteryLevel: number
+    status: number
+    questionsAsked: number
+    coverageScore: number
+    depthScore: number
+    confidenceScore: number
+    diversityScore: number
+    retentionScore: number
+    subtopicsExplored: number
+    firstInteraction: number
+    lastInteraction: number
+    completedAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type TopicMasteryAvgAggregateInputType = {
+    masteryLevel?: true
+    questionsAsked?: true
+    coverageScore?: true
+    depthScore?: true
+    confidenceScore?: true
+    diversityScore?: true
+    retentionScore?: true
+  }
+
+  export type TopicMasterySumAggregateInputType = {
+    masteryLevel?: true
+    questionsAsked?: true
+    coverageScore?: true
+    depthScore?: true
+    confidenceScore?: true
+    diversityScore?: true
+    retentionScore?: true
+  }
+
+  export type TopicMasteryMinAggregateInputType = {
+    id?: true
+    userId?: true
+    topicId?: true
+    masteryLevel?: true
+    status?: true
+    questionsAsked?: true
+    coverageScore?: true
+    depthScore?: true
+    confidenceScore?: true
+    diversityScore?: true
+    retentionScore?: true
+    firstInteraction?: true
+    lastInteraction?: true
+    completedAt?: true
+    updatedAt?: true
+  }
+
+  export type TopicMasteryMaxAggregateInputType = {
+    id?: true
+    userId?: true
+    topicId?: true
+    masteryLevel?: true
+    status?: true
+    questionsAsked?: true
+    coverageScore?: true
+    depthScore?: true
+    confidenceScore?: true
+    diversityScore?: true
+    retentionScore?: true
+    firstInteraction?: true
+    lastInteraction?: true
+    completedAt?: true
+    updatedAt?: true
+  }
+
+  export type TopicMasteryCountAggregateInputType = {
+    id?: true
+    userId?: true
+    topicId?: true
+    masteryLevel?: true
+    status?: true
+    questionsAsked?: true
+    coverageScore?: true
+    depthScore?: true
+    confidenceScore?: true
+    diversityScore?: true
+    retentionScore?: true
+    subtopicsExplored?: true
+    firstInteraction?: true
+    lastInteraction?: true
+    completedAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type TopicMasteryAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which TopicMastery to aggregate.
+     */
+    where?: TopicMasteryWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of TopicMasteries to fetch.
+     */
+    orderBy?: TopicMasteryOrderByWithRelationInput | TopicMasteryOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: TopicMasteryWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` TopicMasteries from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` TopicMasteries.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned TopicMasteries
+    **/
+    _count?: true | TopicMasteryCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: TopicMasteryAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: TopicMasterySumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: TopicMasteryMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: TopicMasteryMaxAggregateInputType
+  }
+
+  export type GetTopicMasteryAggregateType<T extends TopicMasteryAggregateArgs> = {
+        [P in keyof T & keyof AggregateTopicMastery]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateTopicMastery[P]>
+      : GetScalarType<T[P], AggregateTopicMastery[P]>
+  }
+
+
+
+
+  export type TopicMasteryGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: TopicMasteryWhereInput
+    orderBy?: TopicMasteryOrderByWithAggregationInput | TopicMasteryOrderByWithAggregationInput[]
+    by: TopicMasteryScalarFieldEnum[] | TopicMasteryScalarFieldEnum
+    having?: TopicMasteryScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: TopicMasteryCountAggregateInputType | true
+    _avg?: TopicMasteryAvgAggregateInputType
+    _sum?: TopicMasterySumAggregateInputType
+    _min?: TopicMasteryMinAggregateInputType
+    _max?: TopicMasteryMaxAggregateInputType
+  }
+
+  export type TopicMasteryGroupByOutputType = {
+    id: string
+    userId: string
+    topicId: string
+    masteryLevel: number
+    status: $Enums.MasteryStatus
+    questionsAsked: number
+    coverageScore: number
+    depthScore: number
+    confidenceScore: number
+    diversityScore: number
+    retentionScore: number
+    subtopicsExplored: string[]
+    firstInteraction: Date | null
+    lastInteraction: Date | null
+    completedAt: Date | null
+    updatedAt: Date
+    _count: TopicMasteryCountAggregateOutputType | null
+    _avg: TopicMasteryAvgAggregateOutputType | null
+    _sum: TopicMasterySumAggregateOutputType | null
+    _min: TopicMasteryMinAggregateOutputType | null
+    _max: TopicMasteryMaxAggregateOutputType | null
+  }
+
+  type GetTopicMasteryGroupByPayload<T extends TopicMasteryGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<TopicMasteryGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof TopicMasteryGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], TopicMasteryGroupByOutputType[P]>
+            : GetScalarType<T[P], TopicMasteryGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type TopicMasterySelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    userId?: boolean
+    topicId?: boolean
+    masteryLevel?: boolean
+    status?: boolean
+    questionsAsked?: boolean
+    coverageScore?: boolean
+    depthScore?: boolean
+    confidenceScore?: boolean
+    diversityScore?: boolean
+    retentionScore?: boolean
+    subtopicsExplored?: boolean
+    firstInteraction?: boolean
+    lastInteraction?: boolean
+    completedAt?: boolean
+    updatedAt?: boolean
+    user?: boolean | UserDefaultArgs<ExtArgs>
+    topic?: boolean | TopicDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["topicMastery"]>
+
+  export type TopicMasterySelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    userId?: boolean
+    topicId?: boolean
+    masteryLevel?: boolean
+    status?: boolean
+    questionsAsked?: boolean
+    coverageScore?: boolean
+    depthScore?: boolean
+    confidenceScore?: boolean
+    diversityScore?: boolean
+    retentionScore?: boolean
+    subtopicsExplored?: boolean
+    firstInteraction?: boolean
+    lastInteraction?: boolean
+    completedAt?: boolean
+    updatedAt?: boolean
+    user?: boolean | UserDefaultArgs<ExtArgs>
+    topic?: boolean | TopicDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["topicMastery"]>
+
+  export type TopicMasterySelectScalar = {
+    id?: boolean
+    userId?: boolean
+    topicId?: boolean
+    masteryLevel?: boolean
+    status?: boolean
+    questionsAsked?: boolean
+    coverageScore?: boolean
+    depthScore?: boolean
+    confidenceScore?: boolean
+    diversityScore?: boolean
+    retentionScore?: boolean
+    subtopicsExplored?: boolean
+    firstInteraction?: boolean
+    lastInteraction?: boolean
+    completedAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type TopicMasteryInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
+    topic?: boolean | TopicDefaultArgs<ExtArgs>
+  }
+  export type TopicMasteryIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
+    topic?: boolean | TopicDefaultArgs<ExtArgs>
+  }
+
+  export type $TopicMasteryPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "TopicMastery"
+    objects: {
+      user: Prisma.$UserPayload<ExtArgs>
+      topic: Prisma.$TopicPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      userId: string
+      topicId: string
+      masteryLevel: number
+      status: $Enums.MasteryStatus
+      questionsAsked: number
+      coverageScore: number
+      depthScore: number
+      confidenceScore: number
+      diversityScore: number
+      retentionScore: number
+      subtopicsExplored: string[]
+      firstInteraction: Date | null
+      lastInteraction: Date | null
+      completedAt: Date | null
+      updatedAt: Date
+    }, ExtArgs["result"]["topicMastery"]>
+    composites: {}
+  }
+
+  type TopicMasteryGetPayload<S extends boolean | null | undefined | TopicMasteryDefaultArgs> = $Result.GetResult<Prisma.$TopicMasteryPayload, S>
+
+  type TopicMasteryCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = 
+    Omit<TopicMasteryFindManyArgs, 'select' | 'include' | 'distinct'> & {
+      select?: TopicMasteryCountAggregateInputType | true
+    }
+
+  export interface TopicMasteryDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['TopicMastery'], meta: { name: 'TopicMastery' } }
+    /**
+     * Find zero or one TopicMastery that matches the filter.
+     * @param {TopicMasteryFindUniqueArgs} args - Arguments to find a TopicMastery
+     * @example
+     * // Get one TopicMastery
+     * const topicMastery = await prisma.topicMastery.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends TopicMasteryFindUniqueArgs>(args: SelectSubset<T, TopicMasteryFindUniqueArgs<ExtArgs>>): Prisma__TopicMasteryClient<$Result.GetResult<Prisma.$TopicMasteryPayload<ExtArgs>, T, "findUnique"> | null, null, ExtArgs>
+
+    /**
+     * Find one TopicMastery that matches the filter or throw an error with `error.code='P2025'` 
+     * if no matches were found.
+     * @param {TopicMasteryFindUniqueOrThrowArgs} args - Arguments to find a TopicMastery
+     * @example
+     * // Get one TopicMastery
+     * const topicMastery = await prisma.topicMastery.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends TopicMasteryFindUniqueOrThrowArgs>(args: SelectSubset<T, TopicMasteryFindUniqueOrThrowArgs<ExtArgs>>): Prisma__TopicMasteryClient<$Result.GetResult<Prisma.$TopicMasteryPayload<ExtArgs>, T, "findUniqueOrThrow">, never, ExtArgs>
+
+    /**
+     * Find the first TopicMastery that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TopicMasteryFindFirstArgs} args - Arguments to find a TopicMastery
+     * @example
+     * // Get one TopicMastery
+     * const topicMastery = await prisma.topicMastery.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends TopicMasteryFindFirstArgs>(args?: SelectSubset<T, TopicMasteryFindFirstArgs<ExtArgs>>): Prisma__TopicMasteryClient<$Result.GetResult<Prisma.$TopicMasteryPayload<ExtArgs>, T, "findFirst"> | null, null, ExtArgs>
+
+    /**
+     * Find the first TopicMastery that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TopicMasteryFindFirstOrThrowArgs} args - Arguments to find a TopicMastery
+     * @example
+     * // Get one TopicMastery
+     * const topicMastery = await prisma.topicMastery.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends TopicMasteryFindFirstOrThrowArgs>(args?: SelectSubset<T, TopicMasteryFindFirstOrThrowArgs<ExtArgs>>): Prisma__TopicMasteryClient<$Result.GetResult<Prisma.$TopicMasteryPayload<ExtArgs>, T, "findFirstOrThrow">, never, ExtArgs>
+
+    /**
+     * Find zero or more TopicMasteries that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TopicMasteryFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all TopicMasteries
+     * const topicMasteries = await prisma.topicMastery.findMany()
+     * 
+     * // Get first 10 TopicMasteries
+     * const topicMasteries = await prisma.topicMastery.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const topicMasteryWithIdOnly = await prisma.topicMastery.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends TopicMasteryFindManyArgs>(args?: SelectSubset<T, TopicMasteryFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TopicMasteryPayload<ExtArgs>, T, "findMany">>
+
+    /**
+     * Create a TopicMastery.
+     * @param {TopicMasteryCreateArgs} args - Arguments to create a TopicMastery.
+     * @example
+     * // Create one TopicMastery
+     * const TopicMastery = await prisma.topicMastery.create({
+     *   data: {
+     *     // ... data to create a TopicMastery
+     *   }
+     * })
+     * 
+     */
+    create<T extends TopicMasteryCreateArgs>(args: SelectSubset<T, TopicMasteryCreateArgs<ExtArgs>>): Prisma__TopicMasteryClient<$Result.GetResult<Prisma.$TopicMasteryPayload<ExtArgs>, T, "create">, never, ExtArgs>
+
+    /**
+     * Create many TopicMasteries.
+     * @param {TopicMasteryCreateManyArgs} args - Arguments to create many TopicMasteries.
+     * @example
+     * // Create many TopicMasteries
+     * const topicMastery = await prisma.topicMastery.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends TopicMasteryCreateManyArgs>(args?: SelectSubset<T, TopicMasteryCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many TopicMasteries and returns the data saved in the database.
+     * @param {TopicMasteryCreateManyAndReturnArgs} args - Arguments to create many TopicMasteries.
+     * @example
+     * // Create many TopicMasteries
+     * const topicMastery = await prisma.topicMastery.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many TopicMasteries and only return the `id`
+     * const topicMasteryWithIdOnly = await prisma.topicMastery.createManyAndReturn({ 
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends TopicMasteryCreateManyAndReturnArgs>(args?: SelectSubset<T, TopicMasteryCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$TopicMasteryPayload<ExtArgs>, T, "createManyAndReturn">>
+
+    /**
+     * Delete a TopicMastery.
+     * @param {TopicMasteryDeleteArgs} args - Arguments to delete one TopicMastery.
+     * @example
+     * // Delete one TopicMastery
+     * const TopicMastery = await prisma.topicMastery.delete({
+     *   where: {
+     *     // ... filter to delete one TopicMastery
+     *   }
+     * })
+     * 
+     */
+    delete<T extends TopicMasteryDeleteArgs>(args: SelectSubset<T, TopicMasteryDeleteArgs<ExtArgs>>): Prisma__TopicMasteryClient<$Result.GetResult<Prisma.$TopicMasteryPayload<ExtArgs>, T, "delete">, never, ExtArgs>
+
+    /**
+     * Update one TopicMastery.
+     * @param {TopicMasteryUpdateArgs} args - Arguments to update one TopicMastery.
+     * @example
+     * // Update one TopicMastery
+     * const topicMastery = await prisma.topicMastery.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends TopicMasteryUpdateArgs>(args: SelectSubset<T, TopicMasteryUpdateArgs<ExtArgs>>): Prisma__TopicMasteryClient<$Result.GetResult<Prisma.$TopicMasteryPayload<ExtArgs>, T, "update">, never, ExtArgs>
+
+    /**
+     * Delete zero or more TopicMasteries.
+     * @param {TopicMasteryDeleteManyArgs} args - Arguments to filter TopicMasteries to delete.
+     * @example
+     * // Delete a few TopicMasteries
+     * const { count } = await prisma.topicMastery.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends TopicMasteryDeleteManyArgs>(args?: SelectSubset<T, TopicMasteryDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more TopicMasteries.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TopicMasteryUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many TopicMasteries
+     * const topicMastery = await prisma.topicMastery.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends TopicMasteryUpdateManyArgs>(args: SelectSubset<T, TopicMasteryUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one TopicMastery.
+     * @param {TopicMasteryUpsertArgs} args - Arguments to update or create a TopicMastery.
+     * @example
+     * // Update or create a TopicMastery
+     * const topicMastery = await prisma.topicMastery.upsert({
+     *   create: {
+     *     // ... data to create a TopicMastery
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the TopicMastery we want to update
+     *   }
+     * })
+     */
+    upsert<T extends TopicMasteryUpsertArgs>(args: SelectSubset<T, TopicMasteryUpsertArgs<ExtArgs>>): Prisma__TopicMasteryClient<$Result.GetResult<Prisma.$TopicMasteryPayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+
+    /**
+     * Count the number of TopicMasteries.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TopicMasteryCountArgs} args - Arguments to filter TopicMasteries to count.
+     * @example
+     * // Count the number of TopicMasteries
+     * const count = await prisma.topicMastery.count({
+     *   where: {
+     *     // ... the filter for the TopicMasteries we want to count
+     *   }
+     * })
+    **/
+    count<T extends TopicMasteryCountArgs>(
+      args?: Subset<T, TopicMasteryCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], TopicMasteryCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a TopicMastery.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TopicMasteryAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends TopicMasteryAggregateArgs>(args: Subset<T, TopicMasteryAggregateArgs>): Prisma.PrismaPromise<GetTopicMasteryAggregateType<T>>
+
+    /**
+     * Group by TopicMastery.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {TopicMasteryGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends TopicMasteryGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: TopicMasteryGroupByArgs['orderBy'] }
+        : { orderBy?: TopicMasteryGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, TopicMasteryGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetTopicMasteryGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the TopicMastery model
+   */
+  readonly fields: TopicMasteryFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for TopicMastery.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__TopicMasteryClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    user<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow"> | Null, Null, ExtArgs>
+    topic<T extends TopicDefaultArgs<ExtArgs> = {}>(args?: Subset<T, TopicDefaultArgs<ExtArgs>>): Prisma__TopicClient<$Result.GetResult<Prisma.$TopicPayload<ExtArgs>, T, "findUniqueOrThrow"> | Null, Null, ExtArgs>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the TopicMastery model
+   */ 
+  interface TopicMasteryFieldRefs {
+    readonly id: FieldRef<"TopicMastery", 'String'>
+    readonly userId: FieldRef<"TopicMastery", 'String'>
+    readonly topicId: FieldRef<"TopicMastery", 'String'>
+    readonly masteryLevel: FieldRef<"TopicMastery", 'Float'>
+    readonly status: FieldRef<"TopicMastery", 'MasteryStatus'>
+    readonly questionsAsked: FieldRef<"TopicMastery", 'Int'>
+    readonly coverageScore: FieldRef<"TopicMastery", 'Float'>
+    readonly depthScore: FieldRef<"TopicMastery", 'Float'>
+    readonly confidenceScore: FieldRef<"TopicMastery", 'Float'>
+    readonly diversityScore: FieldRef<"TopicMastery", 'Float'>
+    readonly retentionScore: FieldRef<"TopicMastery", 'Float'>
+    readonly subtopicsExplored: FieldRef<"TopicMastery", 'String[]'>
+    readonly firstInteraction: FieldRef<"TopicMastery", 'DateTime'>
+    readonly lastInteraction: FieldRef<"TopicMastery", 'DateTime'>
+    readonly completedAt: FieldRef<"TopicMastery", 'DateTime'>
+    readonly updatedAt: FieldRef<"TopicMastery", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * TopicMastery findUnique
+   */
+  export type TopicMasteryFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TopicMastery
+     */
+    select?: TopicMasterySelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TopicMasteryInclude<ExtArgs> | null
+    /**
+     * Filter, which TopicMastery to fetch.
+     */
+    where: TopicMasteryWhereUniqueInput
+  }
+
+  /**
+   * TopicMastery findUniqueOrThrow
+   */
+  export type TopicMasteryFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TopicMastery
+     */
+    select?: TopicMasterySelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TopicMasteryInclude<ExtArgs> | null
+    /**
+     * Filter, which TopicMastery to fetch.
+     */
+    where: TopicMasteryWhereUniqueInput
+  }
+
+  /**
+   * TopicMastery findFirst
+   */
+  export type TopicMasteryFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TopicMastery
+     */
+    select?: TopicMasterySelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TopicMasteryInclude<ExtArgs> | null
+    /**
+     * Filter, which TopicMastery to fetch.
+     */
+    where?: TopicMasteryWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of TopicMasteries to fetch.
+     */
+    orderBy?: TopicMasteryOrderByWithRelationInput | TopicMasteryOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for TopicMasteries.
+     */
+    cursor?: TopicMasteryWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` TopicMasteries from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` TopicMasteries.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of TopicMasteries.
+     */
+    distinct?: TopicMasteryScalarFieldEnum | TopicMasteryScalarFieldEnum[]
+  }
+
+  /**
+   * TopicMastery findFirstOrThrow
+   */
+  export type TopicMasteryFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TopicMastery
+     */
+    select?: TopicMasterySelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TopicMasteryInclude<ExtArgs> | null
+    /**
+     * Filter, which TopicMastery to fetch.
+     */
+    where?: TopicMasteryWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of TopicMasteries to fetch.
+     */
+    orderBy?: TopicMasteryOrderByWithRelationInput | TopicMasteryOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for TopicMasteries.
+     */
+    cursor?: TopicMasteryWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` TopicMasteries from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` TopicMasteries.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of TopicMasteries.
+     */
+    distinct?: TopicMasteryScalarFieldEnum | TopicMasteryScalarFieldEnum[]
+  }
+
+  /**
+   * TopicMastery findMany
+   */
+  export type TopicMasteryFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TopicMastery
+     */
+    select?: TopicMasterySelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TopicMasteryInclude<ExtArgs> | null
+    /**
+     * Filter, which TopicMasteries to fetch.
+     */
+    where?: TopicMasteryWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of TopicMasteries to fetch.
+     */
+    orderBy?: TopicMasteryOrderByWithRelationInput | TopicMasteryOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing TopicMasteries.
+     */
+    cursor?: TopicMasteryWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` TopicMasteries from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` TopicMasteries.
+     */
+    skip?: number
+    distinct?: TopicMasteryScalarFieldEnum | TopicMasteryScalarFieldEnum[]
+  }
+
+  /**
+   * TopicMastery create
+   */
+  export type TopicMasteryCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TopicMastery
+     */
+    select?: TopicMasterySelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TopicMasteryInclude<ExtArgs> | null
+    /**
+     * The data needed to create a TopicMastery.
+     */
+    data: XOR<TopicMasteryCreateInput, TopicMasteryUncheckedCreateInput>
+  }
+
+  /**
+   * TopicMastery createMany
+   */
+  export type TopicMasteryCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many TopicMasteries.
+     */
+    data: TopicMasteryCreateManyInput | TopicMasteryCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * TopicMastery createManyAndReturn
+   */
+  export type TopicMasteryCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TopicMastery
+     */
+    select?: TopicMasterySelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * The data used to create many TopicMasteries.
+     */
+    data: TopicMasteryCreateManyInput | TopicMasteryCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TopicMasteryIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * TopicMastery update
+   */
+  export type TopicMasteryUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TopicMastery
+     */
+    select?: TopicMasterySelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TopicMasteryInclude<ExtArgs> | null
+    /**
+     * The data needed to update a TopicMastery.
+     */
+    data: XOR<TopicMasteryUpdateInput, TopicMasteryUncheckedUpdateInput>
+    /**
+     * Choose, which TopicMastery to update.
+     */
+    where: TopicMasteryWhereUniqueInput
+  }
+
+  /**
+   * TopicMastery updateMany
+   */
+  export type TopicMasteryUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update TopicMasteries.
+     */
+    data: XOR<TopicMasteryUpdateManyMutationInput, TopicMasteryUncheckedUpdateManyInput>
+    /**
+     * Filter which TopicMasteries to update
+     */
+    where?: TopicMasteryWhereInput
+  }
+
+  /**
+   * TopicMastery upsert
+   */
+  export type TopicMasteryUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TopicMastery
+     */
+    select?: TopicMasterySelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TopicMasteryInclude<ExtArgs> | null
+    /**
+     * The filter to search for the TopicMastery to update in case it exists.
+     */
+    where: TopicMasteryWhereUniqueInput
+    /**
+     * In case the TopicMastery found by the `where` argument doesn't exist, create a new TopicMastery with this data.
+     */
+    create: XOR<TopicMasteryCreateInput, TopicMasteryUncheckedCreateInput>
+    /**
+     * In case the TopicMastery was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<TopicMasteryUpdateInput, TopicMasteryUncheckedUpdateInput>
+  }
+
+  /**
+   * TopicMastery delete
+   */
+  export type TopicMasteryDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TopicMastery
+     */
+    select?: TopicMasterySelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TopicMasteryInclude<ExtArgs> | null
+    /**
+     * Filter which TopicMastery to delete.
+     */
+    where: TopicMasteryWhereUniqueInput
+  }
+
+  /**
+   * TopicMastery deleteMany
+   */
+  export type TopicMasteryDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which TopicMasteries to delete
+     */
+    where?: TopicMasteryWhereInput
+  }
+
+  /**
+   * TopicMastery without action
+   */
+  export type TopicMasteryDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the TopicMastery
+     */
+    select?: TopicMasterySelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: TopicMasteryInclude<ExtArgs> | null
+  }
+
+
+  /**
    * Enums
    */
 
@@ -8888,6 +12416,63 @@ export namespace Prisma {
   };
 
   export type RetrievalLogScalarFieldEnum = (typeof RetrievalLogScalarFieldEnum)[keyof typeof RetrievalLogScalarFieldEnum]
+
+
+  export const TopicScalarFieldEnum: {
+    id: 'id',
+    level: 'level',
+    name: 'name',
+    slug: 'slug',
+    parentId: 'parentId',
+    chapterNum: 'chapterNum',
+    keywords: 'keywords',
+    aliases: 'aliases',
+    expectedQuestions: 'expectedQuestions',
+    createdAt: 'createdAt'
+  };
+
+  export type TopicScalarFieldEnum = (typeof TopicScalarFieldEnum)[keyof typeof TopicScalarFieldEnum]
+
+
+  export const TopicInteractionScalarFieldEnum: {
+    id: 'id',
+    userId: 'userId',
+    topicId: 'topicId',
+    query: 'query',
+    mappingConfidence: 'mappingConfidence',
+    ragConfidence: 'ragConfidence',
+    ragTopScore: 'ragTopScore',
+    citedSections: 'citedSections',
+    answerLength: 'answerLength',
+    citationCount: 'citationCount',
+    timeSpentMs: 'timeSpentMs',
+    hadFollowUp: 'hadFollowUp',
+    createdAt: 'createdAt'
+  };
+
+  export type TopicInteractionScalarFieldEnum = (typeof TopicInteractionScalarFieldEnum)[keyof typeof TopicInteractionScalarFieldEnum]
+
+
+  export const TopicMasteryScalarFieldEnum: {
+    id: 'id',
+    userId: 'userId',
+    topicId: 'topicId',
+    masteryLevel: 'masteryLevel',
+    status: 'status',
+    questionsAsked: 'questionsAsked',
+    coverageScore: 'coverageScore',
+    depthScore: 'depthScore',
+    confidenceScore: 'confidenceScore',
+    diversityScore: 'diversityScore',
+    retentionScore: 'retentionScore',
+    subtopicsExplored: 'subtopicsExplored',
+    firstInteraction: 'firstInteraction',
+    lastInteraction: 'lastInteraction',
+    completedAt: 'completedAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type TopicMasteryScalarFieldEnum = (typeof TopicMasteryScalarFieldEnum)[keyof typeof TopicMasteryScalarFieldEnum]
 
 
   export const SortOrder: {
@@ -9039,6 +12624,20 @@ export namespace Prisma {
    */
   export type ListFloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float[]'>
     
+
+
+  /**
+   * Reference to a field of type 'MasteryStatus'
+   */
+  export type EnumMasteryStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'MasteryStatus'>
+    
+
+
+  /**
+   * Reference to a field of type 'MasteryStatus[]'
+   */
+  export type ListEnumMasteryStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'MasteryStatus[]'>
+    
   /**
    * Deep Input Types
    */
@@ -9066,6 +12665,8 @@ export namespace Prisma {
     documents?: DocumentListRelationFilter
     embeddings?: EmbeddingListRelationFilter
     refreshTokens?: RefreshTokenListRelationFilter
+    topicInteractions?: TopicInteractionListRelationFilter
+    topicMasteries?: TopicMasteryListRelationFilter
   }
 
   export type UserOrderByWithRelationInput = {
@@ -9087,6 +12688,8 @@ export namespace Prisma {
     documents?: DocumentOrderByRelationAggregateInput
     embeddings?: EmbeddingOrderByRelationAggregateInput
     refreshTokens?: RefreshTokenOrderByRelationAggregateInput
+    topicInteractions?: TopicInteractionOrderByRelationAggregateInput
+    topicMasteries?: TopicMasteryOrderByRelationAggregateInput
   }
 
   export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -9111,6 +12714,8 @@ export namespace Prisma {
     documents?: DocumentListRelationFilter
     embeddings?: EmbeddingListRelationFilter
     refreshTokens?: RefreshTokenListRelationFilter
+    topicInteractions?: TopicInteractionListRelationFilter
+    topicMasteries?: TopicMasteryListRelationFilter
   }, "id" | "email" | "verificationToken" | "resetToken">
 
   export type UserOrderByWithAggregationInput = {
@@ -9634,6 +13239,313 @@ export namespace Prisma {
     createdAt?: DateTimeWithAggregatesFilter<"RetrievalLog"> | Date | string
   }
 
+  export type TopicWhereInput = {
+    AND?: TopicWhereInput | TopicWhereInput[]
+    OR?: TopicWhereInput[]
+    NOT?: TopicWhereInput | TopicWhereInput[]
+    id?: StringFilter<"Topic"> | string
+    level?: IntFilter<"Topic"> | number
+    name?: StringFilter<"Topic"> | string
+    slug?: StringFilter<"Topic"> | string
+    parentId?: StringNullableFilter<"Topic"> | string | null
+    chapterNum?: IntNullableFilter<"Topic"> | number | null
+    keywords?: StringNullableListFilter<"Topic">
+    aliases?: StringNullableListFilter<"Topic">
+    expectedQuestions?: IntFilter<"Topic"> | number
+    createdAt?: DateTimeFilter<"Topic"> | Date | string
+    parent?: XOR<TopicNullableRelationFilter, TopicWhereInput> | null
+    children?: TopicListRelationFilter
+    interactions?: TopicInteractionListRelationFilter
+    masteries?: TopicMasteryListRelationFilter
+  }
+
+  export type TopicOrderByWithRelationInput = {
+    id?: SortOrder
+    level?: SortOrder
+    name?: SortOrder
+    slug?: SortOrder
+    parentId?: SortOrderInput | SortOrder
+    chapterNum?: SortOrderInput | SortOrder
+    keywords?: SortOrder
+    aliases?: SortOrder
+    expectedQuestions?: SortOrder
+    createdAt?: SortOrder
+    parent?: TopicOrderByWithRelationInput
+    children?: TopicOrderByRelationAggregateInput
+    interactions?: TopicInteractionOrderByRelationAggregateInput
+    masteries?: TopicMasteryOrderByRelationAggregateInput
+  }
+
+  export type TopicWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    slug?: string
+    AND?: TopicWhereInput | TopicWhereInput[]
+    OR?: TopicWhereInput[]
+    NOT?: TopicWhereInput | TopicWhereInput[]
+    level?: IntFilter<"Topic"> | number
+    name?: StringFilter<"Topic"> | string
+    parentId?: StringNullableFilter<"Topic"> | string | null
+    chapterNum?: IntNullableFilter<"Topic"> | number | null
+    keywords?: StringNullableListFilter<"Topic">
+    aliases?: StringNullableListFilter<"Topic">
+    expectedQuestions?: IntFilter<"Topic"> | number
+    createdAt?: DateTimeFilter<"Topic"> | Date | string
+    parent?: XOR<TopicNullableRelationFilter, TopicWhereInput> | null
+    children?: TopicListRelationFilter
+    interactions?: TopicInteractionListRelationFilter
+    masteries?: TopicMasteryListRelationFilter
+  }, "id" | "slug">
+
+  export type TopicOrderByWithAggregationInput = {
+    id?: SortOrder
+    level?: SortOrder
+    name?: SortOrder
+    slug?: SortOrder
+    parentId?: SortOrderInput | SortOrder
+    chapterNum?: SortOrderInput | SortOrder
+    keywords?: SortOrder
+    aliases?: SortOrder
+    expectedQuestions?: SortOrder
+    createdAt?: SortOrder
+    _count?: TopicCountOrderByAggregateInput
+    _avg?: TopicAvgOrderByAggregateInput
+    _max?: TopicMaxOrderByAggregateInput
+    _min?: TopicMinOrderByAggregateInput
+    _sum?: TopicSumOrderByAggregateInput
+  }
+
+  export type TopicScalarWhereWithAggregatesInput = {
+    AND?: TopicScalarWhereWithAggregatesInput | TopicScalarWhereWithAggregatesInput[]
+    OR?: TopicScalarWhereWithAggregatesInput[]
+    NOT?: TopicScalarWhereWithAggregatesInput | TopicScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"Topic"> | string
+    level?: IntWithAggregatesFilter<"Topic"> | number
+    name?: StringWithAggregatesFilter<"Topic"> | string
+    slug?: StringWithAggregatesFilter<"Topic"> | string
+    parentId?: StringNullableWithAggregatesFilter<"Topic"> | string | null
+    chapterNum?: IntNullableWithAggregatesFilter<"Topic"> | number | null
+    keywords?: StringNullableListFilter<"Topic">
+    aliases?: StringNullableListFilter<"Topic">
+    expectedQuestions?: IntWithAggregatesFilter<"Topic"> | number
+    createdAt?: DateTimeWithAggregatesFilter<"Topic"> | Date | string
+  }
+
+  export type TopicInteractionWhereInput = {
+    AND?: TopicInteractionWhereInput | TopicInteractionWhereInput[]
+    OR?: TopicInteractionWhereInput[]
+    NOT?: TopicInteractionWhereInput | TopicInteractionWhereInput[]
+    id?: StringFilter<"TopicInteraction"> | string
+    userId?: StringFilter<"TopicInteraction"> | string
+    topicId?: StringFilter<"TopicInteraction"> | string
+    query?: StringFilter<"TopicInteraction"> | string
+    mappingConfidence?: FloatFilter<"TopicInteraction"> | number
+    ragConfidence?: StringFilter<"TopicInteraction"> | string
+    ragTopScore?: FloatFilter<"TopicInteraction"> | number
+    citedSections?: StringNullableListFilter<"TopicInteraction">
+    answerLength?: IntFilter<"TopicInteraction"> | number
+    citationCount?: IntFilter<"TopicInteraction"> | number
+    timeSpentMs?: IntNullableFilter<"TopicInteraction"> | number | null
+    hadFollowUp?: BoolFilter<"TopicInteraction"> | boolean
+    createdAt?: DateTimeFilter<"TopicInteraction"> | Date | string
+    user?: XOR<UserRelationFilter, UserWhereInput>
+    topic?: XOR<TopicRelationFilter, TopicWhereInput>
+  }
+
+  export type TopicInteractionOrderByWithRelationInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    topicId?: SortOrder
+    query?: SortOrder
+    mappingConfidence?: SortOrder
+    ragConfidence?: SortOrder
+    ragTopScore?: SortOrder
+    citedSections?: SortOrder
+    answerLength?: SortOrder
+    citationCount?: SortOrder
+    timeSpentMs?: SortOrderInput | SortOrder
+    hadFollowUp?: SortOrder
+    createdAt?: SortOrder
+    user?: UserOrderByWithRelationInput
+    topic?: TopicOrderByWithRelationInput
+  }
+
+  export type TopicInteractionWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: TopicInteractionWhereInput | TopicInteractionWhereInput[]
+    OR?: TopicInteractionWhereInput[]
+    NOT?: TopicInteractionWhereInput | TopicInteractionWhereInput[]
+    userId?: StringFilter<"TopicInteraction"> | string
+    topicId?: StringFilter<"TopicInteraction"> | string
+    query?: StringFilter<"TopicInteraction"> | string
+    mappingConfidence?: FloatFilter<"TopicInteraction"> | number
+    ragConfidence?: StringFilter<"TopicInteraction"> | string
+    ragTopScore?: FloatFilter<"TopicInteraction"> | number
+    citedSections?: StringNullableListFilter<"TopicInteraction">
+    answerLength?: IntFilter<"TopicInteraction"> | number
+    citationCount?: IntFilter<"TopicInteraction"> | number
+    timeSpentMs?: IntNullableFilter<"TopicInteraction"> | number | null
+    hadFollowUp?: BoolFilter<"TopicInteraction"> | boolean
+    createdAt?: DateTimeFilter<"TopicInteraction"> | Date | string
+    user?: XOR<UserRelationFilter, UserWhereInput>
+    topic?: XOR<TopicRelationFilter, TopicWhereInput>
+  }, "id">
+
+  export type TopicInteractionOrderByWithAggregationInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    topicId?: SortOrder
+    query?: SortOrder
+    mappingConfidence?: SortOrder
+    ragConfidence?: SortOrder
+    ragTopScore?: SortOrder
+    citedSections?: SortOrder
+    answerLength?: SortOrder
+    citationCount?: SortOrder
+    timeSpentMs?: SortOrderInput | SortOrder
+    hadFollowUp?: SortOrder
+    createdAt?: SortOrder
+    _count?: TopicInteractionCountOrderByAggregateInput
+    _avg?: TopicInteractionAvgOrderByAggregateInput
+    _max?: TopicInteractionMaxOrderByAggregateInput
+    _min?: TopicInteractionMinOrderByAggregateInput
+    _sum?: TopicInteractionSumOrderByAggregateInput
+  }
+
+  export type TopicInteractionScalarWhereWithAggregatesInput = {
+    AND?: TopicInteractionScalarWhereWithAggregatesInput | TopicInteractionScalarWhereWithAggregatesInput[]
+    OR?: TopicInteractionScalarWhereWithAggregatesInput[]
+    NOT?: TopicInteractionScalarWhereWithAggregatesInput | TopicInteractionScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"TopicInteraction"> | string
+    userId?: StringWithAggregatesFilter<"TopicInteraction"> | string
+    topicId?: StringWithAggregatesFilter<"TopicInteraction"> | string
+    query?: StringWithAggregatesFilter<"TopicInteraction"> | string
+    mappingConfidence?: FloatWithAggregatesFilter<"TopicInteraction"> | number
+    ragConfidence?: StringWithAggregatesFilter<"TopicInteraction"> | string
+    ragTopScore?: FloatWithAggregatesFilter<"TopicInteraction"> | number
+    citedSections?: StringNullableListFilter<"TopicInteraction">
+    answerLength?: IntWithAggregatesFilter<"TopicInteraction"> | number
+    citationCount?: IntWithAggregatesFilter<"TopicInteraction"> | number
+    timeSpentMs?: IntNullableWithAggregatesFilter<"TopicInteraction"> | number | null
+    hadFollowUp?: BoolWithAggregatesFilter<"TopicInteraction"> | boolean
+    createdAt?: DateTimeWithAggregatesFilter<"TopicInteraction"> | Date | string
+  }
+
+  export type TopicMasteryWhereInput = {
+    AND?: TopicMasteryWhereInput | TopicMasteryWhereInput[]
+    OR?: TopicMasteryWhereInput[]
+    NOT?: TopicMasteryWhereInput | TopicMasteryWhereInput[]
+    id?: StringFilter<"TopicMastery"> | string
+    userId?: StringFilter<"TopicMastery"> | string
+    topicId?: StringFilter<"TopicMastery"> | string
+    masteryLevel?: FloatFilter<"TopicMastery"> | number
+    status?: EnumMasteryStatusFilter<"TopicMastery"> | $Enums.MasteryStatus
+    questionsAsked?: IntFilter<"TopicMastery"> | number
+    coverageScore?: FloatFilter<"TopicMastery"> | number
+    depthScore?: FloatFilter<"TopicMastery"> | number
+    confidenceScore?: FloatFilter<"TopicMastery"> | number
+    diversityScore?: FloatFilter<"TopicMastery"> | number
+    retentionScore?: FloatFilter<"TopicMastery"> | number
+    subtopicsExplored?: StringNullableListFilter<"TopicMastery">
+    firstInteraction?: DateTimeNullableFilter<"TopicMastery"> | Date | string | null
+    lastInteraction?: DateTimeNullableFilter<"TopicMastery"> | Date | string | null
+    completedAt?: DateTimeNullableFilter<"TopicMastery"> | Date | string | null
+    updatedAt?: DateTimeFilter<"TopicMastery"> | Date | string
+    user?: XOR<UserRelationFilter, UserWhereInput>
+    topic?: XOR<TopicRelationFilter, TopicWhereInput>
+  }
+
+  export type TopicMasteryOrderByWithRelationInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    topicId?: SortOrder
+    masteryLevel?: SortOrder
+    status?: SortOrder
+    questionsAsked?: SortOrder
+    coverageScore?: SortOrder
+    depthScore?: SortOrder
+    confidenceScore?: SortOrder
+    diversityScore?: SortOrder
+    retentionScore?: SortOrder
+    subtopicsExplored?: SortOrder
+    firstInteraction?: SortOrderInput | SortOrder
+    lastInteraction?: SortOrderInput | SortOrder
+    completedAt?: SortOrderInput | SortOrder
+    updatedAt?: SortOrder
+    user?: UserOrderByWithRelationInput
+    topic?: TopicOrderByWithRelationInput
+  }
+
+  export type TopicMasteryWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    userId_topicId?: TopicMasteryUserIdTopicIdCompoundUniqueInput
+    AND?: TopicMasteryWhereInput | TopicMasteryWhereInput[]
+    OR?: TopicMasteryWhereInput[]
+    NOT?: TopicMasteryWhereInput | TopicMasteryWhereInput[]
+    userId?: StringFilter<"TopicMastery"> | string
+    topicId?: StringFilter<"TopicMastery"> | string
+    masteryLevel?: FloatFilter<"TopicMastery"> | number
+    status?: EnumMasteryStatusFilter<"TopicMastery"> | $Enums.MasteryStatus
+    questionsAsked?: IntFilter<"TopicMastery"> | number
+    coverageScore?: FloatFilter<"TopicMastery"> | number
+    depthScore?: FloatFilter<"TopicMastery"> | number
+    confidenceScore?: FloatFilter<"TopicMastery"> | number
+    diversityScore?: FloatFilter<"TopicMastery"> | number
+    retentionScore?: FloatFilter<"TopicMastery"> | number
+    subtopicsExplored?: StringNullableListFilter<"TopicMastery">
+    firstInteraction?: DateTimeNullableFilter<"TopicMastery"> | Date | string | null
+    lastInteraction?: DateTimeNullableFilter<"TopicMastery"> | Date | string | null
+    completedAt?: DateTimeNullableFilter<"TopicMastery"> | Date | string | null
+    updatedAt?: DateTimeFilter<"TopicMastery"> | Date | string
+    user?: XOR<UserRelationFilter, UserWhereInput>
+    topic?: XOR<TopicRelationFilter, TopicWhereInput>
+  }, "id" | "userId_topicId">
+
+  export type TopicMasteryOrderByWithAggregationInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    topicId?: SortOrder
+    masteryLevel?: SortOrder
+    status?: SortOrder
+    questionsAsked?: SortOrder
+    coverageScore?: SortOrder
+    depthScore?: SortOrder
+    confidenceScore?: SortOrder
+    diversityScore?: SortOrder
+    retentionScore?: SortOrder
+    subtopicsExplored?: SortOrder
+    firstInteraction?: SortOrderInput | SortOrder
+    lastInteraction?: SortOrderInput | SortOrder
+    completedAt?: SortOrderInput | SortOrder
+    updatedAt?: SortOrder
+    _count?: TopicMasteryCountOrderByAggregateInput
+    _avg?: TopicMasteryAvgOrderByAggregateInput
+    _max?: TopicMasteryMaxOrderByAggregateInput
+    _min?: TopicMasteryMinOrderByAggregateInput
+    _sum?: TopicMasterySumOrderByAggregateInput
+  }
+
+  export type TopicMasteryScalarWhereWithAggregatesInput = {
+    AND?: TopicMasteryScalarWhereWithAggregatesInput | TopicMasteryScalarWhereWithAggregatesInput[]
+    OR?: TopicMasteryScalarWhereWithAggregatesInput[]
+    NOT?: TopicMasteryScalarWhereWithAggregatesInput | TopicMasteryScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"TopicMastery"> | string
+    userId?: StringWithAggregatesFilter<"TopicMastery"> | string
+    topicId?: StringWithAggregatesFilter<"TopicMastery"> | string
+    masteryLevel?: FloatWithAggregatesFilter<"TopicMastery"> | number
+    status?: EnumMasteryStatusWithAggregatesFilter<"TopicMastery"> | $Enums.MasteryStatus
+    questionsAsked?: IntWithAggregatesFilter<"TopicMastery"> | number
+    coverageScore?: FloatWithAggregatesFilter<"TopicMastery"> | number
+    depthScore?: FloatWithAggregatesFilter<"TopicMastery"> | number
+    confidenceScore?: FloatWithAggregatesFilter<"TopicMastery"> | number
+    diversityScore?: FloatWithAggregatesFilter<"TopicMastery"> | number
+    retentionScore?: FloatWithAggregatesFilter<"TopicMastery"> | number
+    subtopicsExplored?: StringNullableListFilter<"TopicMastery">
+    firstInteraction?: DateTimeNullableWithAggregatesFilter<"TopicMastery"> | Date | string | null
+    lastInteraction?: DateTimeNullableWithAggregatesFilter<"TopicMastery"> | Date | string | null
+    completedAt?: DateTimeNullableWithAggregatesFilter<"TopicMastery"> | Date | string | null
+    updatedAt?: DateTimeWithAggregatesFilter<"TopicMastery"> | Date | string
+  }
+
   export type UserCreateInput = {
     id?: string
     email: string
@@ -9653,6 +13565,8 @@ export namespace Prisma {
     documents?: DocumentCreateNestedManyWithoutUserInput
     embeddings?: EmbeddingCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenCreateNestedManyWithoutUserInput
+    topicInteractions?: TopicInteractionCreateNestedManyWithoutUserInput
+    topicMasteries?: TopicMasteryCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateInput = {
@@ -9674,6 +13588,8 @@ export namespace Prisma {
     documents?: DocumentUncheckedCreateNestedManyWithoutUserInput
     embeddings?: EmbeddingUncheckedCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenUncheckedCreateNestedManyWithoutUserInput
+    topicInteractions?: TopicInteractionUncheckedCreateNestedManyWithoutUserInput
+    topicMasteries?: TopicMasteryUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserUpdateInput = {
@@ -9695,6 +13611,8 @@ export namespace Prisma {
     documents?: DocumentUpdateManyWithoutUserNestedInput
     embeddings?: EmbeddingUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUpdateManyWithoutUserNestedInput
+    topicInteractions?: TopicInteractionUpdateManyWithoutUserNestedInput
+    topicMasteries?: TopicMasteryUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateInput = {
@@ -9716,6 +13634,8 @@ export namespace Prisma {
     documents?: DocumentUncheckedUpdateManyWithoutUserNestedInput
     embeddings?: EmbeddingUncheckedUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
+    topicInteractions?: TopicInteractionUncheckedUpdateManyWithoutUserNestedInput
+    topicMasteries?: TopicMasteryUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserCreateManyInput = {
@@ -10296,6 +14216,301 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type TopicCreateInput = {
+    id: string
+    level: number
+    name: string
+    slug: string
+    chapterNum?: number | null
+    keywords?: TopicCreatekeywordsInput | string[]
+    aliases?: TopicCreatealiasesInput | string[]
+    expectedQuestions?: number
+    createdAt?: Date | string
+    parent?: TopicCreateNestedOneWithoutChildrenInput
+    children?: TopicCreateNestedManyWithoutParentInput
+    interactions?: TopicInteractionCreateNestedManyWithoutTopicInput
+    masteries?: TopicMasteryCreateNestedManyWithoutTopicInput
+  }
+
+  export type TopicUncheckedCreateInput = {
+    id: string
+    level: number
+    name: string
+    slug: string
+    parentId?: string | null
+    chapterNum?: number | null
+    keywords?: TopicCreatekeywordsInput | string[]
+    aliases?: TopicCreatealiasesInput | string[]
+    expectedQuestions?: number
+    createdAt?: Date | string
+    children?: TopicUncheckedCreateNestedManyWithoutParentInput
+    interactions?: TopicInteractionUncheckedCreateNestedManyWithoutTopicInput
+    masteries?: TopicMasteryUncheckedCreateNestedManyWithoutTopicInput
+  }
+
+  export type TopicUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    level?: IntFieldUpdateOperationsInput | number
+    name?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    chapterNum?: NullableIntFieldUpdateOperationsInput | number | null
+    keywords?: TopicUpdatekeywordsInput | string[]
+    aliases?: TopicUpdatealiasesInput | string[]
+    expectedQuestions?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    parent?: TopicUpdateOneWithoutChildrenNestedInput
+    children?: TopicUpdateManyWithoutParentNestedInput
+    interactions?: TopicInteractionUpdateManyWithoutTopicNestedInput
+    masteries?: TopicMasteryUpdateManyWithoutTopicNestedInput
+  }
+
+  export type TopicUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    level?: IntFieldUpdateOperationsInput | number
+    name?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    parentId?: NullableStringFieldUpdateOperationsInput | string | null
+    chapterNum?: NullableIntFieldUpdateOperationsInput | number | null
+    keywords?: TopicUpdatekeywordsInput | string[]
+    aliases?: TopicUpdatealiasesInput | string[]
+    expectedQuestions?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    children?: TopicUncheckedUpdateManyWithoutParentNestedInput
+    interactions?: TopicInteractionUncheckedUpdateManyWithoutTopicNestedInput
+    masteries?: TopicMasteryUncheckedUpdateManyWithoutTopicNestedInput
+  }
+
+  export type TopicCreateManyInput = {
+    id: string
+    level: number
+    name: string
+    slug: string
+    parentId?: string | null
+    chapterNum?: number | null
+    keywords?: TopicCreatekeywordsInput | string[]
+    aliases?: TopicCreatealiasesInput | string[]
+    expectedQuestions?: number
+    createdAt?: Date | string
+  }
+
+  export type TopicUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    level?: IntFieldUpdateOperationsInput | number
+    name?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    chapterNum?: NullableIntFieldUpdateOperationsInput | number | null
+    keywords?: TopicUpdatekeywordsInput | string[]
+    aliases?: TopicUpdatealiasesInput | string[]
+    expectedQuestions?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type TopicUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    level?: IntFieldUpdateOperationsInput | number
+    name?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    parentId?: NullableStringFieldUpdateOperationsInput | string | null
+    chapterNum?: NullableIntFieldUpdateOperationsInput | number | null
+    keywords?: TopicUpdatekeywordsInput | string[]
+    aliases?: TopicUpdatealiasesInput | string[]
+    expectedQuestions?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type TopicInteractionUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    query?: StringFieldUpdateOperationsInput | string
+    mappingConfidence?: FloatFieldUpdateOperationsInput | number
+    ragConfidence?: StringFieldUpdateOperationsInput | string
+    ragTopScore?: FloatFieldUpdateOperationsInput | number
+    citedSections?: TopicInteractionUpdatecitedSectionsInput | string[]
+    answerLength?: IntFieldUpdateOperationsInput | number
+    citationCount?: IntFieldUpdateOperationsInput | number
+    timeSpentMs?: NullableIntFieldUpdateOperationsInput | number | null
+    hadFollowUp?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    user?: UserUpdateOneRequiredWithoutTopicInteractionsNestedInput
+    topic?: TopicUpdateOneRequiredWithoutInteractionsNestedInput
+  }
+
+  export type TopicInteractionUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    topicId?: StringFieldUpdateOperationsInput | string
+    query?: StringFieldUpdateOperationsInput | string
+    mappingConfidence?: FloatFieldUpdateOperationsInput | number
+    ragConfidence?: StringFieldUpdateOperationsInput | string
+    ragTopScore?: FloatFieldUpdateOperationsInput | number
+    citedSections?: TopicInteractionUpdatecitedSectionsInput | string[]
+    answerLength?: IntFieldUpdateOperationsInput | number
+    citationCount?: IntFieldUpdateOperationsInput | number
+    timeSpentMs?: NullableIntFieldUpdateOperationsInput | number | null
+    hadFollowUp?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type TopicInteractionUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    query?: StringFieldUpdateOperationsInput | string
+    mappingConfidence?: FloatFieldUpdateOperationsInput | number
+    ragConfidence?: StringFieldUpdateOperationsInput | string
+    ragTopScore?: FloatFieldUpdateOperationsInput | number
+    citedSections?: TopicInteractionUpdatecitedSectionsInput | string[]
+    answerLength?: IntFieldUpdateOperationsInput | number
+    citationCount?: IntFieldUpdateOperationsInput | number
+    timeSpentMs?: NullableIntFieldUpdateOperationsInput | number | null
+    hadFollowUp?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type TopicInteractionUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    topicId?: StringFieldUpdateOperationsInput | string
+    query?: StringFieldUpdateOperationsInput | string
+    mappingConfidence?: FloatFieldUpdateOperationsInput | number
+    ragConfidence?: StringFieldUpdateOperationsInput | string
+    ragTopScore?: FloatFieldUpdateOperationsInput | number
+    citedSections?: TopicInteractionUpdatecitedSectionsInput | string[]
+    answerLength?: IntFieldUpdateOperationsInput | number
+    citationCount?: IntFieldUpdateOperationsInput | number
+    timeSpentMs?: NullableIntFieldUpdateOperationsInput | number | null
+    hadFollowUp?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type TopicMasteryCreateInput = {
+    id?: string
+    masteryLevel?: number
+    status: $Enums.MasteryStatus
+    questionsAsked?: number
+    coverageScore?: number
+    depthScore?: number
+    confidenceScore?: number
+    diversityScore?: number
+    retentionScore?: number
+    subtopicsExplored?: TopicMasteryCreatesubtopicsExploredInput | string[]
+    firstInteraction?: Date | string | null
+    lastInteraction?: Date | string | null
+    completedAt?: Date | string | null
+    updatedAt?: Date | string
+    user: UserCreateNestedOneWithoutTopicMasteriesInput
+    topic: TopicCreateNestedOneWithoutMasteriesInput
+  }
+
+  export type TopicMasteryUncheckedCreateInput = {
+    id?: string
+    userId: string
+    topicId: string
+    masteryLevel?: number
+    status: $Enums.MasteryStatus
+    questionsAsked?: number
+    coverageScore?: number
+    depthScore?: number
+    confidenceScore?: number
+    diversityScore?: number
+    retentionScore?: number
+    subtopicsExplored?: TopicMasteryCreatesubtopicsExploredInput | string[]
+    firstInteraction?: Date | string | null
+    lastInteraction?: Date | string | null
+    completedAt?: Date | string | null
+    updatedAt?: Date | string
+  }
+
+  export type TopicMasteryUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    masteryLevel?: FloatFieldUpdateOperationsInput | number
+    status?: EnumMasteryStatusFieldUpdateOperationsInput | $Enums.MasteryStatus
+    questionsAsked?: IntFieldUpdateOperationsInput | number
+    coverageScore?: FloatFieldUpdateOperationsInput | number
+    depthScore?: FloatFieldUpdateOperationsInput | number
+    confidenceScore?: FloatFieldUpdateOperationsInput | number
+    diversityScore?: FloatFieldUpdateOperationsInput | number
+    retentionScore?: FloatFieldUpdateOperationsInput | number
+    subtopicsExplored?: TopicMasteryUpdatesubtopicsExploredInput | string[]
+    firstInteraction?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastInteraction?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    user?: UserUpdateOneRequiredWithoutTopicMasteriesNestedInput
+    topic?: TopicUpdateOneRequiredWithoutMasteriesNestedInput
+  }
+
+  export type TopicMasteryUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    topicId?: StringFieldUpdateOperationsInput | string
+    masteryLevel?: FloatFieldUpdateOperationsInput | number
+    status?: EnumMasteryStatusFieldUpdateOperationsInput | $Enums.MasteryStatus
+    questionsAsked?: IntFieldUpdateOperationsInput | number
+    coverageScore?: FloatFieldUpdateOperationsInput | number
+    depthScore?: FloatFieldUpdateOperationsInput | number
+    confidenceScore?: FloatFieldUpdateOperationsInput | number
+    diversityScore?: FloatFieldUpdateOperationsInput | number
+    retentionScore?: FloatFieldUpdateOperationsInput | number
+    subtopicsExplored?: TopicMasteryUpdatesubtopicsExploredInput | string[]
+    firstInteraction?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastInteraction?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type TopicMasteryCreateManyInput = {
+    id?: string
+    userId: string
+    topicId: string
+    masteryLevel?: number
+    status: $Enums.MasteryStatus
+    questionsAsked?: number
+    coverageScore?: number
+    depthScore?: number
+    confidenceScore?: number
+    diversityScore?: number
+    retentionScore?: number
+    subtopicsExplored?: TopicMasteryCreatesubtopicsExploredInput | string[]
+    firstInteraction?: Date | string | null
+    lastInteraction?: Date | string | null
+    completedAt?: Date | string | null
+    updatedAt?: Date | string
+  }
+
+  export type TopicMasteryUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    masteryLevel?: FloatFieldUpdateOperationsInput | number
+    status?: EnumMasteryStatusFieldUpdateOperationsInput | $Enums.MasteryStatus
+    questionsAsked?: IntFieldUpdateOperationsInput | number
+    coverageScore?: FloatFieldUpdateOperationsInput | number
+    depthScore?: FloatFieldUpdateOperationsInput | number
+    confidenceScore?: FloatFieldUpdateOperationsInput | number
+    diversityScore?: FloatFieldUpdateOperationsInput | number
+    retentionScore?: FloatFieldUpdateOperationsInput | number
+    subtopicsExplored?: TopicMasteryUpdatesubtopicsExploredInput | string[]
+    firstInteraction?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastInteraction?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type TopicMasteryUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    topicId?: StringFieldUpdateOperationsInput | string
+    masteryLevel?: FloatFieldUpdateOperationsInput | number
+    status?: EnumMasteryStatusFieldUpdateOperationsInput | $Enums.MasteryStatus
+    questionsAsked?: IntFieldUpdateOperationsInput | number
+    coverageScore?: FloatFieldUpdateOperationsInput | number
+    depthScore?: FloatFieldUpdateOperationsInput | number
+    confidenceScore?: FloatFieldUpdateOperationsInput | number
+    diversityScore?: FloatFieldUpdateOperationsInput | number
+    retentionScore?: FloatFieldUpdateOperationsInput | number
+    subtopicsExplored?: TopicMasteryUpdatesubtopicsExploredInput | string[]
+    firstInteraction?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastInteraction?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type StringFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
     in?: string[] | ListStringFieldRefInput<$PrismaModel>
@@ -10401,6 +14616,18 @@ export namespace Prisma {
     none?: RefreshTokenWhereInput
   }
 
+  export type TopicInteractionListRelationFilter = {
+    every?: TopicInteractionWhereInput
+    some?: TopicInteractionWhereInput
+    none?: TopicInteractionWhereInput
+  }
+
+  export type TopicMasteryListRelationFilter = {
+    every?: TopicMasteryWhereInput
+    some?: TopicMasteryWhereInput
+    none?: TopicMasteryWhereInput
+  }
+
   export type SortOrderInput = {
     sort: SortOrder
     nulls?: NullsOrder
@@ -10423,6 +14650,14 @@ export namespace Prisma {
   }
 
   export type RefreshTokenOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type TopicInteractionOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type TopicMasteryOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -11005,6 +15240,267 @@ export namespace Prisma {
     createdAt?: SortOrder
   }
 
+  export type StringNullableListFilter<$PrismaModel = never> = {
+    equals?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    has?: string | StringFieldRefInput<$PrismaModel> | null
+    hasEvery?: string[] | ListStringFieldRefInput<$PrismaModel>
+    hasSome?: string[] | ListStringFieldRefInput<$PrismaModel>
+    isEmpty?: boolean
+  }
+
+  export type TopicNullableRelationFilter = {
+    is?: TopicWhereInput | null
+    isNot?: TopicWhereInput | null
+  }
+
+  export type TopicListRelationFilter = {
+    every?: TopicWhereInput
+    some?: TopicWhereInput
+    none?: TopicWhereInput
+  }
+
+  export type TopicOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type TopicCountOrderByAggregateInput = {
+    id?: SortOrder
+    level?: SortOrder
+    name?: SortOrder
+    slug?: SortOrder
+    parentId?: SortOrder
+    chapterNum?: SortOrder
+    keywords?: SortOrder
+    aliases?: SortOrder
+    expectedQuestions?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type TopicAvgOrderByAggregateInput = {
+    level?: SortOrder
+    chapterNum?: SortOrder
+    expectedQuestions?: SortOrder
+  }
+
+  export type TopicMaxOrderByAggregateInput = {
+    id?: SortOrder
+    level?: SortOrder
+    name?: SortOrder
+    slug?: SortOrder
+    parentId?: SortOrder
+    chapterNum?: SortOrder
+    expectedQuestions?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type TopicMinOrderByAggregateInput = {
+    id?: SortOrder
+    level?: SortOrder
+    name?: SortOrder
+    slug?: SortOrder
+    parentId?: SortOrder
+    chapterNum?: SortOrder
+    expectedQuestions?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type TopicSumOrderByAggregateInput = {
+    level?: SortOrder
+    chapterNum?: SortOrder
+    expectedQuestions?: SortOrder
+  }
+
+  export type FloatFilter<$PrismaModel = never> = {
+    equals?: number | FloatFieldRefInput<$PrismaModel>
+    in?: number[] | ListFloatFieldRefInput<$PrismaModel>
+    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel>
+    lt?: number | FloatFieldRefInput<$PrismaModel>
+    lte?: number | FloatFieldRefInput<$PrismaModel>
+    gt?: number | FloatFieldRefInput<$PrismaModel>
+    gte?: number | FloatFieldRefInput<$PrismaModel>
+    not?: NestedFloatFilter<$PrismaModel> | number
+  }
+
+  export type TopicRelationFilter = {
+    is?: TopicWhereInput
+    isNot?: TopicWhereInput
+  }
+
+  export type TopicInteractionCountOrderByAggregateInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    topicId?: SortOrder
+    query?: SortOrder
+    mappingConfidence?: SortOrder
+    ragConfidence?: SortOrder
+    ragTopScore?: SortOrder
+    citedSections?: SortOrder
+    answerLength?: SortOrder
+    citationCount?: SortOrder
+    timeSpentMs?: SortOrder
+    hadFollowUp?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type TopicInteractionAvgOrderByAggregateInput = {
+    mappingConfidence?: SortOrder
+    ragTopScore?: SortOrder
+    answerLength?: SortOrder
+    citationCount?: SortOrder
+    timeSpentMs?: SortOrder
+  }
+
+  export type TopicInteractionMaxOrderByAggregateInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    topicId?: SortOrder
+    query?: SortOrder
+    mappingConfidence?: SortOrder
+    ragConfidence?: SortOrder
+    ragTopScore?: SortOrder
+    answerLength?: SortOrder
+    citationCount?: SortOrder
+    timeSpentMs?: SortOrder
+    hadFollowUp?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type TopicInteractionMinOrderByAggregateInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    topicId?: SortOrder
+    query?: SortOrder
+    mappingConfidence?: SortOrder
+    ragConfidence?: SortOrder
+    ragTopScore?: SortOrder
+    answerLength?: SortOrder
+    citationCount?: SortOrder
+    timeSpentMs?: SortOrder
+    hadFollowUp?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type TopicInteractionSumOrderByAggregateInput = {
+    mappingConfidence?: SortOrder
+    ragTopScore?: SortOrder
+    answerLength?: SortOrder
+    citationCount?: SortOrder
+    timeSpentMs?: SortOrder
+  }
+
+  export type FloatWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | FloatFieldRefInput<$PrismaModel>
+    in?: number[] | ListFloatFieldRefInput<$PrismaModel>
+    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel>
+    lt?: number | FloatFieldRefInput<$PrismaModel>
+    lte?: number | FloatFieldRefInput<$PrismaModel>
+    gt?: number | FloatFieldRefInput<$PrismaModel>
+    gte?: number | FloatFieldRefInput<$PrismaModel>
+    not?: NestedFloatWithAggregatesFilter<$PrismaModel> | number
+    _count?: NestedIntFilter<$PrismaModel>
+    _avg?: NestedFloatFilter<$PrismaModel>
+    _sum?: NestedFloatFilter<$PrismaModel>
+    _min?: NestedFloatFilter<$PrismaModel>
+    _max?: NestedFloatFilter<$PrismaModel>
+  }
+
+  export type EnumMasteryStatusFilter<$PrismaModel = never> = {
+    equals?: $Enums.MasteryStatus | EnumMasteryStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.MasteryStatus[] | ListEnumMasteryStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.MasteryStatus[] | ListEnumMasteryStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumMasteryStatusFilter<$PrismaModel> | $Enums.MasteryStatus
+  }
+
+  export type TopicMasteryUserIdTopicIdCompoundUniqueInput = {
+    userId: string
+    topicId: string
+  }
+
+  export type TopicMasteryCountOrderByAggregateInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    topicId?: SortOrder
+    masteryLevel?: SortOrder
+    status?: SortOrder
+    questionsAsked?: SortOrder
+    coverageScore?: SortOrder
+    depthScore?: SortOrder
+    confidenceScore?: SortOrder
+    diversityScore?: SortOrder
+    retentionScore?: SortOrder
+    subtopicsExplored?: SortOrder
+    firstInteraction?: SortOrder
+    lastInteraction?: SortOrder
+    completedAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type TopicMasteryAvgOrderByAggregateInput = {
+    masteryLevel?: SortOrder
+    questionsAsked?: SortOrder
+    coverageScore?: SortOrder
+    depthScore?: SortOrder
+    confidenceScore?: SortOrder
+    diversityScore?: SortOrder
+    retentionScore?: SortOrder
+  }
+
+  export type TopicMasteryMaxOrderByAggregateInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    topicId?: SortOrder
+    masteryLevel?: SortOrder
+    status?: SortOrder
+    questionsAsked?: SortOrder
+    coverageScore?: SortOrder
+    depthScore?: SortOrder
+    confidenceScore?: SortOrder
+    diversityScore?: SortOrder
+    retentionScore?: SortOrder
+    firstInteraction?: SortOrder
+    lastInteraction?: SortOrder
+    completedAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type TopicMasteryMinOrderByAggregateInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    topicId?: SortOrder
+    masteryLevel?: SortOrder
+    status?: SortOrder
+    questionsAsked?: SortOrder
+    coverageScore?: SortOrder
+    depthScore?: SortOrder
+    confidenceScore?: SortOrder
+    diversityScore?: SortOrder
+    retentionScore?: SortOrder
+    firstInteraction?: SortOrder
+    lastInteraction?: SortOrder
+    completedAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type TopicMasterySumOrderByAggregateInput = {
+    masteryLevel?: SortOrder
+    questionsAsked?: SortOrder
+    coverageScore?: SortOrder
+    depthScore?: SortOrder
+    confidenceScore?: SortOrder
+    diversityScore?: SortOrder
+    retentionScore?: SortOrder
+  }
+
+  export type EnumMasteryStatusWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.MasteryStatus | EnumMasteryStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.MasteryStatus[] | ListEnumMasteryStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.MasteryStatus[] | ListEnumMasteryStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumMasteryStatusWithAggregatesFilter<$PrismaModel> | $Enums.MasteryStatus
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumMasteryStatusFilter<$PrismaModel>
+    _max?: NestedEnumMasteryStatusFilter<$PrismaModel>
+  }
+
   export type NoteCreateNestedManyWithoutUserInput = {
     create?: XOR<NoteCreateWithoutUserInput, NoteUncheckedCreateWithoutUserInput> | NoteCreateWithoutUserInput[] | NoteUncheckedCreateWithoutUserInput[]
     connectOrCreate?: NoteCreateOrConnectWithoutUserInput | NoteCreateOrConnectWithoutUserInput[]
@@ -11040,6 +15536,17 @@ export namespace Prisma {
     connect?: RefreshTokenWhereUniqueInput | RefreshTokenWhereUniqueInput[]
   }
 
+  export type TopicInteractionCreateNestedManyWithoutUserInput = {
+    connect?: TopicInteractionWhereUniqueInput | TopicInteractionWhereUniqueInput[]
+  }
+
+  export type TopicMasteryCreateNestedManyWithoutUserInput = {
+    create?: XOR<TopicMasteryCreateWithoutUserInput, TopicMasteryUncheckedCreateWithoutUserInput> | TopicMasteryCreateWithoutUserInput[] | TopicMasteryUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: TopicMasteryCreateOrConnectWithoutUserInput | TopicMasteryCreateOrConnectWithoutUserInput[]
+    createMany?: TopicMasteryCreateManyUserInputEnvelope
+    connect?: TopicMasteryWhereUniqueInput | TopicMasteryWhereUniqueInput[]
+  }
+
   export type NoteUncheckedCreateNestedManyWithoutUserInput = {
     create?: XOR<NoteCreateWithoutUserInput, NoteUncheckedCreateWithoutUserInput> | NoteCreateWithoutUserInput[] | NoteUncheckedCreateWithoutUserInput[]
     connectOrCreate?: NoteCreateOrConnectWithoutUserInput | NoteCreateOrConnectWithoutUserInput[]
@@ -11073,6 +15580,17 @@ export namespace Prisma {
     connectOrCreate?: RefreshTokenCreateOrConnectWithoutUserInput | RefreshTokenCreateOrConnectWithoutUserInput[]
     createMany?: RefreshTokenCreateManyUserInputEnvelope
     connect?: RefreshTokenWhereUniqueInput | RefreshTokenWhereUniqueInput[]
+  }
+
+  export type TopicInteractionUncheckedCreateNestedManyWithoutUserInput = {
+    connect?: TopicInteractionWhereUniqueInput | TopicInteractionWhereUniqueInput[]
+  }
+
+  export type TopicMasteryUncheckedCreateNestedManyWithoutUserInput = {
+    create?: XOR<TopicMasteryCreateWithoutUserInput, TopicMasteryUncheckedCreateWithoutUserInput> | TopicMasteryCreateWithoutUserInput[] | TopicMasteryUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: TopicMasteryCreateOrConnectWithoutUserInput | TopicMasteryCreateOrConnectWithoutUserInput[]
+    createMany?: TopicMasteryCreateManyUserInputEnvelope
+    connect?: TopicMasteryWhereUniqueInput | TopicMasteryWhereUniqueInput[]
   }
 
   export type StringFieldUpdateOperationsInput = {
@@ -11177,6 +15695,30 @@ export namespace Prisma {
     deleteMany?: RefreshTokenScalarWhereInput | RefreshTokenScalarWhereInput[]
   }
 
+  export type TopicInteractionUpdateManyWithoutUserNestedInput = {
+    set?: TopicInteractionWhereUniqueInput | TopicInteractionWhereUniqueInput[]
+    disconnect?: TopicInteractionWhereUniqueInput | TopicInteractionWhereUniqueInput[]
+    delete?: TopicInteractionWhereUniqueInput | TopicInteractionWhereUniqueInput[]
+    connect?: TopicInteractionWhereUniqueInput | TopicInteractionWhereUniqueInput[]
+    update?: TopicInteractionUpdateWithWhereUniqueWithoutUserInput | TopicInteractionUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: TopicInteractionUpdateManyWithWhereWithoutUserInput | TopicInteractionUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: TopicInteractionScalarWhereInput | TopicInteractionScalarWhereInput[]
+  }
+
+  export type TopicMasteryUpdateManyWithoutUserNestedInput = {
+    create?: XOR<TopicMasteryCreateWithoutUserInput, TopicMasteryUncheckedCreateWithoutUserInput> | TopicMasteryCreateWithoutUserInput[] | TopicMasteryUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: TopicMasteryCreateOrConnectWithoutUserInput | TopicMasteryCreateOrConnectWithoutUserInput[]
+    upsert?: TopicMasteryUpsertWithWhereUniqueWithoutUserInput | TopicMasteryUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: TopicMasteryCreateManyUserInputEnvelope
+    set?: TopicMasteryWhereUniqueInput | TopicMasteryWhereUniqueInput[]
+    disconnect?: TopicMasteryWhereUniqueInput | TopicMasteryWhereUniqueInput[]
+    delete?: TopicMasteryWhereUniqueInput | TopicMasteryWhereUniqueInput[]
+    connect?: TopicMasteryWhereUniqueInput | TopicMasteryWhereUniqueInput[]
+    update?: TopicMasteryUpdateWithWhereUniqueWithoutUserInput | TopicMasteryUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: TopicMasteryUpdateManyWithWhereWithoutUserInput | TopicMasteryUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: TopicMasteryScalarWhereInput | TopicMasteryScalarWhereInput[]
+  }
+
   export type NoteUncheckedUpdateManyWithoutUserNestedInput = {
     create?: XOR<NoteCreateWithoutUserInput, NoteUncheckedCreateWithoutUserInput> | NoteCreateWithoutUserInput[] | NoteUncheckedCreateWithoutUserInput[]
     connectOrCreate?: NoteCreateOrConnectWithoutUserInput | NoteCreateOrConnectWithoutUserInput[]
@@ -11245,6 +15787,30 @@ export namespace Prisma {
     update?: RefreshTokenUpdateWithWhereUniqueWithoutUserInput | RefreshTokenUpdateWithWhereUniqueWithoutUserInput[]
     updateMany?: RefreshTokenUpdateManyWithWhereWithoutUserInput | RefreshTokenUpdateManyWithWhereWithoutUserInput[]
     deleteMany?: RefreshTokenScalarWhereInput | RefreshTokenScalarWhereInput[]
+  }
+
+  export type TopicInteractionUncheckedUpdateManyWithoutUserNestedInput = {
+    set?: TopicInteractionWhereUniqueInput | TopicInteractionWhereUniqueInput[]
+    disconnect?: TopicInteractionWhereUniqueInput | TopicInteractionWhereUniqueInput[]
+    delete?: TopicInteractionWhereUniqueInput | TopicInteractionWhereUniqueInput[]
+    connect?: TopicInteractionWhereUniqueInput | TopicInteractionWhereUniqueInput[]
+    update?: TopicInteractionUpdateWithWhereUniqueWithoutUserInput | TopicInteractionUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: TopicInteractionUpdateManyWithWhereWithoutUserInput | TopicInteractionUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: TopicInteractionScalarWhereInput | TopicInteractionScalarWhereInput[]
+  }
+
+  export type TopicMasteryUncheckedUpdateManyWithoutUserNestedInput = {
+    create?: XOR<TopicMasteryCreateWithoutUserInput, TopicMasteryUncheckedCreateWithoutUserInput> | TopicMasteryCreateWithoutUserInput[] | TopicMasteryUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: TopicMasteryCreateOrConnectWithoutUserInput | TopicMasteryCreateOrConnectWithoutUserInput[]
+    upsert?: TopicMasteryUpsertWithWhereUniqueWithoutUserInput | TopicMasteryUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: TopicMasteryCreateManyUserInputEnvelope
+    set?: TopicMasteryWhereUniqueInput | TopicMasteryWhereUniqueInput[]
+    disconnect?: TopicMasteryWhereUniqueInput | TopicMasteryWhereUniqueInput[]
+    delete?: TopicMasteryWhereUniqueInput | TopicMasteryWhereUniqueInput[]
+    connect?: TopicMasteryWhereUniqueInput | TopicMasteryWhereUniqueInput[]
+    update?: TopicMasteryUpdateWithWhereUniqueWithoutUserInput | TopicMasteryUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: TopicMasteryUpdateManyWithWhereWithoutUserInput | TopicMasteryUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: TopicMasteryScalarWhereInput | TopicMasteryScalarWhereInput[]
   }
 
   export type UserCreateNestedOneWithoutRefreshTokensInput = {
@@ -11387,6 +15953,222 @@ export namespace Prisma {
     delete?: DocumentWhereInput | boolean
     connect?: DocumentWhereUniqueInput
     update?: XOR<XOR<DocumentUpdateToOneWithWhereWithoutEmbeddingsInput, DocumentUpdateWithoutEmbeddingsInput>, DocumentUncheckedUpdateWithoutEmbeddingsInput>
+  }
+
+  export type TopicCreatekeywordsInput = {
+    set: string[]
+  }
+
+  export type TopicCreatealiasesInput = {
+    set: string[]
+  }
+
+  export type TopicCreateNestedOneWithoutChildrenInput = {
+    create?: XOR<TopicCreateWithoutChildrenInput, TopicUncheckedCreateWithoutChildrenInput>
+    connectOrCreate?: TopicCreateOrConnectWithoutChildrenInput
+    connect?: TopicWhereUniqueInput
+  }
+
+  export type TopicCreateNestedManyWithoutParentInput = {
+    create?: XOR<TopicCreateWithoutParentInput, TopicUncheckedCreateWithoutParentInput> | TopicCreateWithoutParentInput[] | TopicUncheckedCreateWithoutParentInput[]
+    connectOrCreate?: TopicCreateOrConnectWithoutParentInput | TopicCreateOrConnectWithoutParentInput[]
+    createMany?: TopicCreateManyParentInputEnvelope
+    connect?: TopicWhereUniqueInput | TopicWhereUniqueInput[]
+  }
+
+  export type TopicInteractionCreateNestedManyWithoutTopicInput = {
+    connect?: TopicInteractionWhereUniqueInput | TopicInteractionWhereUniqueInput[]
+  }
+
+  export type TopicMasteryCreateNestedManyWithoutTopicInput = {
+    create?: XOR<TopicMasteryCreateWithoutTopicInput, TopicMasteryUncheckedCreateWithoutTopicInput> | TopicMasteryCreateWithoutTopicInput[] | TopicMasteryUncheckedCreateWithoutTopicInput[]
+    connectOrCreate?: TopicMasteryCreateOrConnectWithoutTopicInput | TopicMasteryCreateOrConnectWithoutTopicInput[]
+    createMany?: TopicMasteryCreateManyTopicInputEnvelope
+    connect?: TopicMasteryWhereUniqueInput | TopicMasteryWhereUniqueInput[]
+  }
+
+  export type TopicUncheckedCreateNestedManyWithoutParentInput = {
+    create?: XOR<TopicCreateWithoutParentInput, TopicUncheckedCreateWithoutParentInput> | TopicCreateWithoutParentInput[] | TopicUncheckedCreateWithoutParentInput[]
+    connectOrCreate?: TopicCreateOrConnectWithoutParentInput | TopicCreateOrConnectWithoutParentInput[]
+    createMany?: TopicCreateManyParentInputEnvelope
+    connect?: TopicWhereUniqueInput | TopicWhereUniqueInput[]
+  }
+
+  export type TopicInteractionUncheckedCreateNestedManyWithoutTopicInput = {
+    connect?: TopicInteractionWhereUniqueInput | TopicInteractionWhereUniqueInput[]
+  }
+
+  export type TopicMasteryUncheckedCreateNestedManyWithoutTopicInput = {
+    create?: XOR<TopicMasteryCreateWithoutTopicInput, TopicMasteryUncheckedCreateWithoutTopicInput> | TopicMasteryCreateWithoutTopicInput[] | TopicMasteryUncheckedCreateWithoutTopicInput[]
+    connectOrCreate?: TopicMasteryCreateOrConnectWithoutTopicInput | TopicMasteryCreateOrConnectWithoutTopicInput[]
+    createMany?: TopicMasteryCreateManyTopicInputEnvelope
+    connect?: TopicMasteryWhereUniqueInput | TopicMasteryWhereUniqueInput[]
+  }
+
+  export type TopicUpdatekeywordsInput = {
+    set?: string[]
+    push?: string | string[]
+  }
+
+  export type TopicUpdatealiasesInput = {
+    set?: string[]
+    push?: string | string[]
+  }
+
+  export type TopicUpdateOneWithoutChildrenNestedInput = {
+    create?: XOR<TopicCreateWithoutChildrenInput, TopicUncheckedCreateWithoutChildrenInput>
+    connectOrCreate?: TopicCreateOrConnectWithoutChildrenInput
+    upsert?: TopicUpsertWithoutChildrenInput
+    disconnect?: TopicWhereInput | boolean
+    delete?: TopicWhereInput | boolean
+    connect?: TopicWhereUniqueInput
+    update?: XOR<XOR<TopicUpdateToOneWithWhereWithoutChildrenInput, TopicUpdateWithoutChildrenInput>, TopicUncheckedUpdateWithoutChildrenInput>
+  }
+
+  export type TopicUpdateManyWithoutParentNestedInput = {
+    create?: XOR<TopicCreateWithoutParentInput, TopicUncheckedCreateWithoutParentInput> | TopicCreateWithoutParentInput[] | TopicUncheckedCreateWithoutParentInput[]
+    connectOrCreate?: TopicCreateOrConnectWithoutParentInput | TopicCreateOrConnectWithoutParentInput[]
+    upsert?: TopicUpsertWithWhereUniqueWithoutParentInput | TopicUpsertWithWhereUniqueWithoutParentInput[]
+    createMany?: TopicCreateManyParentInputEnvelope
+    set?: TopicWhereUniqueInput | TopicWhereUniqueInput[]
+    disconnect?: TopicWhereUniqueInput | TopicWhereUniqueInput[]
+    delete?: TopicWhereUniqueInput | TopicWhereUniqueInput[]
+    connect?: TopicWhereUniqueInput | TopicWhereUniqueInput[]
+    update?: TopicUpdateWithWhereUniqueWithoutParentInput | TopicUpdateWithWhereUniqueWithoutParentInput[]
+    updateMany?: TopicUpdateManyWithWhereWithoutParentInput | TopicUpdateManyWithWhereWithoutParentInput[]
+    deleteMany?: TopicScalarWhereInput | TopicScalarWhereInput[]
+  }
+
+  export type TopicInteractionUpdateManyWithoutTopicNestedInput = {
+    set?: TopicInteractionWhereUniqueInput | TopicInteractionWhereUniqueInput[]
+    disconnect?: TopicInteractionWhereUniqueInput | TopicInteractionWhereUniqueInput[]
+    delete?: TopicInteractionWhereUniqueInput | TopicInteractionWhereUniqueInput[]
+    connect?: TopicInteractionWhereUniqueInput | TopicInteractionWhereUniqueInput[]
+    update?: TopicInteractionUpdateWithWhereUniqueWithoutTopicInput | TopicInteractionUpdateWithWhereUniqueWithoutTopicInput[]
+    updateMany?: TopicInteractionUpdateManyWithWhereWithoutTopicInput | TopicInteractionUpdateManyWithWhereWithoutTopicInput[]
+    deleteMany?: TopicInteractionScalarWhereInput | TopicInteractionScalarWhereInput[]
+  }
+
+  export type TopicMasteryUpdateManyWithoutTopicNestedInput = {
+    create?: XOR<TopicMasteryCreateWithoutTopicInput, TopicMasteryUncheckedCreateWithoutTopicInput> | TopicMasteryCreateWithoutTopicInput[] | TopicMasteryUncheckedCreateWithoutTopicInput[]
+    connectOrCreate?: TopicMasteryCreateOrConnectWithoutTopicInput | TopicMasteryCreateOrConnectWithoutTopicInput[]
+    upsert?: TopicMasteryUpsertWithWhereUniqueWithoutTopicInput | TopicMasteryUpsertWithWhereUniqueWithoutTopicInput[]
+    createMany?: TopicMasteryCreateManyTopicInputEnvelope
+    set?: TopicMasteryWhereUniqueInput | TopicMasteryWhereUniqueInput[]
+    disconnect?: TopicMasteryWhereUniqueInput | TopicMasteryWhereUniqueInput[]
+    delete?: TopicMasteryWhereUniqueInput | TopicMasteryWhereUniqueInput[]
+    connect?: TopicMasteryWhereUniqueInput | TopicMasteryWhereUniqueInput[]
+    update?: TopicMasteryUpdateWithWhereUniqueWithoutTopicInput | TopicMasteryUpdateWithWhereUniqueWithoutTopicInput[]
+    updateMany?: TopicMasteryUpdateManyWithWhereWithoutTopicInput | TopicMasteryUpdateManyWithWhereWithoutTopicInput[]
+    deleteMany?: TopicMasteryScalarWhereInput | TopicMasteryScalarWhereInput[]
+  }
+
+  export type TopicUncheckedUpdateManyWithoutParentNestedInput = {
+    create?: XOR<TopicCreateWithoutParentInput, TopicUncheckedCreateWithoutParentInput> | TopicCreateWithoutParentInput[] | TopicUncheckedCreateWithoutParentInput[]
+    connectOrCreate?: TopicCreateOrConnectWithoutParentInput | TopicCreateOrConnectWithoutParentInput[]
+    upsert?: TopicUpsertWithWhereUniqueWithoutParentInput | TopicUpsertWithWhereUniqueWithoutParentInput[]
+    createMany?: TopicCreateManyParentInputEnvelope
+    set?: TopicWhereUniqueInput | TopicWhereUniqueInput[]
+    disconnect?: TopicWhereUniqueInput | TopicWhereUniqueInput[]
+    delete?: TopicWhereUniqueInput | TopicWhereUniqueInput[]
+    connect?: TopicWhereUniqueInput | TopicWhereUniqueInput[]
+    update?: TopicUpdateWithWhereUniqueWithoutParentInput | TopicUpdateWithWhereUniqueWithoutParentInput[]
+    updateMany?: TopicUpdateManyWithWhereWithoutParentInput | TopicUpdateManyWithWhereWithoutParentInput[]
+    deleteMany?: TopicScalarWhereInput | TopicScalarWhereInput[]
+  }
+
+  export type TopicInteractionUncheckedUpdateManyWithoutTopicNestedInput = {
+    set?: TopicInteractionWhereUniqueInput | TopicInteractionWhereUniqueInput[]
+    disconnect?: TopicInteractionWhereUniqueInput | TopicInteractionWhereUniqueInput[]
+    delete?: TopicInteractionWhereUniqueInput | TopicInteractionWhereUniqueInput[]
+    connect?: TopicInteractionWhereUniqueInput | TopicInteractionWhereUniqueInput[]
+    update?: TopicInteractionUpdateWithWhereUniqueWithoutTopicInput | TopicInteractionUpdateWithWhereUniqueWithoutTopicInput[]
+    updateMany?: TopicInteractionUpdateManyWithWhereWithoutTopicInput | TopicInteractionUpdateManyWithWhereWithoutTopicInput[]
+    deleteMany?: TopicInteractionScalarWhereInput | TopicInteractionScalarWhereInput[]
+  }
+
+  export type TopicMasteryUncheckedUpdateManyWithoutTopicNestedInput = {
+    create?: XOR<TopicMasteryCreateWithoutTopicInput, TopicMasteryUncheckedCreateWithoutTopicInput> | TopicMasteryCreateWithoutTopicInput[] | TopicMasteryUncheckedCreateWithoutTopicInput[]
+    connectOrCreate?: TopicMasteryCreateOrConnectWithoutTopicInput | TopicMasteryCreateOrConnectWithoutTopicInput[]
+    upsert?: TopicMasteryUpsertWithWhereUniqueWithoutTopicInput | TopicMasteryUpsertWithWhereUniqueWithoutTopicInput[]
+    createMany?: TopicMasteryCreateManyTopicInputEnvelope
+    set?: TopicMasteryWhereUniqueInput | TopicMasteryWhereUniqueInput[]
+    disconnect?: TopicMasteryWhereUniqueInput | TopicMasteryWhereUniqueInput[]
+    delete?: TopicMasteryWhereUniqueInput | TopicMasteryWhereUniqueInput[]
+    connect?: TopicMasteryWhereUniqueInput | TopicMasteryWhereUniqueInput[]
+    update?: TopicMasteryUpdateWithWhereUniqueWithoutTopicInput | TopicMasteryUpdateWithWhereUniqueWithoutTopicInput[]
+    updateMany?: TopicMasteryUpdateManyWithWhereWithoutTopicInput | TopicMasteryUpdateManyWithWhereWithoutTopicInput[]
+    deleteMany?: TopicMasteryScalarWhereInput | TopicMasteryScalarWhereInput[]
+  }
+
+  export type FloatFieldUpdateOperationsInput = {
+    set?: number
+    increment?: number
+    decrement?: number
+    multiply?: number
+    divide?: number
+  }
+
+  export type TopicInteractionUpdatecitedSectionsInput = {
+    set?: string[]
+    push?: string | string[]
+  }
+
+  export type UserUpdateOneRequiredWithoutTopicInteractionsNestedInput = {
+    create?: XOR<UserCreateWithoutTopicInteractionsInput, UserUncheckedCreateWithoutTopicInteractionsInput>
+    connectOrCreate?: UserCreateOrConnectWithoutTopicInteractionsInput
+    upsert?: UserUpsertWithoutTopicInteractionsInput
+    connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutTopicInteractionsInput, UserUpdateWithoutTopicInteractionsInput>, UserUncheckedUpdateWithoutTopicInteractionsInput>
+  }
+
+  export type TopicUpdateOneRequiredWithoutInteractionsNestedInput = {
+    create?: XOR<TopicCreateWithoutInteractionsInput, TopicUncheckedCreateWithoutInteractionsInput>
+    connectOrCreate?: TopicCreateOrConnectWithoutInteractionsInput
+    upsert?: TopicUpsertWithoutInteractionsInput
+    connect?: TopicWhereUniqueInput
+    update?: XOR<XOR<TopicUpdateToOneWithWhereWithoutInteractionsInput, TopicUpdateWithoutInteractionsInput>, TopicUncheckedUpdateWithoutInteractionsInput>
+  }
+
+  export type TopicMasteryCreatesubtopicsExploredInput = {
+    set: string[]
+  }
+
+  export type UserCreateNestedOneWithoutTopicMasteriesInput = {
+    create?: XOR<UserCreateWithoutTopicMasteriesInput, UserUncheckedCreateWithoutTopicMasteriesInput>
+    connectOrCreate?: UserCreateOrConnectWithoutTopicMasteriesInput
+    connect?: UserWhereUniqueInput
+  }
+
+  export type TopicCreateNestedOneWithoutMasteriesInput = {
+    create?: XOR<TopicCreateWithoutMasteriesInput, TopicUncheckedCreateWithoutMasteriesInput>
+    connectOrCreate?: TopicCreateOrConnectWithoutMasteriesInput
+    connect?: TopicWhereUniqueInput
+  }
+
+  export type EnumMasteryStatusFieldUpdateOperationsInput = {
+    set?: $Enums.MasteryStatus
+  }
+
+  export type TopicMasteryUpdatesubtopicsExploredInput = {
+    set?: string[]
+    push?: string | string[]
+  }
+
+  export type UserUpdateOneRequiredWithoutTopicMasteriesNestedInput = {
+    create?: XOR<UserCreateWithoutTopicMasteriesInput, UserUncheckedCreateWithoutTopicMasteriesInput>
+    connectOrCreate?: UserCreateOrConnectWithoutTopicMasteriesInput
+    upsert?: UserUpsertWithoutTopicMasteriesInput
+    connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutTopicMasteriesInput, UserUpdateWithoutTopicMasteriesInput>, UserUncheckedUpdateWithoutTopicMasteriesInput>
+  }
+
+  export type TopicUpdateOneRequiredWithoutMasteriesNestedInput = {
+    create?: XOR<TopicCreateWithoutMasteriesInput, TopicUncheckedCreateWithoutMasteriesInput>
+    connectOrCreate?: TopicCreateOrConnectWithoutMasteriesInput
+    upsert?: TopicUpsertWithoutMasteriesInput
+    connect?: TopicWhereUniqueInput
+    update?: XOR<XOR<TopicUpdateToOneWithWhereWithoutMasteriesInput, TopicUpdateWithoutMasteriesInput>, TopicUncheckedUpdateWithoutMasteriesInput>
   }
 
   export type NestedStringFilter<$PrismaModel = never> = {
@@ -11668,6 +16450,39 @@ export namespace Prisma {
     not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
   }
 
+  export type NestedFloatWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | FloatFieldRefInput<$PrismaModel>
+    in?: number[] | ListFloatFieldRefInput<$PrismaModel>
+    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel>
+    lt?: number | FloatFieldRefInput<$PrismaModel>
+    lte?: number | FloatFieldRefInput<$PrismaModel>
+    gt?: number | FloatFieldRefInput<$PrismaModel>
+    gte?: number | FloatFieldRefInput<$PrismaModel>
+    not?: NestedFloatWithAggregatesFilter<$PrismaModel> | number
+    _count?: NestedIntFilter<$PrismaModel>
+    _avg?: NestedFloatFilter<$PrismaModel>
+    _sum?: NestedFloatFilter<$PrismaModel>
+    _min?: NestedFloatFilter<$PrismaModel>
+    _max?: NestedFloatFilter<$PrismaModel>
+  }
+
+  export type NestedEnumMasteryStatusFilter<$PrismaModel = never> = {
+    equals?: $Enums.MasteryStatus | EnumMasteryStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.MasteryStatus[] | ListEnumMasteryStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.MasteryStatus[] | ListEnumMasteryStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumMasteryStatusFilter<$PrismaModel> | $Enums.MasteryStatus
+  }
+
+  export type NestedEnumMasteryStatusWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.MasteryStatus | EnumMasteryStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.MasteryStatus[] | ListEnumMasteryStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.MasteryStatus[] | ListEnumMasteryStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumMasteryStatusWithAggregatesFilter<$PrismaModel> | $Enums.MasteryStatus
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumMasteryStatusFilter<$PrismaModel>
+    _max?: NestedEnumMasteryStatusFilter<$PrismaModel>
+  }
+
   export type NoteCreateWithoutUserInput = {
     id?: string
     document: string
@@ -11846,6 +16661,52 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
+  export type TopicMasteryCreateWithoutUserInput = {
+    id?: string
+    masteryLevel?: number
+    status: $Enums.MasteryStatus
+    questionsAsked?: number
+    coverageScore?: number
+    depthScore?: number
+    confidenceScore?: number
+    diversityScore?: number
+    retentionScore?: number
+    subtopicsExplored?: TopicMasteryCreatesubtopicsExploredInput | string[]
+    firstInteraction?: Date | string | null
+    lastInteraction?: Date | string | null
+    completedAt?: Date | string | null
+    updatedAt?: Date | string
+    topic: TopicCreateNestedOneWithoutMasteriesInput
+  }
+
+  export type TopicMasteryUncheckedCreateWithoutUserInput = {
+    id?: string
+    topicId: string
+    masteryLevel?: number
+    status: $Enums.MasteryStatus
+    questionsAsked?: number
+    coverageScore?: number
+    depthScore?: number
+    confidenceScore?: number
+    diversityScore?: number
+    retentionScore?: number
+    subtopicsExplored?: TopicMasteryCreatesubtopicsExploredInput | string[]
+    firstInteraction?: Date | string | null
+    lastInteraction?: Date | string | null
+    completedAt?: Date | string | null
+    updatedAt?: Date | string
+  }
+
+  export type TopicMasteryCreateOrConnectWithoutUserInput = {
+    where: TopicMasteryWhereUniqueInput
+    create: XOR<TopicMasteryCreateWithoutUserInput, TopicMasteryUncheckedCreateWithoutUserInput>
+  }
+
+  export type TopicMasteryCreateManyUserInputEnvelope = {
+    data: TopicMasteryCreateManyUserInput | TopicMasteryCreateManyUserInput[]
+    skipDuplicates?: boolean
+  }
+
   export type NoteUpsertWithWhereUniqueWithoutUserInput = {
     where: NoteWhereUniqueInput
     update: XOR<NoteUpdateWithoutUserInput, NoteUncheckedUpdateWithoutUserInput>
@@ -12009,6 +16870,73 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"RefreshToken"> | Date | string
   }
 
+  export type TopicInteractionUpdateWithWhereUniqueWithoutUserInput = {
+    where: TopicInteractionWhereUniqueInput
+    data: XOR<TopicInteractionUpdateWithoutUserInput, TopicInteractionUncheckedUpdateWithoutUserInput>
+  }
+
+  export type TopicInteractionUpdateManyWithWhereWithoutUserInput = {
+    where: TopicInteractionScalarWhereInput
+    data: XOR<TopicInteractionUpdateManyMutationInput, TopicInteractionUncheckedUpdateManyWithoutUserInput>
+  }
+
+  export type TopicInteractionScalarWhereInput = {
+    AND?: TopicInteractionScalarWhereInput | TopicInteractionScalarWhereInput[]
+    OR?: TopicInteractionScalarWhereInput[]
+    NOT?: TopicInteractionScalarWhereInput | TopicInteractionScalarWhereInput[]
+    id?: StringFilter<"TopicInteraction"> | string
+    userId?: StringFilter<"TopicInteraction"> | string
+    topicId?: StringFilter<"TopicInteraction"> | string
+    query?: StringFilter<"TopicInteraction"> | string
+    mappingConfidence?: FloatFilter<"TopicInteraction"> | number
+    ragConfidence?: StringFilter<"TopicInteraction"> | string
+    ragTopScore?: FloatFilter<"TopicInteraction"> | number
+    citedSections?: StringNullableListFilter<"TopicInteraction">
+    answerLength?: IntFilter<"TopicInteraction"> | number
+    citationCount?: IntFilter<"TopicInteraction"> | number
+    timeSpentMs?: IntNullableFilter<"TopicInteraction"> | number | null
+    hadFollowUp?: BoolFilter<"TopicInteraction"> | boolean
+    createdAt?: DateTimeFilter<"TopicInteraction"> | Date | string
+  }
+
+  export type TopicMasteryUpsertWithWhereUniqueWithoutUserInput = {
+    where: TopicMasteryWhereUniqueInput
+    update: XOR<TopicMasteryUpdateWithoutUserInput, TopicMasteryUncheckedUpdateWithoutUserInput>
+    create: XOR<TopicMasteryCreateWithoutUserInput, TopicMasteryUncheckedCreateWithoutUserInput>
+  }
+
+  export type TopicMasteryUpdateWithWhereUniqueWithoutUserInput = {
+    where: TopicMasteryWhereUniqueInput
+    data: XOR<TopicMasteryUpdateWithoutUserInput, TopicMasteryUncheckedUpdateWithoutUserInput>
+  }
+
+  export type TopicMasteryUpdateManyWithWhereWithoutUserInput = {
+    where: TopicMasteryScalarWhereInput
+    data: XOR<TopicMasteryUpdateManyMutationInput, TopicMasteryUncheckedUpdateManyWithoutUserInput>
+  }
+
+  export type TopicMasteryScalarWhereInput = {
+    AND?: TopicMasteryScalarWhereInput | TopicMasteryScalarWhereInput[]
+    OR?: TopicMasteryScalarWhereInput[]
+    NOT?: TopicMasteryScalarWhereInput | TopicMasteryScalarWhereInput[]
+    id?: StringFilter<"TopicMastery"> | string
+    userId?: StringFilter<"TopicMastery"> | string
+    topicId?: StringFilter<"TopicMastery"> | string
+    masteryLevel?: FloatFilter<"TopicMastery"> | number
+    status?: EnumMasteryStatusFilter<"TopicMastery"> | $Enums.MasteryStatus
+    questionsAsked?: IntFilter<"TopicMastery"> | number
+    coverageScore?: FloatFilter<"TopicMastery"> | number
+    depthScore?: FloatFilter<"TopicMastery"> | number
+    confidenceScore?: FloatFilter<"TopicMastery"> | number
+    diversityScore?: FloatFilter<"TopicMastery"> | number
+    retentionScore?: FloatFilter<"TopicMastery"> | number
+    subtopicsExplored?: StringNullableListFilter<"TopicMastery">
+    firstInteraction?: DateTimeNullableFilter<"TopicMastery"> | Date | string | null
+    lastInteraction?: DateTimeNullableFilter<"TopicMastery"> | Date | string | null
+    completedAt?: DateTimeNullableFilter<"TopicMastery"> | Date | string | null
+    updatedAt?: DateTimeFilter<"TopicMastery"> | Date | string
+  }
+
   export type UserCreateWithoutRefreshTokensInput = {
     id?: string
     email: string
@@ -12027,6 +16955,8 @@ export namespace Prisma {
     progress?: ProgressCreateNestedManyWithoutUserInput
     documents?: DocumentCreateNestedManyWithoutUserInput
     embeddings?: EmbeddingCreateNestedManyWithoutUserInput
+    topicInteractions?: TopicInteractionCreateNestedManyWithoutUserInput
+    topicMasteries?: TopicMasteryCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutRefreshTokensInput = {
@@ -12047,6 +16977,8 @@ export namespace Prisma {
     progress?: ProgressUncheckedCreateNestedManyWithoutUserInput
     documents?: DocumentUncheckedCreateNestedManyWithoutUserInput
     embeddings?: EmbeddingUncheckedCreateNestedManyWithoutUserInput
+    topicInteractions?: TopicInteractionUncheckedCreateNestedManyWithoutUserInput
+    topicMasteries?: TopicMasteryUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutRefreshTokensInput = {
@@ -12083,6 +17015,8 @@ export namespace Prisma {
     progress?: ProgressUpdateManyWithoutUserNestedInput
     documents?: DocumentUpdateManyWithoutUserNestedInput
     embeddings?: EmbeddingUpdateManyWithoutUserNestedInput
+    topicInteractions?: TopicInteractionUpdateManyWithoutUserNestedInput
+    topicMasteries?: TopicMasteryUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutRefreshTokensInput = {
@@ -12103,6 +17037,8 @@ export namespace Prisma {
     progress?: ProgressUncheckedUpdateManyWithoutUserNestedInput
     documents?: DocumentUncheckedUpdateManyWithoutUserNestedInput
     embeddings?: EmbeddingUncheckedUpdateManyWithoutUserNestedInput
+    topicInteractions?: TopicInteractionUncheckedUpdateManyWithoutUserNestedInput
+    topicMasteries?: TopicMasteryUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserCreateWithoutNotesInput = {
@@ -12123,6 +17059,8 @@ export namespace Prisma {
     documents?: DocumentCreateNestedManyWithoutUserInput
     embeddings?: EmbeddingCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenCreateNestedManyWithoutUserInput
+    topicInteractions?: TopicInteractionCreateNestedManyWithoutUserInput
+    topicMasteries?: TopicMasteryCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutNotesInput = {
@@ -12143,6 +17081,8 @@ export namespace Prisma {
     documents?: DocumentUncheckedCreateNestedManyWithoutUserInput
     embeddings?: EmbeddingUncheckedCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenUncheckedCreateNestedManyWithoutUserInput
+    topicInteractions?: TopicInteractionUncheckedCreateNestedManyWithoutUserInput
+    topicMasteries?: TopicMasteryUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutNotesInput = {
@@ -12179,6 +17119,8 @@ export namespace Prisma {
     documents?: DocumentUpdateManyWithoutUserNestedInput
     embeddings?: EmbeddingUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUpdateManyWithoutUserNestedInput
+    topicInteractions?: TopicInteractionUpdateManyWithoutUserNestedInput
+    topicMasteries?: TopicMasteryUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutNotesInput = {
@@ -12199,6 +17141,8 @@ export namespace Prisma {
     documents?: DocumentUncheckedUpdateManyWithoutUserNestedInput
     embeddings?: EmbeddingUncheckedUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
+    topicInteractions?: TopicInteractionUncheckedUpdateManyWithoutUserNestedInput
+    topicMasteries?: TopicMasteryUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserCreateWithoutProgressInput = {
@@ -12219,6 +17163,8 @@ export namespace Prisma {
     documents?: DocumentCreateNestedManyWithoutUserInput
     embeddings?: EmbeddingCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenCreateNestedManyWithoutUserInput
+    topicInteractions?: TopicInteractionCreateNestedManyWithoutUserInput
+    topicMasteries?: TopicMasteryCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutProgressInput = {
@@ -12239,6 +17185,8 @@ export namespace Prisma {
     documents?: DocumentUncheckedCreateNestedManyWithoutUserInput
     embeddings?: EmbeddingUncheckedCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenUncheckedCreateNestedManyWithoutUserInput
+    topicInteractions?: TopicInteractionUncheckedCreateNestedManyWithoutUserInput
+    topicMasteries?: TopicMasteryUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutProgressInput = {
@@ -12275,6 +17223,8 @@ export namespace Prisma {
     documents?: DocumentUpdateManyWithoutUserNestedInput
     embeddings?: EmbeddingUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUpdateManyWithoutUserNestedInput
+    topicInteractions?: TopicInteractionUpdateManyWithoutUserNestedInput
+    topicMasteries?: TopicMasteryUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutProgressInput = {
@@ -12295,6 +17245,8 @@ export namespace Prisma {
     documents?: DocumentUncheckedUpdateManyWithoutUserNestedInput
     embeddings?: EmbeddingUncheckedUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
+    topicInteractions?: TopicInteractionUncheckedUpdateManyWithoutUserNestedInput
+    topicMasteries?: TopicMasteryUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserCreateWithoutDocumentsInput = {
@@ -12315,6 +17267,8 @@ export namespace Prisma {
     progress?: ProgressCreateNestedManyWithoutUserInput
     embeddings?: EmbeddingCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenCreateNestedManyWithoutUserInput
+    topicInteractions?: TopicInteractionCreateNestedManyWithoutUserInput
+    topicMasteries?: TopicMasteryCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutDocumentsInput = {
@@ -12335,6 +17289,8 @@ export namespace Prisma {
     progress?: ProgressUncheckedCreateNestedManyWithoutUserInput
     embeddings?: EmbeddingUncheckedCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenUncheckedCreateNestedManyWithoutUserInput
+    topicInteractions?: TopicInteractionUncheckedCreateNestedManyWithoutUserInput
+    topicMasteries?: TopicMasteryUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutDocumentsInput = {
@@ -12425,6 +17381,8 @@ export namespace Prisma {
     progress?: ProgressUpdateManyWithoutUserNestedInput
     embeddings?: EmbeddingUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUpdateManyWithoutUserNestedInput
+    topicInteractions?: TopicInteractionUpdateManyWithoutUserNestedInput
+    topicMasteries?: TopicMasteryUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutDocumentsInput = {
@@ -12445,6 +17403,8 @@ export namespace Prisma {
     progress?: ProgressUncheckedUpdateManyWithoutUserNestedInput
     embeddings?: EmbeddingUncheckedUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
+    topicInteractions?: TopicInteractionUncheckedUpdateManyWithoutUserNestedInput
+    topicMasteries?: TopicMasteryUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type EmbeddingUpsertWithWhereUniqueWithoutDocumentInput = {
@@ -12481,6 +17441,8 @@ export namespace Prisma {
     progress?: ProgressCreateNestedManyWithoutUserInput
     documents?: DocumentCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenCreateNestedManyWithoutUserInput
+    topicInteractions?: TopicInteractionCreateNestedManyWithoutUserInput
+    topicMasteries?: TopicMasteryCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutEmbeddingsInput = {
@@ -12501,6 +17463,8 @@ export namespace Prisma {
     progress?: ProgressUncheckedCreateNestedManyWithoutUserInput
     documents?: DocumentUncheckedCreateNestedManyWithoutUserInput
     refreshTokens?: RefreshTokenUncheckedCreateNestedManyWithoutUserInput
+    topicInteractions?: TopicInteractionUncheckedCreateNestedManyWithoutUserInput
+    topicMasteries?: TopicMasteryUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutEmbeddingsInput = {
@@ -12580,6 +17544,8 @@ export namespace Prisma {
     progress?: ProgressUpdateManyWithoutUserNestedInput
     documents?: DocumentUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUpdateManyWithoutUserNestedInput
+    topicInteractions?: TopicInteractionUpdateManyWithoutUserNestedInput
+    topicMasteries?: TopicMasteryUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutEmbeddingsInput = {
@@ -12600,6 +17566,8 @@ export namespace Prisma {
     progress?: ProgressUncheckedUpdateManyWithoutUserNestedInput
     documents?: DocumentUncheckedUpdateManyWithoutUserNestedInput
     refreshTokens?: RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
+    topicInteractions?: TopicInteractionUncheckedUpdateManyWithoutUserNestedInput
+    topicMasteries?: TopicMasteryUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type DocumentUpsertWithoutEmbeddingsInput = {
@@ -12649,6 +17617,586 @@ export namespace Prisma {
     completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type TopicCreateWithoutChildrenInput = {
+    id: string
+    level: number
+    name: string
+    slug: string
+    chapterNum?: number | null
+    keywords?: TopicCreatekeywordsInput | string[]
+    aliases?: TopicCreatealiasesInput | string[]
+    expectedQuestions?: number
+    createdAt?: Date | string
+    parent?: TopicCreateNestedOneWithoutChildrenInput
+    interactions?: TopicInteractionCreateNestedManyWithoutTopicInput
+    masteries?: TopicMasteryCreateNestedManyWithoutTopicInput
+  }
+
+  export type TopicUncheckedCreateWithoutChildrenInput = {
+    id: string
+    level: number
+    name: string
+    slug: string
+    parentId?: string | null
+    chapterNum?: number | null
+    keywords?: TopicCreatekeywordsInput | string[]
+    aliases?: TopicCreatealiasesInput | string[]
+    expectedQuestions?: number
+    createdAt?: Date | string
+    interactions?: TopicInteractionUncheckedCreateNestedManyWithoutTopicInput
+    masteries?: TopicMasteryUncheckedCreateNestedManyWithoutTopicInput
+  }
+
+  export type TopicCreateOrConnectWithoutChildrenInput = {
+    where: TopicWhereUniqueInput
+    create: XOR<TopicCreateWithoutChildrenInput, TopicUncheckedCreateWithoutChildrenInput>
+  }
+
+  export type TopicCreateWithoutParentInput = {
+    id: string
+    level: number
+    name: string
+    slug: string
+    chapterNum?: number | null
+    keywords?: TopicCreatekeywordsInput | string[]
+    aliases?: TopicCreatealiasesInput | string[]
+    expectedQuestions?: number
+    createdAt?: Date | string
+    children?: TopicCreateNestedManyWithoutParentInput
+    interactions?: TopicInteractionCreateNestedManyWithoutTopicInput
+    masteries?: TopicMasteryCreateNestedManyWithoutTopicInput
+  }
+
+  export type TopicUncheckedCreateWithoutParentInput = {
+    id: string
+    level: number
+    name: string
+    slug: string
+    chapterNum?: number | null
+    keywords?: TopicCreatekeywordsInput | string[]
+    aliases?: TopicCreatealiasesInput | string[]
+    expectedQuestions?: number
+    createdAt?: Date | string
+    children?: TopicUncheckedCreateNestedManyWithoutParentInput
+    interactions?: TopicInteractionUncheckedCreateNestedManyWithoutTopicInput
+    masteries?: TopicMasteryUncheckedCreateNestedManyWithoutTopicInput
+  }
+
+  export type TopicCreateOrConnectWithoutParentInput = {
+    where: TopicWhereUniqueInput
+    create: XOR<TopicCreateWithoutParentInput, TopicUncheckedCreateWithoutParentInput>
+  }
+
+  export type TopicCreateManyParentInputEnvelope = {
+    data: TopicCreateManyParentInput | TopicCreateManyParentInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type TopicMasteryCreateWithoutTopicInput = {
+    id?: string
+    masteryLevel?: number
+    status: $Enums.MasteryStatus
+    questionsAsked?: number
+    coverageScore?: number
+    depthScore?: number
+    confidenceScore?: number
+    diversityScore?: number
+    retentionScore?: number
+    subtopicsExplored?: TopicMasteryCreatesubtopicsExploredInput | string[]
+    firstInteraction?: Date | string | null
+    lastInteraction?: Date | string | null
+    completedAt?: Date | string | null
+    updatedAt?: Date | string
+    user: UserCreateNestedOneWithoutTopicMasteriesInput
+  }
+
+  export type TopicMasteryUncheckedCreateWithoutTopicInput = {
+    id?: string
+    userId: string
+    masteryLevel?: number
+    status: $Enums.MasteryStatus
+    questionsAsked?: number
+    coverageScore?: number
+    depthScore?: number
+    confidenceScore?: number
+    diversityScore?: number
+    retentionScore?: number
+    subtopicsExplored?: TopicMasteryCreatesubtopicsExploredInput | string[]
+    firstInteraction?: Date | string | null
+    lastInteraction?: Date | string | null
+    completedAt?: Date | string | null
+    updatedAt?: Date | string
+  }
+
+  export type TopicMasteryCreateOrConnectWithoutTopicInput = {
+    where: TopicMasteryWhereUniqueInput
+    create: XOR<TopicMasteryCreateWithoutTopicInput, TopicMasteryUncheckedCreateWithoutTopicInput>
+  }
+
+  export type TopicMasteryCreateManyTopicInputEnvelope = {
+    data: TopicMasteryCreateManyTopicInput | TopicMasteryCreateManyTopicInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type TopicUpsertWithoutChildrenInput = {
+    update: XOR<TopicUpdateWithoutChildrenInput, TopicUncheckedUpdateWithoutChildrenInput>
+    create: XOR<TopicCreateWithoutChildrenInput, TopicUncheckedCreateWithoutChildrenInput>
+    where?: TopicWhereInput
+  }
+
+  export type TopicUpdateToOneWithWhereWithoutChildrenInput = {
+    where?: TopicWhereInput
+    data: XOR<TopicUpdateWithoutChildrenInput, TopicUncheckedUpdateWithoutChildrenInput>
+  }
+
+  export type TopicUpdateWithoutChildrenInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    level?: IntFieldUpdateOperationsInput | number
+    name?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    chapterNum?: NullableIntFieldUpdateOperationsInput | number | null
+    keywords?: TopicUpdatekeywordsInput | string[]
+    aliases?: TopicUpdatealiasesInput | string[]
+    expectedQuestions?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    parent?: TopicUpdateOneWithoutChildrenNestedInput
+    interactions?: TopicInteractionUpdateManyWithoutTopicNestedInput
+    masteries?: TopicMasteryUpdateManyWithoutTopicNestedInput
+  }
+
+  export type TopicUncheckedUpdateWithoutChildrenInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    level?: IntFieldUpdateOperationsInput | number
+    name?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    parentId?: NullableStringFieldUpdateOperationsInput | string | null
+    chapterNum?: NullableIntFieldUpdateOperationsInput | number | null
+    keywords?: TopicUpdatekeywordsInput | string[]
+    aliases?: TopicUpdatealiasesInput | string[]
+    expectedQuestions?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    interactions?: TopicInteractionUncheckedUpdateManyWithoutTopicNestedInput
+    masteries?: TopicMasteryUncheckedUpdateManyWithoutTopicNestedInput
+  }
+
+  export type TopicUpsertWithWhereUniqueWithoutParentInput = {
+    where: TopicWhereUniqueInput
+    update: XOR<TopicUpdateWithoutParentInput, TopicUncheckedUpdateWithoutParentInput>
+    create: XOR<TopicCreateWithoutParentInput, TopicUncheckedCreateWithoutParentInput>
+  }
+
+  export type TopicUpdateWithWhereUniqueWithoutParentInput = {
+    where: TopicWhereUniqueInput
+    data: XOR<TopicUpdateWithoutParentInput, TopicUncheckedUpdateWithoutParentInput>
+  }
+
+  export type TopicUpdateManyWithWhereWithoutParentInput = {
+    where: TopicScalarWhereInput
+    data: XOR<TopicUpdateManyMutationInput, TopicUncheckedUpdateManyWithoutParentInput>
+  }
+
+  export type TopicScalarWhereInput = {
+    AND?: TopicScalarWhereInput | TopicScalarWhereInput[]
+    OR?: TopicScalarWhereInput[]
+    NOT?: TopicScalarWhereInput | TopicScalarWhereInput[]
+    id?: StringFilter<"Topic"> | string
+    level?: IntFilter<"Topic"> | number
+    name?: StringFilter<"Topic"> | string
+    slug?: StringFilter<"Topic"> | string
+    parentId?: StringNullableFilter<"Topic"> | string | null
+    chapterNum?: IntNullableFilter<"Topic"> | number | null
+    keywords?: StringNullableListFilter<"Topic">
+    aliases?: StringNullableListFilter<"Topic">
+    expectedQuestions?: IntFilter<"Topic"> | number
+    createdAt?: DateTimeFilter<"Topic"> | Date | string
+  }
+
+  export type TopicInteractionUpdateWithWhereUniqueWithoutTopicInput = {
+    where: TopicInteractionWhereUniqueInput
+    data: XOR<TopicInteractionUpdateWithoutTopicInput, TopicInteractionUncheckedUpdateWithoutTopicInput>
+  }
+
+  export type TopicInteractionUpdateManyWithWhereWithoutTopicInput = {
+    where: TopicInteractionScalarWhereInput
+    data: XOR<TopicInteractionUpdateManyMutationInput, TopicInteractionUncheckedUpdateManyWithoutTopicInput>
+  }
+
+  export type TopicMasteryUpsertWithWhereUniqueWithoutTopicInput = {
+    where: TopicMasteryWhereUniqueInput
+    update: XOR<TopicMasteryUpdateWithoutTopicInput, TopicMasteryUncheckedUpdateWithoutTopicInput>
+    create: XOR<TopicMasteryCreateWithoutTopicInput, TopicMasteryUncheckedCreateWithoutTopicInput>
+  }
+
+  export type TopicMasteryUpdateWithWhereUniqueWithoutTopicInput = {
+    where: TopicMasteryWhereUniqueInput
+    data: XOR<TopicMasteryUpdateWithoutTopicInput, TopicMasteryUncheckedUpdateWithoutTopicInput>
+  }
+
+  export type TopicMasteryUpdateManyWithWhereWithoutTopicInput = {
+    where: TopicMasteryScalarWhereInput
+    data: XOR<TopicMasteryUpdateManyMutationInput, TopicMasteryUncheckedUpdateManyWithoutTopicInput>
+  }
+
+  export type UserCreateWithoutTopicInteractionsInput = {
+    id?: string
+    email: string
+    passwordHash: string
+    role?: $Enums.Role
+    isVerified?: boolean
+    failedLogins?: number
+    lockedUntil?: Date | string | null
+    verificationToken?: string | null
+    verificationExpires?: Date | string | null
+    resetToken?: string | null
+    resetTokenExpires?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    notes?: NoteCreateNestedManyWithoutUserInput
+    progress?: ProgressCreateNestedManyWithoutUserInput
+    documents?: DocumentCreateNestedManyWithoutUserInput
+    embeddings?: EmbeddingCreateNestedManyWithoutUserInput
+    refreshTokens?: RefreshTokenCreateNestedManyWithoutUserInput
+    topicMasteries?: TopicMasteryCreateNestedManyWithoutUserInput
+  }
+
+  export type UserUncheckedCreateWithoutTopicInteractionsInput = {
+    id?: string
+    email: string
+    passwordHash: string
+    role?: $Enums.Role
+    isVerified?: boolean
+    failedLogins?: number
+    lockedUntil?: Date | string | null
+    verificationToken?: string | null
+    verificationExpires?: Date | string | null
+    resetToken?: string | null
+    resetTokenExpires?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    notes?: NoteUncheckedCreateNestedManyWithoutUserInput
+    progress?: ProgressUncheckedCreateNestedManyWithoutUserInput
+    documents?: DocumentUncheckedCreateNestedManyWithoutUserInput
+    embeddings?: EmbeddingUncheckedCreateNestedManyWithoutUserInput
+    refreshTokens?: RefreshTokenUncheckedCreateNestedManyWithoutUserInput
+    topicMasteries?: TopicMasteryUncheckedCreateNestedManyWithoutUserInput
+  }
+
+  export type UserCreateOrConnectWithoutTopicInteractionsInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutTopicInteractionsInput, UserUncheckedCreateWithoutTopicInteractionsInput>
+  }
+
+  export type UserUpsertWithoutTopicInteractionsInput = {
+    update: XOR<UserUpdateWithoutTopicInteractionsInput, UserUncheckedUpdateWithoutTopicInteractionsInput>
+    create: XOR<UserCreateWithoutTopicInteractionsInput, UserUncheckedCreateWithoutTopicInteractionsInput>
+    where?: UserWhereInput
+  }
+
+  export type UserUpdateToOneWithWhereWithoutTopicInteractionsInput = {
+    where?: UserWhereInput
+    data: XOR<UserUpdateWithoutTopicInteractionsInput, UserUncheckedUpdateWithoutTopicInteractionsInput>
+  }
+
+  export type UserUpdateWithoutTopicInteractionsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    passwordHash?: StringFieldUpdateOperationsInput | string
+    role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
+    isVerified?: BoolFieldUpdateOperationsInput | boolean
+    failedLogins?: IntFieldUpdateOperationsInput | number
+    lockedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    verificationToken?: NullableStringFieldUpdateOperationsInput | string | null
+    verificationExpires?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    resetToken?: NullableStringFieldUpdateOperationsInput | string | null
+    resetTokenExpires?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    notes?: NoteUpdateManyWithoutUserNestedInput
+    progress?: ProgressUpdateManyWithoutUserNestedInput
+    documents?: DocumentUpdateManyWithoutUserNestedInput
+    embeddings?: EmbeddingUpdateManyWithoutUserNestedInput
+    refreshTokens?: RefreshTokenUpdateManyWithoutUserNestedInput
+    topicMasteries?: TopicMasteryUpdateManyWithoutUserNestedInput
+  }
+
+  export type UserUncheckedUpdateWithoutTopicInteractionsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    passwordHash?: StringFieldUpdateOperationsInput | string
+    role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
+    isVerified?: BoolFieldUpdateOperationsInput | boolean
+    failedLogins?: IntFieldUpdateOperationsInput | number
+    lockedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    verificationToken?: NullableStringFieldUpdateOperationsInput | string | null
+    verificationExpires?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    resetToken?: NullableStringFieldUpdateOperationsInput | string | null
+    resetTokenExpires?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    notes?: NoteUncheckedUpdateManyWithoutUserNestedInput
+    progress?: ProgressUncheckedUpdateManyWithoutUserNestedInput
+    documents?: DocumentUncheckedUpdateManyWithoutUserNestedInput
+    embeddings?: EmbeddingUncheckedUpdateManyWithoutUserNestedInput
+    refreshTokens?: RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
+    topicMasteries?: TopicMasteryUncheckedUpdateManyWithoutUserNestedInput
+  }
+
+  export type TopicCreateWithoutInteractionsInput = {
+    id: string
+    level: number
+    name: string
+    slug: string
+    chapterNum?: number | null
+    keywords?: TopicCreatekeywordsInput | string[]
+    aliases?: TopicCreatealiasesInput | string[]
+    expectedQuestions?: number
+    createdAt?: Date | string
+    parent?: TopicCreateNestedOneWithoutChildrenInput
+    children?: TopicCreateNestedManyWithoutParentInput
+    masteries?: TopicMasteryCreateNestedManyWithoutTopicInput
+  }
+
+  export type TopicUncheckedCreateWithoutInteractionsInput = {
+    id: string
+    level: number
+    name: string
+    slug: string
+    parentId?: string | null
+    chapterNum?: number | null
+    keywords?: TopicCreatekeywordsInput | string[]
+    aliases?: TopicCreatealiasesInput | string[]
+    expectedQuestions?: number
+    createdAt?: Date | string
+    children?: TopicUncheckedCreateNestedManyWithoutParentInput
+    masteries?: TopicMasteryUncheckedCreateNestedManyWithoutTopicInput
+  }
+
+  export type TopicCreateOrConnectWithoutInteractionsInput = {
+    where: TopicWhereUniqueInput
+    create: XOR<TopicCreateWithoutInteractionsInput, TopicUncheckedCreateWithoutInteractionsInput>
+  }
+
+  export type TopicUpsertWithoutInteractionsInput = {
+    update: XOR<TopicUpdateWithoutInteractionsInput, TopicUncheckedUpdateWithoutInteractionsInput>
+    create: XOR<TopicCreateWithoutInteractionsInput, TopicUncheckedCreateWithoutInteractionsInput>
+    where?: TopicWhereInput
+  }
+
+  export type TopicUpdateToOneWithWhereWithoutInteractionsInput = {
+    where?: TopicWhereInput
+    data: XOR<TopicUpdateWithoutInteractionsInput, TopicUncheckedUpdateWithoutInteractionsInput>
+  }
+
+  export type TopicUpdateWithoutInteractionsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    level?: IntFieldUpdateOperationsInput | number
+    name?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    chapterNum?: NullableIntFieldUpdateOperationsInput | number | null
+    keywords?: TopicUpdatekeywordsInput | string[]
+    aliases?: TopicUpdatealiasesInput | string[]
+    expectedQuestions?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    parent?: TopicUpdateOneWithoutChildrenNestedInput
+    children?: TopicUpdateManyWithoutParentNestedInput
+    masteries?: TopicMasteryUpdateManyWithoutTopicNestedInput
+  }
+
+  export type TopicUncheckedUpdateWithoutInteractionsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    level?: IntFieldUpdateOperationsInput | number
+    name?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    parentId?: NullableStringFieldUpdateOperationsInput | string | null
+    chapterNum?: NullableIntFieldUpdateOperationsInput | number | null
+    keywords?: TopicUpdatekeywordsInput | string[]
+    aliases?: TopicUpdatealiasesInput | string[]
+    expectedQuestions?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    children?: TopicUncheckedUpdateManyWithoutParentNestedInput
+    masteries?: TopicMasteryUncheckedUpdateManyWithoutTopicNestedInput
+  }
+
+  export type UserCreateWithoutTopicMasteriesInput = {
+    id?: string
+    email: string
+    passwordHash: string
+    role?: $Enums.Role
+    isVerified?: boolean
+    failedLogins?: number
+    lockedUntil?: Date | string | null
+    verificationToken?: string | null
+    verificationExpires?: Date | string | null
+    resetToken?: string | null
+    resetTokenExpires?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    notes?: NoteCreateNestedManyWithoutUserInput
+    progress?: ProgressCreateNestedManyWithoutUserInput
+    documents?: DocumentCreateNestedManyWithoutUserInput
+    embeddings?: EmbeddingCreateNestedManyWithoutUserInput
+    refreshTokens?: RefreshTokenCreateNestedManyWithoutUserInput
+    topicInteractions?: TopicInteractionCreateNestedManyWithoutUserInput
+  }
+
+  export type UserUncheckedCreateWithoutTopicMasteriesInput = {
+    id?: string
+    email: string
+    passwordHash: string
+    role?: $Enums.Role
+    isVerified?: boolean
+    failedLogins?: number
+    lockedUntil?: Date | string | null
+    verificationToken?: string | null
+    verificationExpires?: Date | string | null
+    resetToken?: string | null
+    resetTokenExpires?: Date | string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    notes?: NoteUncheckedCreateNestedManyWithoutUserInput
+    progress?: ProgressUncheckedCreateNestedManyWithoutUserInput
+    documents?: DocumentUncheckedCreateNestedManyWithoutUserInput
+    embeddings?: EmbeddingUncheckedCreateNestedManyWithoutUserInput
+    refreshTokens?: RefreshTokenUncheckedCreateNestedManyWithoutUserInput
+    topicInteractions?: TopicInteractionUncheckedCreateNestedManyWithoutUserInput
+  }
+
+  export type UserCreateOrConnectWithoutTopicMasteriesInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutTopicMasteriesInput, UserUncheckedCreateWithoutTopicMasteriesInput>
+  }
+
+  export type TopicCreateWithoutMasteriesInput = {
+    id: string
+    level: number
+    name: string
+    slug: string
+    chapterNum?: number | null
+    keywords?: TopicCreatekeywordsInput | string[]
+    aliases?: TopicCreatealiasesInput | string[]
+    expectedQuestions?: number
+    createdAt?: Date | string
+    parent?: TopicCreateNestedOneWithoutChildrenInput
+    children?: TopicCreateNestedManyWithoutParentInput
+    interactions?: TopicInteractionCreateNestedManyWithoutTopicInput
+  }
+
+  export type TopicUncheckedCreateWithoutMasteriesInput = {
+    id: string
+    level: number
+    name: string
+    slug: string
+    parentId?: string | null
+    chapterNum?: number | null
+    keywords?: TopicCreatekeywordsInput | string[]
+    aliases?: TopicCreatealiasesInput | string[]
+    expectedQuestions?: number
+    createdAt?: Date | string
+    children?: TopicUncheckedCreateNestedManyWithoutParentInput
+    interactions?: TopicInteractionUncheckedCreateNestedManyWithoutTopicInput
+  }
+
+  export type TopicCreateOrConnectWithoutMasteriesInput = {
+    where: TopicWhereUniqueInput
+    create: XOR<TopicCreateWithoutMasteriesInput, TopicUncheckedCreateWithoutMasteriesInput>
+  }
+
+  export type UserUpsertWithoutTopicMasteriesInput = {
+    update: XOR<UserUpdateWithoutTopicMasteriesInput, UserUncheckedUpdateWithoutTopicMasteriesInput>
+    create: XOR<UserCreateWithoutTopicMasteriesInput, UserUncheckedCreateWithoutTopicMasteriesInput>
+    where?: UserWhereInput
+  }
+
+  export type UserUpdateToOneWithWhereWithoutTopicMasteriesInput = {
+    where?: UserWhereInput
+    data: XOR<UserUpdateWithoutTopicMasteriesInput, UserUncheckedUpdateWithoutTopicMasteriesInput>
+  }
+
+  export type UserUpdateWithoutTopicMasteriesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    passwordHash?: StringFieldUpdateOperationsInput | string
+    role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
+    isVerified?: BoolFieldUpdateOperationsInput | boolean
+    failedLogins?: IntFieldUpdateOperationsInput | number
+    lockedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    verificationToken?: NullableStringFieldUpdateOperationsInput | string | null
+    verificationExpires?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    resetToken?: NullableStringFieldUpdateOperationsInput | string | null
+    resetTokenExpires?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    notes?: NoteUpdateManyWithoutUserNestedInput
+    progress?: ProgressUpdateManyWithoutUserNestedInput
+    documents?: DocumentUpdateManyWithoutUserNestedInput
+    embeddings?: EmbeddingUpdateManyWithoutUserNestedInput
+    refreshTokens?: RefreshTokenUpdateManyWithoutUserNestedInput
+    topicInteractions?: TopicInteractionUpdateManyWithoutUserNestedInput
+  }
+
+  export type UserUncheckedUpdateWithoutTopicMasteriesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    passwordHash?: StringFieldUpdateOperationsInput | string
+    role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
+    isVerified?: BoolFieldUpdateOperationsInput | boolean
+    failedLogins?: IntFieldUpdateOperationsInput | number
+    lockedUntil?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    verificationToken?: NullableStringFieldUpdateOperationsInput | string | null
+    verificationExpires?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    resetToken?: NullableStringFieldUpdateOperationsInput | string | null
+    resetTokenExpires?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    notes?: NoteUncheckedUpdateManyWithoutUserNestedInput
+    progress?: ProgressUncheckedUpdateManyWithoutUserNestedInput
+    documents?: DocumentUncheckedUpdateManyWithoutUserNestedInput
+    embeddings?: EmbeddingUncheckedUpdateManyWithoutUserNestedInput
+    refreshTokens?: RefreshTokenUncheckedUpdateManyWithoutUserNestedInput
+    topicInteractions?: TopicInteractionUncheckedUpdateManyWithoutUserNestedInput
+  }
+
+  export type TopicUpsertWithoutMasteriesInput = {
+    update: XOR<TopicUpdateWithoutMasteriesInput, TopicUncheckedUpdateWithoutMasteriesInput>
+    create: XOR<TopicCreateWithoutMasteriesInput, TopicUncheckedCreateWithoutMasteriesInput>
+    where?: TopicWhereInput
+  }
+
+  export type TopicUpdateToOneWithWhereWithoutMasteriesInput = {
+    where?: TopicWhereInput
+    data: XOR<TopicUpdateWithoutMasteriesInput, TopicUncheckedUpdateWithoutMasteriesInput>
+  }
+
+  export type TopicUpdateWithoutMasteriesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    level?: IntFieldUpdateOperationsInput | number
+    name?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    chapterNum?: NullableIntFieldUpdateOperationsInput | number | null
+    keywords?: TopicUpdatekeywordsInput | string[]
+    aliases?: TopicUpdatealiasesInput | string[]
+    expectedQuestions?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    parent?: TopicUpdateOneWithoutChildrenNestedInput
+    children?: TopicUpdateManyWithoutParentNestedInput
+    interactions?: TopicInteractionUpdateManyWithoutTopicNestedInput
+  }
+
+  export type TopicUncheckedUpdateWithoutMasteriesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    level?: IntFieldUpdateOperationsInput | number
+    name?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    parentId?: NullableStringFieldUpdateOperationsInput | string | null
+    chapterNum?: NullableIntFieldUpdateOperationsInput | number | null
+    keywords?: TopicUpdatekeywordsInput | string[]
+    aliases?: TopicUpdatealiasesInput | string[]
+    expectedQuestions?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    children?: TopicUncheckedUpdateManyWithoutParentNestedInput
+    interactions?: TopicInteractionUncheckedUpdateManyWithoutTopicNestedInput
   }
 
   export type NoteCreateManyUserInput = {
@@ -12712,6 +18260,24 @@ export namespace Prisma {
     token: string
     expiresAt: Date | string
     createdAt?: Date | string
+  }
+
+  export type TopicMasteryCreateManyUserInput = {
+    id?: string
+    topicId: string
+    masteryLevel?: number
+    status: $Enums.MasteryStatus
+    questionsAsked?: number
+    coverageScore?: number
+    depthScore?: number
+    confidenceScore?: number
+    diversityScore?: number
+    retentionScore?: number
+    subtopicsExplored?: TopicMasteryCreatesubtopicsExploredInput | string[]
+    firstInteraction?: Date | string | null
+    lastInteraction?: Date | string | null
+    completedAt?: Date | string | null
+    updatedAt?: Date | string
   }
 
   export type NoteUpdateWithoutUserInput = {
@@ -12905,6 +18471,105 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type TopicInteractionUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    query?: StringFieldUpdateOperationsInput | string
+    mappingConfidence?: FloatFieldUpdateOperationsInput | number
+    ragConfidence?: StringFieldUpdateOperationsInput | string
+    ragTopScore?: FloatFieldUpdateOperationsInput | number
+    citedSections?: TopicInteractionUpdatecitedSectionsInput | string[]
+    answerLength?: IntFieldUpdateOperationsInput | number
+    citationCount?: IntFieldUpdateOperationsInput | number
+    timeSpentMs?: NullableIntFieldUpdateOperationsInput | number | null
+    hadFollowUp?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    topic?: TopicUpdateOneRequiredWithoutInteractionsNestedInput
+  }
+
+  export type TopicInteractionUncheckedUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    topicId?: StringFieldUpdateOperationsInput | string
+    query?: StringFieldUpdateOperationsInput | string
+    mappingConfidence?: FloatFieldUpdateOperationsInput | number
+    ragConfidence?: StringFieldUpdateOperationsInput | string
+    ragTopScore?: FloatFieldUpdateOperationsInput | number
+    citedSections?: TopicInteractionUpdatecitedSectionsInput | string[]
+    answerLength?: IntFieldUpdateOperationsInput | number
+    citationCount?: IntFieldUpdateOperationsInput | number
+    timeSpentMs?: NullableIntFieldUpdateOperationsInput | number | null
+    hadFollowUp?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type TopicInteractionUncheckedUpdateManyWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    topicId?: StringFieldUpdateOperationsInput | string
+    query?: StringFieldUpdateOperationsInput | string
+    mappingConfidence?: FloatFieldUpdateOperationsInput | number
+    ragConfidence?: StringFieldUpdateOperationsInput | string
+    ragTopScore?: FloatFieldUpdateOperationsInput | number
+    citedSections?: TopicInteractionUpdatecitedSectionsInput | string[]
+    answerLength?: IntFieldUpdateOperationsInput | number
+    citationCount?: IntFieldUpdateOperationsInput | number
+    timeSpentMs?: NullableIntFieldUpdateOperationsInput | number | null
+    hadFollowUp?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type TopicMasteryUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    masteryLevel?: FloatFieldUpdateOperationsInput | number
+    status?: EnumMasteryStatusFieldUpdateOperationsInput | $Enums.MasteryStatus
+    questionsAsked?: IntFieldUpdateOperationsInput | number
+    coverageScore?: FloatFieldUpdateOperationsInput | number
+    depthScore?: FloatFieldUpdateOperationsInput | number
+    confidenceScore?: FloatFieldUpdateOperationsInput | number
+    diversityScore?: FloatFieldUpdateOperationsInput | number
+    retentionScore?: FloatFieldUpdateOperationsInput | number
+    subtopicsExplored?: TopicMasteryUpdatesubtopicsExploredInput | string[]
+    firstInteraction?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastInteraction?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    topic?: TopicUpdateOneRequiredWithoutMasteriesNestedInput
+  }
+
+  export type TopicMasteryUncheckedUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    topicId?: StringFieldUpdateOperationsInput | string
+    masteryLevel?: FloatFieldUpdateOperationsInput | number
+    status?: EnumMasteryStatusFieldUpdateOperationsInput | $Enums.MasteryStatus
+    questionsAsked?: IntFieldUpdateOperationsInput | number
+    coverageScore?: FloatFieldUpdateOperationsInput | number
+    depthScore?: FloatFieldUpdateOperationsInput | number
+    confidenceScore?: FloatFieldUpdateOperationsInput | number
+    diversityScore?: FloatFieldUpdateOperationsInput | number
+    retentionScore?: FloatFieldUpdateOperationsInput | number
+    subtopicsExplored?: TopicMasteryUpdatesubtopicsExploredInput | string[]
+    firstInteraction?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastInteraction?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type TopicMasteryUncheckedUpdateManyWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    topicId?: StringFieldUpdateOperationsInput | string
+    masteryLevel?: FloatFieldUpdateOperationsInput | number
+    status?: EnumMasteryStatusFieldUpdateOperationsInput | $Enums.MasteryStatus
+    questionsAsked?: IntFieldUpdateOperationsInput | number
+    coverageScore?: FloatFieldUpdateOperationsInput | number
+    depthScore?: FloatFieldUpdateOperationsInput | number
+    confidenceScore?: FloatFieldUpdateOperationsInput | number
+    diversityScore?: FloatFieldUpdateOperationsInput | number
+    retentionScore?: FloatFieldUpdateOperationsInput | number
+    subtopicsExplored?: TopicMasteryUpdatesubtopicsExploredInput | string[]
+    firstInteraction?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastInteraction?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type EmbeddingCreateManyDocumentInput = {
     id?: string
     userId?: string | null
@@ -12993,6 +18658,177 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type TopicCreateManyParentInput = {
+    id: string
+    level: number
+    name: string
+    slug: string
+    chapterNum?: number | null
+    keywords?: TopicCreatekeywordsInput | string[]
+    aliases?: TopicCreatealiasesInput | string[]
+    expectedQuestions?: number
+    createdAt?: Date | string
+  }
+
+  export type TopicMasteryCreateManyTopicInput = {
+    id?: string
+    userId: string
+    masteryLevel?: number
+    status: $Enums.MasteryStatus
+    questionsAsked?: number
+    coverageScore?: number
+    depthScore?: number
+    confidenceScore?: number
+    diversityScore?: number
+    retentionScore?: number
+    subtopicsExplored?: TopicMasteryCreatesubtopicsExploredInput | string[]
+    firstInteraction?: Date | string | null
+    lastInteraction?: Date | string | null
+    completedAt?: Date | string | null
+    updatedAt?: Date | string
+  }
+
+  export type TopicUpdateWithoutParentInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    level?: IntFieldUpdateOperationsInput | number
+    name?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    chapterNum?: NullableIntFieldUpdateOperationsInput | number | null
+    keywords?: TopicUpdatekeywordsInput | string[]
+    aliases?: TopicUpdatealiasesInput | string[]
+    expectedQuestions?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    children?: TopicUpdateManyWithoutParentNestedInput
+    interactions?: TopicInteractionUpdateManyWithoutTopicNestedInput
+    masteries?: TopicMasteryUpdateManyWithoutTopicNestedInput
+  }
+
+  export type TopicUncheckedUpdateWithoutParentInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    level?: IntFieldUpdateOperationsInput | number
+    name?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    chapterNum?: NullableIntFieldUpdateOperationsInput | number | null
+    keywords?: TopicUpdatekeywordsInput | string[]
+    aliases?: TopicUpdatealiasesInput | string[]
+    expectedQuestions?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    children?: TopicUncheckedUpdateManyWithoutParentNestedInput
+    interactions?: TopicInteractionUncheckedUpdateManyWithoutTopicNestedInput
+    masteries?: TopicMasteryUncheckedUpdateManyWithoutTopicNestedInput
+  }
+
+  export type TopicUncheckedUpdateManyWithoutParentInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    level?: IntFieldUpdateOperationsInput | number
+    name?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    chapterNum?: NullableIntFieldUpdateOperationsInput | number | null
+    keywords?: TopicUpdatekeywordsInput | string[]
+    aliases?: TopicUpdatealiasesInput | string[]
+    expectedQuestions?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type TopicInteractionUpdateWithoutTopicInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    query?: StringFieldUpdateOperationsInput | string
+    mappingConfidence?: FloatFieldUpdateOperationsInput | number
+    ragConfidence?: StringFieldUpdateOperationsInput | string
+    ragTopScore?: FloatFieldUpdateOperationsInput | number
+    citedSections?: TopicInteractionUpdatecitedSectionsInput | string[]
+    answerLength?: IntFieldUpdateOperationsInput | number
+    citationCount?: IntFieldUpdateOperationsInput | number
+    timeSpentMs?: NullableIntFieldUpdateOperationsInput | number | null
+    hadFollowUp?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    user?: UserUpdateOneRequiredWithoutTopicInteractionsNestedInput
+  }
+
+  export type TopicInteractionUncheckedUpdateWithoutTopicInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    query?: StringFieldUpdateOperationsInput | string
+    mappingConfidence?: FloatFieldUpdateOperationsInput | number
+    ragConfidence?: StringFieldUpdateOperationsInput | string
+    ragTopScore?: FloatFieldUpdateOperationsInput | number
+    citedSections?: TopicInteractionUpdatecitedSectionsInput | string[]
+    answerLength?: IntFieldUpdateOperationsInput | number
+    citationCount?: IntFieldUpdateOperationsInput | number
+    timeSpentMs?: NullableIntFieldUpdateOperationsInput | number | null
+    hadFollowUp?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type TopicInteractionUncheckedUpdateManyWithoutTopicInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    query?: StringFieldUpdateOperationsInput | string
+    mappingConfidence?: FloatFieldUpdateOperationsInput | number
+    ragConfidence?: StringFieldUpdateOperationsInput | string
+    ragTopScore?: FloatFieldUpdateOperationsInput | number
+    citedSections?: TopicInteractionUpdatecitedSectionsInput | string[]
+    answerLength?: IntFieldUpdateOperationsInput | number
+    citationCount?: IntFieldUpdateOperationsInput | number
+    timeSpentMs?: NullableIntFieldUpdateOperationsInput | number | null
+    hadFollowUp?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type TopicMasteryUpdateWithoutTopicInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    masteryLevel?: FloatFieldUpdateOperationsInput | number
+    status?: EnumMasteryStatusFieldUpdateOperationsInput | $Enums.MasteryStatus
+    questionsAsked?: IntFieldUpdateOperationsInput | number
+    coverageScore?: FloatFieldUpdateOperationsInput | number
+    depthScore?: FloatFieldUpdateOperationsInput | number
+    confidenceScore?: FloatFieldUpdateOperationsInput | number
+    diversityScore?: FloatFieldUpdateOperationsInput | number
+    retentionScore?: FloatFieldUpdateOperationsInput | number
+    subtopicsExplored?: TopicMasteryUpdatesubtopicsExploredInput | string[]
+    firstInteraction?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastInteraction?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    user?: UserUpdateOneRequiredWithoutTopicMasteriesNestedInput
+  }
+
+  export type TopicMasteryUncheckedUpdateWithoutTopicInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    masteryLevel?: FloatFieldUpdateOperationsInput | number
+    status?: EnumMasteryStatusFieldUpdateOperationsInput | $Enums.MasteryStatus
+    questionsAsked?: IntFieldUpdateOperationsInput | number
+    coverageScore?: FloatFieldUpdateOperationsInput | number
+    depthScore?: FloatFieldUpdateOperationsInput | number
+    confidenceScore?: FloatFieldUpdateOperationsInput | number
+    diversityScore?: FloatFieldUpdateOperationsInput | number
+    retentionScore?: FloatFieldUpdateOperationsInput | number
+    subtopicsExplored?: TopicMasteryUpdatesubtopicsExploredInput | string[]
+    firstInteraction?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastInteraction?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type TopicMasteryUncheckedUpdateManyWithoutTopicInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    masteryLevel?: FloatFieldUpdateOperationsInput | number
+    status?: EnumMasteryStatusFieldUpdateOperationsInput | $Enums.MasteryStatus
+    questionsAsked?: IntFieldUpdateOperationsInput | number
+    coverageScore?: FloatFieldUpdateOperationsInput | number
+    depthScore?: FloatFieldUpdateOperationsInput | number
+    confidenceScore?: FloatFieldUpdateOperationsInput | number
+    diversityScore?: FloatFieldUpdateOperationsInput | number
+    retentionScore?: FloatFieldUpdateOperationsInput | number
+    subtopicsExplored?: TopicMasteryUpdatesubtopicsExploredInput | string[]
+    firstInteraction?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastInteraction?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
 
 
   /**
@@ -13006,6 +18842,10 @@ export namespace Prisma {
      * @deprecated Use DocumentCountOutputTypeDefaultArgs instead
      */
     export type DocumentCountOutputTypeArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = DocumentCountOutputTypeDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use TopicCountOutputTypeDefaultArgs instead
+     */
+    export type TopicCountOutputTypeArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = TopicCountOutputTypeDefaultArgs<ExtArgs>
     /**
      * @deprecated Use UserDefaultArgs instead
      */
@@ -13034,6 +18874,18 @@ export namespace Prisma {
      * @deprecated Use RetrievalLogDefaultArgs instead
      */
     export type RetrievalLogArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = RetrievalLogDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use TopicDefaultArgs instead
+     */
+    export type TopicArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = TopicDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use TopicInteractionDefaultArgs instead
+     */
+    export type TopicInteractionArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = TopicInteractionDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use TopicMasteryDefaultArgs instead
+     */
+    export type TopicMasteryArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = TopicMasteryDefaultArgs<ExtArgs>
 
   /**
    * Batch Payload for updateMany & deleteMany & createMany

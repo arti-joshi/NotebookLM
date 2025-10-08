@@ -24,11 +24,13 @@ model User {
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
 
-  notes         Note[]
-  progress      Progress[]
-  documents     Document[]
-  embeddings    Embedding[]
-  refreshTokens RefreshToken[]
+  notes             Note[]
+  progress          Progress[]
+  documents         Document[]
+  embeddings        Embedding[]
+  refreshTokens     RefreshToken[]
+  topicInteractions TopicInteraction[]
+  topicMasteries    TopicMastery[]
 }
 
 enum Role {
@@ -144,4 +146,81 @@ model RetrievalLog {
   results   Json
   metrics   Json?
   createdAt DateTime @default(now())
+}
+
+enum MasteryStatus {
+  NOT_STARTED
+  BEGINNER
+  LEARNING
+  PROFICIENT
+  MASTERED
+}
+
+model Topic {
+  id                      String                      @id
+  level                   Int // 0=chapter, 1=topic
+  name                    String
+  slug                    String                      @unique
+  parentId                String?
+  chapterNum              Int?
+  keywords                String[]
+  aliases                 String[]
+  expectedQuestions       Int                         @default(5)
+  representativeEmbedding Unsupported("vector(768)")?
+  createdAt               DateTime                    @default(now())
+
+  // Relations
+  parent       Topic?             @relation("TopicToChildren", fields: [parentId], references: [id])
+  children     Topic[]            @relation("TopicToChildren")
+  interactions TopicInteraction[]
+  masteries    TopicMastery[]
+}
+
+model TopicInteraction {
+  id                String                     @id @default(cuid())
+  user              User                       @relation(fields: [userId], references: [id])
+  userId            String
+  topic             Topic                      @relation(fields: [topicId], references: [id])
+  topicId           String
+  query             String
+  queryEmbedding    Unsupported("vector(768)")
+  mappingConfidence Float
+  ragConfidence     String // "high", "medium", "low"
+  ragTopScore       Float
+  citedSections     String[]
+  answerLength      Int
+  citationCount     Int
+  timeSpentMs       Int?
+  hadFollowUp       Boolean                    @default(false)
+  createdAt         DateTime                   @default(now())
+
+  @@index([userId])
+  @@index([topicId])
+  @@index([createdAt])
+}
+
+model TopicMastery {
+  id                String        @id @default(cuid())
+  user              User          @relation(fields: [userId], references: [id])
+  userId            String
+  topic             Topic         @relation(fields: [topicId], references: [id])
+  topicId           String
+  masteryLevel      Float         @default(0) // 0-100
+  status            MasteryStatus
+  questionsAsked    Int           @default(0)
+  coverageScore     Float         @default(0)
+  depthScore        Float         @default(0)
+  confidenceScore   Float         @default(0)
+  diversityScore    Float         @default(0)
+  retentionScore    Float         @default(0)
+  subtopicsExplored String[]
+  firstInteraction  DateTime?
+  lastInteraction   DateTime?
+  completedAt       DateTime?
+  updatedAt         DateTime      @updatedAt
+
+  @@unique([userId, topicId])
+  @@index([userId])
+  @@index([status])
+  @@index([masteryLevel])
 }

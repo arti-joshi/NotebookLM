@@ -214,6 +214,54 @@ exports.Prisma.RetrievalLogScalarFieldEnum = {
   createdAt: 'createdAt'
 };
 
+exports.Prisma.TopicScalarFieldEnum = {
+  id: 'id',
+  level: 'level',
+  name: 'name',
+  slug: 'slug',
+  parentId: 'parentId',
+  chapterNum: 'chapterNum',
+  keywords: 'keywords',
+  aliases: 'aliases',
+  expectedQuestions: 'expectedQuestions',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.TopicInteractionScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  topicId: 'topicId',
+  query: 'query',
+  mappingConfidence: 'mappingConfidence',
+  ragConfidence: 'ragConfidence',
+  ragTopScore: 'ragTopScore',
+  citedSections: 'citedSections',
+  answerLength: 'answerLength',
+  citationCount: 'citationCount',
+  timeSpentMs: 'timeSpentMs',
+  hadFollowUp: 'hadFollowUp',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.TopicMasteryScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  topicId: 'topicId',
+  masteryLevel: 'masteryLevel',
+  status: 'status',
+  questionsAsked: 'questionsAsked',
+  coverageScore: 'coverageScore',
+  depthScore: 'depthScore',
+  confidenceScore: 'confidenceScore',
+  diversityScore: 'diversityScore',
+  retentionScore: 'retentionScore',
+  subtopicsExplored: 'subtopicsExplored',
+  firstInteraction: 'firstInteraction',
+  lastInteraction: 'lastInteraction',
+  completedAt: 'completedAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -256,6 +304,14 @@ exports.DocumentStatus = exports.$Enums.DocumentStatus = {
   CANCELLED: 'CANCELLED'
 };
 
+exports.MasteryStatus = exports.$Enums.MasteryStatus = {
+  NOT_STARTED: 'NOT_STARTED',
+  BEGINNER: 'BEGINNER',
+  LEARNING: 'LEARNING',
+  PROFICIENT: 'PROFICIENT',
+  MASTERED: 'MASTERED'
+};
+
 exports.Prisma.ModelName = {
   User: 'User',
   RefreshToken: 'RefreshToken',
@@ -263,7 +319,10 @@ exports.Prisma.ModelName = {
   Progress: 'Progress',
   Document: 'Document',
   Embedding: 'Embedding',
-  RetrievalLog: 'RetrievalLog'
+  RetrievalLog: 'RetrievalLog',
+  Topic: 'Topic',
+  TopicInteraction: 'TopicInteraction',
+  TopicMastery: 'TopicMastery'
 };
 
 /**
