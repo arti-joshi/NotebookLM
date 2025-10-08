@@ -78,7 +78,7 @@ const ragService = new RAGService(prisma, {
   // Retrieval window - using config defaults (maxResults: 20, similarityThreshold: 0.25)
   // maxResults and similarityThreshold will use config.retrieval values
   enableKeywordSearch: true,
-  enableQueryExpansion: false,
+  enableQueryExpansion: true,
   enableHybridSearch: true,
 
   // Reranking & adjustments
@@ -1400,6 +1400,10 @@ CITATION CONSISTENCY (SINGLE MAIN SECTION):
 - Never list multiple sections in a single citation. Prefer one citation per sentence using the main section.
 - If a different page is strictly needed, start a new sentence (or paragraph) and cite that single alternative section there.
 
+UNDO/ROLLBACK GUIDANCE:
+- When answering about undoing changes (DELETE/UPDATE), ALWAYS state that ROLLBACK only works inside an explicit transaction (BEGIN...COMMIT).
+- Explain that PostgreSQL defaults to autocommit, so standalone statements cannot be rolled back unless executed in a transaction.
+
 WHEN CONTEXT IS INSUFFICIENT:
 Say exactly: "This specific topic is not covered in the provided context. The PostgreSQL documentation may contain this information in a different section."
 
@@ -1843,6 +1847,19 @@ app.get('/rag/status', asyncHandler(async (req: Request, res: Response) => {
   }
 
   res.json(status)
+}))
+
+// Admin: recent retrieval logs (last 50)
+app.get('/admin/retrieval-logs', auth, requireAdmin, asyncHandler(async (req: Request, res: Response) => {
+  try {
+    const rows = await (prisma as any).retrievalLog.findMany({
+      orderBy: { createdAt: 'desc' },
+      take: 50
+    });
+    res.json({ logs: rows });
+  } catch (e) {
+    res.status(500).json({ error: 'Failed to fetch retrieval logs' })
+  }
 }))
 
 // --- Debug: Embedding status and sample ---

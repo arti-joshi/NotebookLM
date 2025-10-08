@@ -206,6 +206,14 @@ exports.Prisma.EmbeddingScalarFieldEnum = {
   createdAt: 'createdAt'
 };
 
+exports.Prisma.RetrievalLogScalarFieldEnum = {
+  id: 'id',
+  query: 'query',
+  results: 'results',
+  metrics: 'metrics',
+  createdAt: 'createdAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -254,7 +262,8 @@ exports.Prisma.ModelName = {
   Note: 'Note',
   Progress: 'Progress',
   Document: 'Document',
-  Embedding: 'Embedding'
+  Embedding: 'Embedding',
+  RetrievalLog: 'RetrievalLog'
 };
 
 /**

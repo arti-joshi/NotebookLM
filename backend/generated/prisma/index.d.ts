@@ -43,6 +43,11 @@ export type Document = $Result.DefaultSelection<Prisma.$DocumentPayload>
  * 
  */
 export type Embedding = $Result.DefaultSelection<Prisma.$EmbeddingPayload>
+/**
+ * Model RetrievalLog
+ * 
+ */
+export type RetrievalLog = $Result.DefaultSelection<Prisma.$RetrievalLogPayload>
 
 /**
  * Enums
@@ -258,6 +263,16 @@ export class PrismaClient<
     * ```
     */
   get embedding(): Prisma.EmbeddingDelegate<ExtArgs>;
+
+  /**
+   * `prisma.retrievalLog`: Exposes CRUD operations for the **RetrievalLog** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more RetrievalLogs
+    * const retrievalLogs = await prisma.retrievalLog.findMany()
+    * ```
+    */
+  get retrievalLog(): Prisma.RetrievalLogDelegate<ExtArgs>;
 }
 
 export namespace Prisma {
@@ -704,7 +719,8 @@ export namespace Prisma {
     Note: 'Note',
     Progress: 'Progress',
     Document: 'Document',
-    Embedding: 'Embedding'
+    Embedding: 'Embedding',
+    RetrievalLog: 'RetrievalLog'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -720,7 +736,7 @@ export namespace Prisma {
 
   export type TypeMap<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, ClientOptions = {}> = {
     meta: {
-      modelProps: "user" | "refreshToken" | "note" | "progress" | "document" | "embedding"
+      modelProps: "user" | "refreshToken" | "note" | "progress" | "document" | "embedding" | "retrievalLog"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -1141,6 +1157,76 @@ export namespace Prisma {
           count: {
             args: Prisma.EmbeddingCountArgs<ExtArgs>
             result: $Utils.Optional<EmbeddingCountAggregateOutputType> | number
+          }
+        }
+      }
+      RetrievalLog: {
+        payload: Prisma.$RetrievalLogPayload<ExtArgs>
+        fields: Prisma.RetrievalLogFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.RetrievalLogFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RetrievalLogPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.RetrievalLogFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RetrievalLogPayload>
+          }
+          findFirst: {
+            args: Prisma.RetrievalLogFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RetrievalLogPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.RetrievalLogFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RetrievalLogPayload>
+          }
+          findMany: {
+            args: Prisma.RetrievalLogFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RetrievalLogPayload>[]
+          }
+          create: {
+            args: Prisma.RetrievalLogCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RetrievalLogPayload>
+          }
+          createMany: {
+            args: Prisma.RetrievalLogCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.RetrievalLogCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RetrievalLogPayload>[]
+          }
+          delete: {
+            args: Prisma.RetrievalLogDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RetrievalLogPayload>
+          }
+          update: {
+            args: Prisma.RetrievalLogUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RetrievalLogPayload>
+          }
+          deleteMany: {
+            args: Prisma.RetrievalLogDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.RetrievalLogUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.RetrievalLogUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$RetrievalLogPayload>
+          }
+          aggregate: {
+            args: Prisma.RetrievalLogAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateRetrievalLog>
+          }
+          groupBy: {
+            args: Prisma.RetrievalLogGroupByArgs<ExtArgs>
+            result: $Utils.Optional<RetrievalLogGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.RetrievalLogCountArgs<ExtArgs>
+            result: $Utils.Optional<RetrievalLogCountAggregateOutputType> | number
           }
         }
       }
@@ -7808,6 +7894,876 @@ export namespace Prisma {
 
 
   /**
+   * Model RetrievalLog
+   */
+
+  export type AggregateRetrievalLog = {
+    _count: RetrievalLogCountAggregateOutputType | null
+    _min: RetrievalLogMinAggregateOutputType | null
+    _max: RetrievalLogMaxAggregateOutputType | null
+  }
+
+  export type RetrievalLogMinAggregateOutputType = {
+    id: string | null
+    query: string | null
+    createdAt: Date | null
+  }
+
+  export type RetrievalLogMaxAggregateOutputType = {
+    id: string | null
+    query: string | null
+    createdAt: Date | null
+  }
+
+  export type RetrievalLogCountAggregateOutputType = {
+    id: number
+    query: number
+    results: number
+    metrics: number
+    createdAt: number
+    _all: number
+  }
+
+
+  export type RetrievalLogMinAggregateInputType = {
+    id?: true
+    query?: true
+    createdAt?: true
+  }
+
+  export type RetrievalLogMaxAggregateInputType = {
+    id?: true
+    query?: true
+    createdAt?: true
+  }
+
+  export type RetrievalLogCountAggregateInputType = {
+    id?: true
+    query?: true
+    results?: true
+    metrics?: true
+    createdAt?: true
+    _all?: true
+  }
+
+  export type RetrievalLogAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which RetrievalLog to aggregate.
+     */
+    where?: RetrievalLogWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of RetrievalLogs to fetch.
+     */
+    orderBy?: RetrievalLogOrderByWithRelationInput | RetrievalLogOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: RetrievalLogWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` RetrievalLogs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` RetrievalLogs.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned RetrievalLogs
+    **/
+    _count?: true | RetrievalLogCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: RetrievalLogMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: RetrievalLogMaxAggregateInputType
+  }
+
+  export type GetRetrievalLogAggregateType<T extends RetrievalLogAggregateArgs> = {
+        [P in keyof T & keyof AggregateRetrievalLog]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateRetrievalLog[P]>
+      : GetScalarType<T[P], AggregateRetrievalLog[P]>
+  }
+
+
+
+
+  export type RetrievalLogGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: RetrievalLogWhereInput
+    orderBy?: RetrievalLogOrderByWithAggregationInput | RetrievalLogOrderByWithAggregationInput[]
+    by: RetrievalLogScalarFieldEnum[] | RetrievalLogScalarFieldEnum
+    having?: RetrievalLogScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: RetrievalLogCountAggregateInputType | true
+    _min?: RetrievalLogMinAggregateInputType
+    _max?: RetrievalLogMaxAggregateInputType
+  }
+
+  export type RetrievalLogGroupByOutputType = {
+    id: string
+    query: string
+    results: JsonValue
+    metrics: JsonValue | null
+    createdAt: Date
+    _count: RetrievalLogCountAggregateOutputType | null
+    _min: RetrievalLogMinAggregateOutputType | null
+    _max: RetrievalLogMaxAggregateOutputType | null
+  }
+
+  type GetRetrievalLogGroupByPayload<T extends RetrievalLogGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<RetrievalLogGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof RetrievalLogGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], RetrievalLogGroupByOutputType[P]>
+            : GetScalarType<T[P], RetrievalLogGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type RetrievalLogSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    query?: boolean
+    results?: boolean
+    metrics?: boolean
+    createdAt?: boolean
+  }, ExtArgs["result"]["retrievalLog"]>
+
+  export type RetrievalLogSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    query?: boolean
+    results?: boolean
+    metrics?: boolean
+    createdAt?: boolean
+  }, ExtArgs["result"]["retrievalLog"]>
+
+  export type RetrievalLogSelectScalar = {
+    id?: boolean
+    query?: boolean
+    results?: boolean
+    metrics?: boolean
+    createdAt?: boolean
+  }
+
+
+  export type $RetrievalLogPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "RetrievalLog"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      query: string
+      results: Prisma.JsonValue
+      metrics: Prisma.JsonValue | null
+      createdAt: Date
+    }, ExtArgs["result"]["retrievalLog"]>
+    composites: {}
+  }
+
+  type RetrievalLogGetPayload<S extends boolean | null | undefined | RetrievalLogDefaultArgs> = $Result.GetResult<Prisma.$RetrievalLogPayload, S>
+
+  type RetrievalLogCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = 
+    Omit<RetrievalLogFindManyArgs, 'select' | 'include' | 'distinct'> & {
+      select?: RetrievalLogCountAggregateInputType | true
+    }
+
+  export interface RetrievalLogDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['RetrievalLog'], meta: { name: 'RetrievalLog' } }
+    /**
+     * Find zero or one RetrievalLog that matches the filter.
+     * @param {RetrievalLogFindUniqueArgs} args - Arguments to find a RetrievalLog
+     * @example
+     * // Get one RetrievalLog
+     * const retrievalLog = await prisma.retrievalLog.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends RetrievalLogFindUniqueArgs>(args: SelectSubset<T, RetrievalLogFindUniqueArgs<ExtArgs>>): Prisma__RetrievalLogClient<$Result.GetResult<Prisma.$RetrievalLogPayload<ExtArgs>, T, "findUnique"> | null, null, ExtArgs>
+
+    /**
+     * Find one RetrievalLog that matches the filter or throw an error with `error.code='P2025'` 
+     * if no matches were found.
+     * @param {RetrievalLogFindUniqueOrThrowArgs} args - Arguments to find a RetrievalLog
+     * @example
+     * // Get one RetrievalLog
+     * const retrievalLog = await prisma.retrievalLog.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends RetrievalLogFindUniqueOrThrowArgs>(args: SelectSubset<T, RetrievalLogFindUniqueOrThrowArgs<ExtArgs>>): Prisma__RetrievalLogClient<$Result.GetResult<Prisma.$RetrievalLogPayload<ExtArgs>, T, "findUniqueOrThrow">, never, ExtArgs>
+
+    /**
+     * Find the first RetrievalLog that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {RetrievalLogFindFirstArgs} args - Arguments to find a RetrievalLog
+     * @example
+     * // Get one RetrievalLog
+     * const retrievalLog = await prisma.retrievalLog.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends RetrievalLogFindFirstArgs>(args?: SelectSubset<T, RetrievalLogFindFirstArgs<ExtArgs>>): Prisma__RetrievalLogClient<$Result.GetResult<Prisma.$RetrievalLogPayload<ExtArgs>, T, "findFirst"> | null, null, ExtArgs>
+
+    /**
+     * Find the first RetrievalLog that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {RetrievalLogFindFirstOrThrowArgs} args - Arguments to find a RetrievalLog
+     * @example
+     * // Get one RetrievalLog
+     * const retrievalLog = await prisma.retrievalLog.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends RetrievalLogFindFirstOrThrowArgs>(args?: SelectSubset<T, RetrievalLogFindFirstOrThrowArgs<ExtArgs>>): Prisma__RetrievalLogClient<$Result.GetResult<Prisma.$RetrievalLogPayload<ExtArgs>, T, "findFirstOrThrow">, never, ExtArgs>
+
+    /**
+     * Find zero or more RetrievalLogs that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {RetrievalLogFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all RetrievalLogs
+     * const retrievalLogs = await prisma.retrievalLog.findMany()
+     * 
+     * // Get first 10 RetrievalLogs
+     * const retrievalLogs = await prisma.retrievalLog.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const retrievalLogWithIdOnly = await prisma.retrievalLog.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends RetrievalLogFindManyArgs>(args?: SelectSubset<T, RetrievalLogFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$RetrievalLogPayload<ExtArgs>, T, "findMany">>
+
+    /**
+     * Create a RetrievalLog.
+     * @param {RetrievalLogCreateArgs} args - Arguments to create a RetrievalLog.
+     * @example
+     * // Create one RetrievalLog
+     * const RetrievalLog = await prisma.retrievalLog.create({
+     *   data: {
+     *     // ... data to create a RetrievalLog
+     *   }
+     * })
+     * 
+     */
+    create<T extends RetrievalLogCreateArgs>(args: SelectSubset<T, RetrievalLogCreateArgs<ExtArgs>>): Prisma__RetrievalLogClient<$Result.GetResult<Prisma.$RetrievalLogPayload<ExtArgs>, T, "create">, never, ExtArgs>
+
+    /**
+     * Create many RetrievalLogs.
+     * @param {RetrievalLogCreateManyArgs} args - Arguments to create many RetrievalLogs.
+     * @example
+     * // Create many RetrievalLogs
+     * const retrievalLog = await prisma.retrievalLog.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends RetrievalLogCreateManyArgs>(args?: SelectSubset<T, RetrievalLogCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many RetrievalLogs and returns the data saved in the database.
+     * @param {RetrievalLogCreateManyAndReturnArgs} args - Arguments to create many RetrievalLogs.
+     * @example
+     * // Create many RetrievalLogs
+     * const retrievalLog = await prisma.retrievalLog.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many RetrievalLogs and only return the `id`
+     * const retrievalLogWithIdOnly = await prisma.retrievalLog.createManyAndReturn({ 
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends RetrievalLogCreateManyAndReturnArgs>(args?: SelectSubset<T, RetrievalLogCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$RetrievalLogPayload<ExtArgs>, T, "createManyAndReturn">>
+
+    /**
+     * Delete a RetrievalLog.
+     * @param {RetrievalLogDeleteArgs} args - Arguments to delete one RetrievalLog.
+     * @example
+     * // Delete one RetrievalLog
+     * const RetrievalLog = await prisma.retrievalLog.delete({
+     *   where: {
+     *     // ... filter to delete one RetrievalLog
+     *   }
+     * })
+     * 
+     */
+    delete<T extends RetrievalLogDeleteArgs>(args: SelectSubset<T, RetrievalLogDeleteArgs<ExtArgs>>): Prisma__RetrievalLogClient<$Result.GetResult<Prisma.$RetrievalLogPayload<ExtArgs>, T, "delete">, never, ExtArgs>
+
+    /**
+     * Update one RetrievalLog.
+     * @param {RetrievalLogUpdateArgs} args - Arguments to update one RetrievalLog.
+     * @example
+     * // Update one RetrievalLog
+     * const retrievalLog = await prisma.retrievalLog.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends RetrievalLogUpdateArgs>(args: SelectSubset<T, RetrievalLogUpdateArgs<ExtArgs>>): Prisma__RetrievalLogClient<$Result.GetResult<Prisma.$RetrievalLogPayload<ExtArgs>, T, "update">, never, ExtArgs>
+
+    /**
+     * Delete zero or more RetrievalLogs.
+     * @param {RetrievalLogDeleteManyArgs} args - Arguments to filter RetrievalLogs to delete.
+     * @example
+     * // Delete a few RetrievalLogs
+     * const { count } = await prisma.retrievalLog.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends RetrievalLogDeleteManyArgs>(args?: SelectSubset<T, RetrievalLogDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more RetrievalLogs.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {RetrievalLogUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many RetrievalLogs
+     * const retrievalLog = await prisma.retrievalLog.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends RetrievalLogUpdateManyArgs>(args: SelectSubset<T, RetrievalLogUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one RetrievalLog.
+     * @param {RetrievalLogUpsertArgs} args - Arguments to update or create a RetrievalLog.
+     * @example
+     * // Update or create a RetrievalLog
+     * const retrievalLog = await prisma.retrievalLog.upsert({
+     *   create: {
+     *     // ... data to create a RetrievalLog
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the RetrievalLog we want to update
+     *   }
+     * })
+     */
+    upsert<T extends RetrievalLogUpsertArgs>(args: SelectSubset<T, RetrievalLogUpsertArgs<ExtArgs>>): Prisma__RetrievalLogClient<$Result.GetResult<Prisma.$RetrievalLogPayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+
+    /**
+     * Count the number of RetrievalLogs.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {RetrievalLogCountArgs} args - Arguments to filter RetrievalLogs to count.
+     * @example
+     * // Count the number of RetrievalLogs
+     * const count = await prisma.retrievalLog.count({
+     *   where: {
+     *     // ... the filter for the RetrievalLogs we want to count
+     *   }
+     * })
+    **/
+    count<T extends RetrievalLogCountArgs>(
+      args?: Subset<T, RetrievalLogCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], RetrievalLogCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a RetrievalLog.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {RetrievalLogAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends RetrievalLogAggregateArgs>(args: Subset<T, RetrievalLogAggregateArgs>): Prisma.PrismaPromise<GetRetrievalLogAggregateType<T>>
+
+    /**
+     * Group by RetrievalLog.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {RetrievalLogGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends RetrievalLogGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: RetrievalLogGroupByArgs['orderBy'] }
+        : { orderBy?: RetrievalLogGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, RetrievalLogGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetRetrievalLogGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the RetrievalLog model
+   */
+  readonly fields: RetrievalLogFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for RetrievalLog.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__RetrievalLogClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the RetrievalLog model
+   */ 
+  interface RetrievalLogFieldRefs {
+    readonly id: FieldRef<"RetrievalLog", 'String'>
+    readonly query: FieldRef<"RetrievalLog", 'String'>
+    readonly results: FieldRef<"RetrievalLog", 'Json'>
+    readonly metrics: FieldRef<"RetrievalLog", 'Json'>
+    readonly createdAt: FieldRef<"RetrievalLog", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * RetrievalLog findUnique
+   */
+  export type RetrievalLogFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RetrievalLog
+     */
+    select?: RetrievalLogSelect<ExtArgs> | null
+    /**
+     * Filter, which RetrievalLog to fetch.
+     */
+    where: RetrievalLogWhereUniqueInput
+  }
+
+  /**
+   * RetrievalLog findUniqueOrThrow
+   */
+  export type RetrievalLogFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RetrievalLog
+     */
+    select?: RetrievalLogSelect<ExtArgs> | null
+    /**
+     * Filter, which RetrievalLog to fetch.
+     */
+    where: RetrievalLogWhereUniqueInput
+  }
+
+  /**
+   * RetrievalLog findFirst
+   */
+  export type RetrievalLogFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RetrievalLog
+     */
+    select?: RetrievalLogSelect<ExtArgs> | null
+    /**
+     * Filter, which RetrievalLog to fetch.
+     */
+    where?: RetrievalLogWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of RetrievalLogs to fetch.
+     */
+    orderBy?: RetrievalLogOrderByWithRelationInput | RetrievalLogOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for RetrievalLogs.
+     */
+    cursor?: RetrievalLogWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` RetrievalLogs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` RetrievalLogs.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of RetrievalLogs.
+     */
+    distinct?: RetrievalLogScalarFieldEnum | RetrievalLogScalarFieldEnum[]
+  }
+
+  /**
+   * RetrievalLog findFirstOrThrow
+   */
+  export type RetrievalLogFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RetrievalLog
+     */
+    select?: RetrievalLogSelect<ExtArgs> | null
+    /**
+     * Filter, which RetrievalLog to fetch.
+     */
+    where?: RetrievalLogWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of RetrievalLogs to fetch.
+     */
+    orderBy?: RetrievalLogOrderByWithRelationInput | RetrievalLogOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for RetrievalLogs.
+     */
+    cursor?: RetrievalLogWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` RetrievalLogs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` RetrievalLogs.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of RetrievalLogs.
+     */
+    distinct?: RetrievalLogScalarFieldEnum | RetrievalLogScalarFieldEnum[]
+  }
+
+  /**
+   * RetrievalLog findMany
+   */
+  export type RetrievalLogFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RetrievalLog
+     */
+    select?: RetrievalLogSelect<ExtArgs> | null
+    /**
+     * Filter, which RetrievalLogs to fetch.
+     */
+    where?: RetrievalLogWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of RetrievalLogs to fetch.
+     */
+    orderBy?: RetrievalLogOrderByWithRelationInput | RetrievalLogOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing RetrievalLogs.
+     */
+    cursor?: RetrievalLogWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` RetrievalLogs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` RetrievalLogs.
+     */
+    skip?: number
+    distinct?: RetrievalLogScalarFieldEnum | RetrievalLogScalarFieldEnum[]
+  }
+
+  /**
+   * RetrievalLog create
+   */
+  export type RetrievalLogCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RetrievalLog
+     */
+    select?: RetrievalLogSelect<ExtArgs> | null
+    /**
+     * The data needed to create a RetrievalLog.
+     */
+    data: XOR<RetrievalLogCreateInput, RetrievalLogUncheckedCreateInput>
+  }
+
+  /**
+   * RetrievalLog createMany
+   */
+  export type RetrievalLogCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many RetrievalLogs.
+     */
+    data: RetrievalLogCreateManyInput | RetrievalLogCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * RetrievalLog createManyAndReturn
+   */
+  export type RetrievalLogCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RetrievalLog
+     */
+    select?: RetrievalLogSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * The data used to create many RetrievalLogs.
+     */
+    data: RetrievalLogCreateManyInput | RetrievalLogCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * RetrievalLog update
+   */
+  export type RetrievalLogUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RetrievalLog
+     */
+    select?: RetrievalLogSelect<ExtArgs> | null
+    /**
+     * The data needed to update a RetrievalLog.
+     */
+    data: XOR<RetrievalLogUpdateInput, RetrievalLogUncheckedUpdateInput>
+    /**
+     * Choose, which RetrievalLog to update.
+     */
+    where: RetrievalLogWhereUniqueInput
+  }
+
+  /**
+   * RetrievalLog updateMany
+   */
+  export type RetrievalLogUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update RetrievalLogs.
+     */
+    data: XOR<RetrievalLogUpdateManyMutationInput, RetrievalLogUncheckedUpdateManyInput>
+    /**
+     * Filter which RetrievalLogs to update
+     */
+    where?: RetrievalLogWhereInput
+  }
+
+  /**
+   * RetrievalLog upsert
+   */
+  export type RetrievalLogUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RetrievalLog
+     */
+    select?: RetrievalLogSelect<ExtArgs> | null
+    /**
+     * The filter to search for the RetrievalLog to update in case it exists.
+     */
+    where: RetrievalLogWhereUniqueInput
+    /**
+     * In case the RetrievalLog found by the `where` argument doesn't exist, create a new RetrievalLog with this data.
+     */
+    create: XOR<RetrievalLogCreateInput, RetrievalLogUncheckedCreateInput>
+    /**
+     * In case the RetrievalLog was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<RetrievalLogUpdateInput, RetrievalLogUncheckedUpdateInput>
+  }
+
+  /**
+   * RetrievalLog delete
+   */
+  export type RetrievalLogDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RetrievalLog
+     */
+    select?: RetrievalLogSelect<ExtArgs> | null
+    /**
+     * Filter which RetrievalLog to delete.
+     */
+    where: RetrievalLogWhereUniqueInput
+  }
+
+  /**
+   * RetrievalLog deleteMany
+   */
+  export type RetrievalLogDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which RetrievalLogs to delete
+     */
+    where?: RetrievalLogWhereInput
+  }
+
+  /**
+   * RetrievalLog without action
+   */
+  export type RetrievalLogDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the RetrievalLog
+     */
+    select?: RetrievalLogSelect<ExtArgs> | null
+  }
+
+
+  /**
    * Enums
    */
 
@@ -7921,6 +8877,17 @@ export namespace Prisma {
   };
 
   export type EmbeddingScalarFieldEnum = (typeof EmbeddingScalarFieldEnum)[keyof typeof EmbeddingScalarFieldEnum]
+
+
+  export const RetrievalLogScalarFieldEnum: {
+    id: 'id',
+    query: 'query',
+    results: 'results',
+    metrics: 'metrics',
+    createdAt: 'createdAt'
+  };
+
+  export type RetrievalLogScalarFieldEnum = (typeof RetrievalLogScalarFieldEnum)[keyof typeof RetrievalLogScalarFieldEnum]
 
 
   export const SortOrder: {
@@ -8615,6 +9582,58 @@ export namespace Prisma {
     createdAt?: DateTimeWithAggregatesFilter<"Embedding"> | Date | string
   }
 
+  export type RetrievalLogWhereInput = {
+    AND?: RetrievalLogWhereInput | RetrievalLogWhereInput[]
+    OR?: RetrievalLogWhereInput[]
+    NOT?: RetrievalLogWhereInput | RetrievalLogWhereInput[]
+    id?: StringFilter<"RetrievalLog"> | string
+    query?: StringFilter<"RetrievalLog"> | string
+    results?: JsonFilter<"RetrievalLog">
+    metrics?: JsonNullableFilter<"RetrievalLog">
+    createdAt?: DateTimeFilter<"RetrievalLog"> | Date | string
+  }
+
+  export type RetrievalLogOrderByWithRelationInput = {
+    id?: SortOrder
+    query?: SortOrder
+    results?: SortOrder
+    metrics?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type RetrievalLogWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: RetrievalLogWhereInput | RetrievalLogWhereInput[]
+    OR?: RetrievalLogWhereInput[]
+    NOT?: RetrievalLogWhereInput | RetrievalLogWhereInput[]
+    query?: StringFilter<"RetrievalLog"> | string
+    results?: JsonFilter<"RetrievalLog">
+    metrics?: JsonNullableFilter<"RetrievalLog">
+    createdAt?: DateTimeFilter<"RetrievalLog"> | Date | string
+  }, "id">
+
+  export type RetrievalLogOrderByWithAggregationInput = {
+    id?: SortOrder
+    query?: SortOrder
+    results?: SortOrder
+    metrics?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    _count?: RetrievalLogCountOrderByAggregateInput
+    _max?: RetrievalLogMaxOrderByAggregateInput
+    _min?: RetrievalLogMinOrderByAggregateInput
+  }
+
+  export type RetrievalLogScalarWhereWithAggregatesInput = {
+    AND?: RetrievalLogScalarWhereWithAggregatesInput | RetrievalLogScalarWhereWithAggregatesInput[]
+    OR?: RetrievalLogScalarWhereWithAggregatesInput[]
+    NOT?: RetrievalLogScalarWhereWithAggregatesInput | RetrievalLogScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"RetrievalLog"> | string
+    query?: StringWithAggregatesFilter<"RetrievalLog"> | string
+    results?: JsonWithAggregatesFilter<"RetrievalLog">
+    metrics?: JsonNullableWithAggregatesFilter<"RetrievalLog">
+    createdAt?: DateTimeWithAggregatesFilter<"RetrievalLog"> | Date | string
+  }
+
   export type UserCreateInput = {
     id?: string
     email: string
@@ -9218,6 +10237,62 @@ export namespace Prisma {
     hasTable?: BoolFieldUpdateOperationsInput | boolean
     hasImage?: BoolFieldUpdateOperationsInput | boolean
     wordCount?: NullableIntFieldUpdateOperationsInput | number | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type RetrievalLogCreateInput = {
+    id?: string
+    query: string
+    results: JsonNullValueInput | InputJsonValue
+    metrics?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+  }
+
+  export type RetrievalLogUncheckedCreateInput = {
+    id?: string
+    query: string
+    results: JsonNullValueInput | InputJsonValue
+    metrics?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+  }
+
+  export type RetrievalLogUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    query?: StringFieldUpdateOperationsInput | string
+    results?: JsonNullValueInput | InputJsonValue
+    metrics?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type RetrievalLogUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    query?: StringFieldUpdateOperationsInput | string
+    results?: JsonNullValueInput | InputJsonValue
+    metrics?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type RetrievalLogCreateManyInput = {
+    id?: string
+    query: string
+    results: JsonNullValueInput | InputJsonValue
+    metrics?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+  }
+
+  export type RetrievalLogUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    query?: StringFieldUpdateOperationsInput | string
+    results?: JsonNullValueInput | InputJsonValue
+    metrics?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type RetrievalLogUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    query?: StringFieldUpdateOperationsInput | string
+    results?: JsonNullValueInput | InputJsonValue
+    metrics?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -9908,6 +10983,26 @@ export namespace Prisma {
     _count?: NestedIntNullableFilter<$PrismaModel>
     _min?: NestedJsonNullableFilter<$PrismaModel>
     _max?: NestedJsonNullableFilter<$PrismaModel>
+  }
+
+  export type RetrievalLogCountOrderByAggregateInput = {
+    id?: SortOrder
+    query?: SortOrder
+    results?: SortOrder
+    metrics?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type RetrievalLogMaxOrderByAggregateInput = {
+    id?: SortOrder
+    query?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type RetrievalLogMinOrderByAggregateInput = {
+    id?: SortOrder
+    query?: SortOrder
+    createdAt?: SortOrder
   }
 
   export type NoteCreateNestedManyWithoutUserInput = {
@@ -11935,6 +13030,10 @@ export namespace Prisma {
      * @deprecated Use EmbeddingDefaultArgs instead
      */
     export type EmbeddingArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = EmbeddingDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use RetrievalLogDefaultArgs instead
+     */
+    export type RetrievalLogArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = RetrievalLogDefaultArgs<ExtArgs>
 
   /**
    * Batch Payload for updateMany & deleteMany & createMany

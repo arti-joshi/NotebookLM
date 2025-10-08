@@ -207,7 +207,8 @@ export class RAGService {
       howTo: /(how\s+to|example|syntax|code)/.test(q),
       warning: /(warning|caution|deprecated|permission|privilege|access)/.test(q),
       performance: /(performance|optimi[sz]e|faster|speed)/.test(q),
-      definition: /(what\s+is|define|explain)/.test(q)
+      definition: /(what\s+is|define|explain)/.test(q),
+      undo: /(undo|rollback|accidentally|mistake|revert)/.test(q)
     };
 
     // Extract keywords from query for overlap with chunk metadata
@@ -227,9 +228,11 @@ export class RAGService {
       const exactMatchBoost = this.calculateExactMatchBoost(result.chunk, query);
       rerankScore += exactMatchBoost;
 
-      // 3) Position
+      // 3) Position (content-aware weighting)
       const positionScore = this.calculatePositionScore(result.chunkIndex ?? null, totalChunks);
-      rerankScore += positionScore * (this.config.positionWeight ?? 0);
+      const docType = ((result.metadata as any)?.documentType || '').toString().toLowerCase();
+      const effectivePositionWeight = docType.includes('reference') ? Math.min(this.config.positionWeight, 0.03) : (this.config.positionWeight ?? 0);
+      rerankScore += positionScore * effectivePositionWeight;
 
       // 4) Section importance
       const sectionScore = this.calculateSectionImportance(result);
@@ -244,6 +247,18 @@ export class RAGService {
       if (intent.warning && contentType === 'warning') contentTypeBoost += 0.10;
       if (intent.performance && contentType === 'table') contentTypeBoost += 0.08; // catalog/tables often relevant
       rerankScore += contentTypeBoost;
+
+      // 5b) Intent-specific keyword boosts inside chunk text
+      if (intent.performance) {
+        if (/\b(CREATE\s+INDEX|EXPLAIN|query\s+plan|VACUUM)\b/i.test(result.chunk)) {
+          rerankScore += 0.25;
+        }
+      }
+      if (intent.undo) {
+        if (/(autocommit|BEGIN|COMMIT|ROLLBACK|transaction)/i.test(result.chunk)) {
+          rerankScore += 0.20;
+        }
+      }
 
       // 6) SQL keyword overlap boost
       let sqlOverlapBoost = 0;
@@ -287,8 +302,8 @@ export class RAGService {
   constructor(prisma: PrismaClient, serviceConfig: RAGServiceConfig = {}) {
     this.prisma = prisma;
     this.config = {
-      maxResults: serviceConfig.maxResults ?? config.retrieval.maxResults,
-      similarityThreshold: serviceConfig.similarityThreshold ?? config.retrieval.similarityThreshold,
+      maxResults: serviceConfig.maxResults ?? 30, // widened recall default
+      similarityThreshold: serviceConfig.similarityThreshold ?? 0.20, // lower threshold default
       enableKeywordSearch: serviceConfig.enableKeywordSearch ?? true,
       enableQueryExpansion: serviceConfig.enableQueryExpansion ?? true,
       enableHybridSearch: serviceConfig.enableHybridSearch ?? true,
@@ -298,7 +313,7 @@ export class RAGService {
       narrativeBoost: serviceConfig.narrativeBoost ?? 0.05,
       debugRetrieval: serviceConfig.debugRetrieval ?? false,
       // Reranking and boosting defaults
-      enableReranking: serviceConfig.enableReranking ?? config.retrieval.rerankingEnabled,
+      enableReranking: serviceConfig.enableReranking ?? true,
       keywordDensityWeight: serviceConfig.keywordDensityWeight ?? 0.1,
       positionWeight: serviceConfig.positionWeight ?? 0.05,
       sectionImportanceWeight: serviceConfig.sectionImportanceWeight ?? 0.08,
@@ -386,7 +401,8 @@ export class RAGService {
           ...(r.chunkingConfig || {}),
           section: (r.chunkingConfig?.section ?? r.section) || undefined
         },
-        score: 1 - r.distance,  // Convert distance to similarity score
+        // Hybrid weighting: 0.6 vector + 0.4 BM25 (BM25 part added in full-text search)
+        score: (1 - r.distance) * 0.6,
         method: 'vector' as const
       }));
     } catch (error) {
@@ -397,43 +413,52 @@ export class RAGService {
 
   // Cosine similarity calculation moved to SQL using pgvector
 
-  private async keywordSearch(keywords: string[], userId: string): Promise<RetrievalResult[]> {
-    const searchResults = await this.prisma.embedding.findMany({
-      where: {
-        OR: [
-          { userId },
-          { document: { isSystemDocument: true } }
-        ],
-        AND: [
-          {
-            OR: keywords.map(keyword => ({
-              chunk: { contains: keyword, mode: 'insensitive' }
-            }))
-          }
-        ]
-      },
-      select: {
-        chunk: true,
-        source: true,
-        chunkIndex: true,
-        pageStart: true,
-        chunkingConfig: true,
-        section: true
-      }
-    });
-
-    return searchResults.map(doc => ({
-      chunk: doc.chunk,
-      source: doc.source || '',
-      chunkIndex: doc.chunkIndex,
-      pageNumber: doc.pageStart ?? undefined,
-      metadata: {
-        ...(doc.chunkingConfig as any),
-        section: ((doc as any).chunkingConfig?.section ?? (doc as any).section) || undefined
-      },
-      score: 0.5,
-      method: 'keyword' as const
-    }));
+  private async bm25Search(keywords: string[], userId: string): Promise<RetrievalResult[]> {
+    if (!keywords.length) return [];
+    const queryText = keywords.join(' ');
+    try {
+      const rows = await this.prisma.$queryRaw<Array<{
+        chunk: string;
+        source: string | null;
+        chunkIndex: number | null;
+        pageStart: number | null;
+        section: string | null;
+        chunkingConfig: any;
+        rank: number;
+      }>>`
+        SELECT 
+          e.chunk,
+          e.source,
+          e."chunkIndex",
+          e."pageStart",
+          e.section,
+          e."chunkingConfig",
+          ts_rank(to_tsvector('english', e.chunk), plainto_tsquery('english', ${queryText})) AS rank
+        FROM "Embedding" e
+        LEFT JOIN "Document" d ON d.id = e."documentId"
+        WHERE (e."userId" = ${userId} OR d."isSystemDocument" = true)
+          AND to_tsvector('english', e.chunk) @@ plainto_tsquery('english', ${queryText})
+        ORDER BY rank DESC
+        LIMIT ${this.config.maxResults}
+      `;
+      const maxRank = rows[0]?.rank || 1;
+      return rows.map(r => ({
+        chunk: r.chunk,
+        source: r.source || '',
+        chunkIndex: r.chunkIndex ?? undefined,
+        pageNumber: r.pageStart ?? undefined,
+        metadata: {
+          ...(r.chunkingConfig || {}),
+          section: (r.chunkingConfig?.section ?? r.section) || undefined
+        },
+        // Normalize BM25 rank and weight at 0.4 of hybrid
+        score: Math.max(0, (r.rank / maxRank)) * 0.4,
+        method: 'keyword' as const
+      }));
+    } catch (e) {
+      console.warn('BM25 search failed:', e);
+      return [];
+    }
   }
 
   async retrieveContext(query: string, userId: string): Promise<{
@@ -447,6 +472,10 @@ export class RAGService {
       keywordResults: number;
       totalResults: number;
       sourceCounts: Record<string, number>;
+      confidence: 'high' | 'medium' | 'low';
+      topScore: number;
+      secondScore: number;
+      topScoreGap: number;
     };
   }> {
     const allResults: RetrievalResult[] = [];
@@ -470,22 +499,58 @@ export class RAGService {
         vectorResultCount += vectorResults.length;
       }
       if (this.config.enableKeywordSearch) {
-        const keywordResults = await this.keywordSearch(keywords, userId);
+        const keywordResults = await this.bm25Search(keywords, userId);
         allResults.push(...keywordResults);
         keywordResultCount = keywordResults.length;
       }
 
-    // Combine and deduplicate results
+    // Multi-hop retrieval: if complex query, expand with entities from top preliminary results
+    const looksComplex = query.length > 80 || /relat(e|ionship)|depend|interaction/i.test(query);
+    if (looksComplex) {
+      const prelimTop = [...allResults].sort((a,b)=> (b.score||0)-(a.score||0)).slice(0,3);
+      const extraTerms = new Set<string>();
+      for (const r of prelimTop) {
+        const meta: any = r.metadata || {};
+        (meta.sqlKeywords || []).slice(0,5).forEach((k: string)=> extraTerms.add(k));
+        const m = r.chunk.match(/[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*/g);
+        (m||[]).slice(0,5).forEach(t=> extraTerms.add(t));
+      }
+      const extra = Array.from(extraTerms).filter(Boolean);
+      if (extra.length) {
+        const hopQuery = `${query} ${extra.slice(0,8).join(' ')}`;
+        const hopVec = await this.vectorSearch(hopQuery, userId);
+        hopVec.forEach(r=> r.score = (r.score||0));
+        const hopBm25 = await this.bm25Search(extra.slice(0,8), userId);
+        allResults.push(...hopVec, ...hopBm25);
+      }
+    }
+
+    // Combine and deduplicate results (structural + semantic)
     const resultMap = new Map<string, RetrievalResult>();
-    
     for (const result of allResults) {
       const key = `${result.source}-${result.chunkIndex}`;
-      if (!resultMap.has(key) || resultMap.get(key)!.score < result.score) {
+      if (!resultMap.has(key) || (resultMap.get(key)!.score < result.score)) {
         resultMap.set(key, result);
       }
     }
-    
-    const dedupedResults = Array.from(resultMap.values());
+    let dedupedResults = Array.from(resultMap.values());
+    // Semantic deduplication by cosine similarity on embeddings is expensive; use text proxy
+    // Simple Jaccard-like proxy: if two chunks share >92% of tokens, drop the lower-scored one
+    const seen: RetrievalResult[] = [];
+    const isNearDuplicate = (a: string, b: string): boolean => {
+      const ta = new Set(a.toLowerCase().split(/\W+/).filter(Boolean));
+      const tb = new Set(b.toLowerCase().split(/\W+/).filter(Boolean));
+      const inter = [...ta].filter(t => tb.has(t)).length;
+      const denom = Math.max(ta.size, tb.size) || 1;
+      return inter / denom >= 0.92;
+    };
+    const semFiltered: RetrievalResult[] = [];
+    for (const r of dedupedResults.sort((a,b)=> (b.score||0)-(a.score||0))) {
+      if (seen.some(s => isNearDuplicate(s.chunk, r.chunk))) continue;
+      seen.push(r);
+      semFiltered.push(r);
+    }
+    dedupedResults = semFiltered;
     
     // Get total chunks count for position scoring
     const totalChunks = Math.max(...dedupedResults.map(r => r.chunkIndex || 0));
@@ -564,6 +629,26 @@ export class RAGService {
     
     const finalResults = diversified.slice(0, this.config.maxResults);
 
+    // If results are too few, relax retrieval once (broader net)
+    if (finalResults.length < 5) {
+      if (this.config.debugRetrieval) console.log('🔁 Relaxing retrieval: low result count, expanding search');
+      // Retry with lower threshold and larger cap; force expansion
+      const relaxed = new RAGService(this.prisma, {
+        ...this.config,
+        similarityThreshold: Math.max(0.15, this.config.similarityThreshold - 0.05),
+        maxResults: Math.max(40, this.config.maxResults),
+        enableQueryExpansion: true,
+        enableKeywordSearch: true,
+        enableHybridSearch: true,
+        enableReranking: true,
+        apiKey: undefined
+      });
+      const retry = await relaxed.retrieveContext(query, userId);
+      if (retry.results.length > finalResults.length) {
+        return retry; // Use relaxed results entirely (includes context/debug)
+      }
+    }
+
     // Build sourceGroups for debug and context reporting
     const sourceGroups = finalResults.reduce((groups, result) => {
       const source = result.source || 'unknown';
@@ -598,7 +683,7 @@ export class RAGService {
         });
       });
 
-      // Build formatted context with source headers and page numbers
+    // Build formatted context with source headers and page/section info
       context = Object.entries(sourceGroups)
         .map(([source, results]) => {
           const sourceHeader = `📄 ${source}`;
@@ -608,17 +693,14 @@ export class RAGService {
             // Try to get actual page number from metadata first
             const metadata = r.metadata as { pageNumber?: number; loc?: { pageNumber?: number } } | undefined;
             const pageNumber = metadata?.pageNumber || metadata?.loc?.pageNumber;
+            const section = (metadata as any)?.section;
             
             if (pageNumber !== undefined) {
               // Use actual page number from metadata
               pageInfo = ` [Page ${pageNumber}]`;
-            } else if (r.chunkIndex !== undefined && r.chunkIndex !== null) {
-              // Fall back to estimation if needed, with a warning first time
-              if (!this.hasLoggedPageWarning) {
-                console.warn('⚠️ Some chunks missing page metadata, falling back to estimation');
-                this.hasLoggedPageWarning = true;
-              }
-              pageInfo = ` [Page ~${Math.floor(r.chunkIndex / 2) + 1}]`;  // Estimated
+            } else if (section) {
+              // Prefer section-only when page unknown to avoid false precision
+              pageInfo = ` [Section: ${section}]`;
             }
             
             return `${pageInfo}\n${r.chunk}`;
@@ -627,6 +709,29 @@ export class RAGService {
         })
         .join('\n\n================\n\n');
     }
+
+    // Simple confidence scoring based on top gaps and volume
+    const top = finalResults[0]?.finalScore ?? 0;
+    const second = finalResults[1]?.finalScore ?? 0;
+    const gap = Math.max(0, top - second);
+    const volume = finalResults.length;
+    const confidence = (top >= 0.7 && gap >= 0.1 && volume >= 5) ? 'high' : (top >= 0.5 && volume >= 3) ? 'medium' : 'low';
+
+    // Compute simple retrieval metrics (heuristics, placeholders for now)
+    const metrics = {
+      ndcg: Number((top + second) / 2).toFixed(3),
+      mrr: Number(top > 0 ? 1 : 0).toFixed(3),
+      recallAtK: Number(finalResults.length >= 5 ? 1 : finalResults.length / 5).toFixed(3)
+    } as any;
+
+    // Fire-and-forget DB log (do not block request on failure)
+    (this.prisma as any).retrievalLog?.create?.({
+      data: {
+        query,
+        results: finalResults.map(r => ({ source: r.source, chunkIndex: r.chunkIndex, score: r.finalScore })),
+        metrics,
+      }
+    }).catch(()=>{});
 
     return {
       results: finalResults,
@@ -640,7 +745,11 @@ export class RAGService {
         totalResults: finalResults.length,
         sourceCounts: Object.fromEntries(
           Object.entries(sourceGroups).map(([source, results]) => [source, results.length])
-        )
+        ),
+        confidence,
+        topScore: top,
+        secondScore: second,
+        topScoreGap: gap
       }
     };
   }

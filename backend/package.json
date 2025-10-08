@@ -10,6 +10,7 @@
     "start": "tsx src/server.ts",
     "test": "jest",
     "test:watch": "jest --watch",
+    "prisma:migrate": "prisma migrate dev --name add_retrieval_log",
     "prisma:generate": "prisma generate",
     "seed": "npm run build:clean && prisma db seed",
     "seed:only": "prisma db seed",

@@ -137,3 +137,11 @@ model Embedding {
   @@index([documentType])
   @@index([source, chunkIndex])
 }
+
+model RetrievalLog {
+  id        String   @id @default(cuid())
+  query     String
+  results   Json
+  metrics   Json?
+  createdAt DateTime @default(now())
+}
