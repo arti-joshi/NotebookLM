@@ -1394,6 +1394,12 @@ CITATION PLACEMENT:
 - Cite the most specific page where information appears
 - Do not group all citations at the end
 
+CITATION CONSISTENCY (SINGLE MAIN SECTION):
+- Choose ONE primary section for the answer: use the section from the highest-scoring/most relevant chunk in CONTEXT.
+- Use that same section for all citations in the answer unless a specific sentence clearly relies on a different page.
+- Never list multiple sections in a single citation. Prefer one citation per sentence using the main section.
+- If a different page is strictly needed, start a new sentence (or paragraph) and cite that single alternative section there.
+
 WHEN CONTEXT IS INSUFFICIENT:
 Say exactly: "This specific topic is not covered in the provided context. The PostgreSQL documentation may contain this information in a different section."
 
