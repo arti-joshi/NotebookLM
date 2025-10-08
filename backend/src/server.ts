@@ -24,6 +24,9 @@ import crypto from 'crypto'
 // Services with LangChain integration
 import { DocumentService } from './services/documentService'
 import { RAGService } from './services/ragService'
+import * as topicService from './services/topicService';
+import * as progressService from './services/progressService';
+import { getEmbedding as getQueryEmbedding } from './services/embeddingService';
 
 // Types
 interface User {
@@ -1304,6 +1307,33 @@ app.post('/ai/chat', auth, asyncHandler(async (req: Request, res: Response) => {
  - contentType: ${meta?.contentType ?? 'n/a'} sqlKeywords: ${Array.isArray(meta?.sqlKeywords) ? meta.sqlKeywords.slice(0,5).join(',') : 'n/a'}
  - Preview: ${r.chunk.substring(0, 140).replace(/\n/g, ' ')}...`)
     })
+
+    // Progress tracking: map query to topics (post-RAG)
+    let interactionData: any = null
+    try {
+      const queryEmbedding = await getQueryEmbedding(userMessage)
+      const topicMappings = await topicService.mapQueryToTopics(userMessage, ragResult)
+      const citedSections = (ragResult?.results || [])
+        .map((r: any) => (r?.metadata?.section))
+        .filter((s: any) => !!s)
+      interactionData = {
+        userId: DEMO_USER_ID,
+        query: userMessage,
+        queryEmbedding,
+        topicMappings,
+        ragMetadata: {
+          confidence: (ragResult?.debug?.confidence || 'medium'),
+          topScore: (ragResult?.debug?.topScore || 0.5),
+          citedSections
+        },
+        answerLength: 0,
+        citationCount: 0,
+        timeSpentMs: undefined
+      }
+      ;(req as any)._interactionData = interactionData
+    } catch (mapErr) {
+      console.warn('[ai/chat] Topic mapping failed, continuing without progress tracking:', (mapErr as Error)?.message)
+    }
     
   } catch (err) {
     console.error(`[ai/chat] Enhanced RAG retrieval failed after ${Date.now() - ragStartTime}ms:`, err)
@@ -1431,6 +1461,20 @@ FORMAT RULES:
 - Processing Time: ${llmTime}ms
 - Status: Success`)
     let answer = completion?.choices?.[0]?.message?.content || 'I could not generate a response.'
+
+    // Progress tracking: update and record interaction asynchronously
+    try {
+      const interactionData: any = (req as any)._interactionData
+      if (interactionData) {
+        interactionData.answerLength = answer.length
+        interactionData.citationCount = (answer.match(/\[Page \d+/g) || []).length
+        progressService.recordInteraction(interactionData).catch((err: any) => {
+          console.error('Failed to record interaction:', err)
+        })
+      }
+    } catch (e) {
+      console.warn('[ai/chat] Failed to enqueue progress tracking:', (e as Error)?.message)
+    }
 
     // Citations disabled by request
 
@@ -1740,82 +1784,9 @@ app.get('/ai/chat-sambanova/stream', asyncHandler(async (req: Request, res: Resp
 
 // --- Progress Summary ---
 app.get('/progress/summary', auth, asyncHandler(async (req: Request, res: Response) => {
-  try {
-    const progressData = await prisma.progress.findMany({
-      where: { userId: DEMO_USER_ID },
-      orderBy: { date: 'desc' },
-      take: 30,
-      select: { id: true, userId: true, document: true, pagesRead: true, minutes: true, date: true }
-    })
-
-    const weekly = [] as Array<{ day: string, questions: number, minutes: number }>
-    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-    const today = new Date(); today.setHours(0, 0, 0, 0)
-
-    for (let i = 6; i >= 0; i--) {
-      const date = new Date(today); date.setDate(today.getDate() - i); date.setHours(0, 0, 0, 0)
-      const dayProgress = progressData.filter(p => {
-        const d = new Date(p.date); d.setHours(0, 0, 0, 0)
-        return d.getTime() === date.getTime()
-      })
-      const totalQuestions = dayProgress.reduce((sum, p) => sum + (p.pagesRead || 0), 0)
-      const totalMinutes = dayProgress.reduce((sum, p) => sum + (p.minutes || 0), 0)
-      weekly.push({ day: dayNames[date.getDay()], questions: totalQuestions, minutes: totalMinutes })
-    }
-
-    const questionsAsked = progressData.reduce((sum, p) => sum + (p.pagesRead || 0), 0)
-    const totalTime = progressData.reduce((sum, p) => sum + (p.minutes || 0), 0)
-
-    const chapterCoverage = [
-      { chapter: 'Chapter 5: Indexes', status: 'well', questions: 8, words: 450 },
-      { chapter: 'Chapter 7: SELECT Queries', status: 'well', questions: 6, words: 320 },
-      { chapter: 'Chapter 9: Performance', status: 'partial', questions: 2, words: 85 },
-      { chapter: 'Chapter 11: Transactions', status: 'partial', questions: 1, words: 60 },
-      { chapter: 'Chapter 12: Replication', status: 'not', questions: 0, words: 0 },
-      { chapter: 'Chapter 15: Security', status: 'not', questions: 0, words: 0 }
-    ]
-    const chaptersExplored = chapterCoverage.filter(c => c.status !== 'not').length
-    const topicsMastered = chapterCoverage.filter(c => c.status === 'well').length
-    const avgSession = totalTime > 0 ? Math.round(totalTime / Math.max(progressData.length, 1)) : 0
-
-    res.json({
-      weekly,
-      questionsAsked,
-      chaptersExplored,
-      totalChapters: 15,
-      totalTime,
-      topicsMastered,
-      avgSession,
-      chapterCoverage
-    })
-  } catch (error) {
-    console.error('Progress summary error:', error)
-    res.json({
-      weekly: [
-        { day: 'Mon', questions: 5, minutes: 45 },
-        { day: 'Tue', questions: 12, minutes: 85 },
-        { day: 'Wed', questions: 8, minutes: 60 },
-        { day: 'Thu', questions: 6, minutes: 40 },
-        { day: 'Fri', questions: 10, minutes: 75 },
-        { day: 'Sat', questions: 3, minutes: 25 },
-        { day: 'Sun', questions: 3, minutes: 30 }
-      ],
-      questionsAsked: 47,
-      chaptersExplored: 8,
-      totalChapters: 15,
-      totalTime: 1247,
-      topicsMastered: 5,
-      avgSession: 28,
-      chapterCoverage: [
-        { chapter: 'Chapter 5: Indexes', status: 'well', questions: 8, words: 450 },
-        { chapter: 'Chapter 7: SELECT Queries', status: 'well', questions: 6, words: 320 },
-        { chapter: 'Chapter 9: Performance', status: 'partial', questions: 2, words: 85 },
-        { chapter: 'Chapter 11: Transactions', status: 'partial', questions: 1, words: 60 },
-        { chapter: 'Chapter 12: Replication', status: 'not', questions: 0, words: 0 },
-        { chapter: 'Chapter 15: Security', status: 'not', questions: 0, words: 0 }
-      ]
-    })
-  }
+  const userId = DEMO_USER_ID // or from req.user.id
+  const summary = await progressService.getUserProgress(userId)
+  res.json(summary)
 }))
 
 // --- Status Routes ---
@@ -1847,6 +1818,60 @@ app.get('/rag/status', asyncHandler(async (req: Request, res: Response) => {
   }
 
   res.json(status)
+}))
+
+// --- Topics & Progress APIs ---
+// Get all topics with hierarchy (chapters + children)
+app.get('/topics', auth, asyncHandler(async (req: Request, res: Response) => {
+  const topics = await prisma.topic.findMany({
+    where: { level: 0 },
+    include: {
+      children: {
+        orderBy: { name: 'asc' }
+      }
+    },
+    orderBy: { chapterNum: 'asc' }
+  })
+  res.json(topics)
+}))
+
+// Get specific topic detail with progress
+app.get('/topics/:topicId/progress', auth, asyncHandler(async (req: Request, res: Response) => {
+  const { topicId } = req.params
+  const userId = DEMO_USER_ID
+  const detail = await progressService.getTopicDetail(userId, topicId)
+  res.json(detail)
+}))
+
+// Get user's topic mastery list (for dashboard)
+app.get('/progress/topics', auth, asyncHandler(async (req: Request, res: Response) => {
+  const userId = DEMO_USER_ID
+  const { status, limit } = req.query
+  const where: any = { userId }
+  if (status) where.status = status
+
+  const masteryRecords = await prisma.topicMastery.findMany({
+    where,
+    include: { topic: true },
+    orderBy: { lastInteraction: 'desc' },
+    take: limit ? parseInt(limit as string) : 100
+  })
+  res.json(masteryRecords)
+}))
+
+// Manually mark topic as completed (optional)
+app.post('/topics/:topicId/complete', auth, asyncHandler(async (req: Request, res: Response) => {
+  const { topicId } = req.params
+  const userId = DEMO_USER_ID
+  await prisma.topicMastery.update({
+    where: { userId_topicId: { userId, topicId } },
+    data: {
+      status: 'MASTERED',
+      masteryLevel: 100,
+      completedAt: new Date()
+    }
+  })
+  res.json({ success: true })
 }))
 
 // Admin: recent retrieval logs (last 50)
