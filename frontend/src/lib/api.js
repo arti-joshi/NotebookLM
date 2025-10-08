@@ -272,3 +272,27 @@ export async function cancelDocumentProcessing(documentId) {
 }
 
 export const apiFetch = callApi
+
+// Progress endpoints
+export async function getProgressSummary() {
+  return apiGet('/progress/summary')
+}
+
+export async function getTopicsList() {
+  return apiGet('/topics')
+}
+
+export async function getTopicProgress(topicId) {
+  return apiGet(`/topics/${topicId}/progress`)
+}
+
+export async function getUserTopicMastery(status = null, limit = 100) {
+  const query = new URLSearchParams()
+  if (status) query.append('status', status)
+  if (limit) query.append('limit', limit.toString())
+  return apiGet(`/progress/topics?${query}`)
+}
+
+export async function markTopicComplete(topicId) {
+  return apiPost(`/topics/${topicId}/complete`, {})
+}

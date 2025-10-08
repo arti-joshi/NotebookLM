@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { MessageCircle, Send, X, Bot, User, Minimize2, Maximize2 } from 'lucide-react'
-import { callApi } from '../lib/api'
+import { callApi, getUserTopicMastery } from '../lib/api'
 import { ErrorBoundary } from './ErrorBoundary'
 
 function ChatWidgetContent({ fullScreen = false }) {
@@ -15,6 +15,7 @@ function ChatWidgetContent({ fullScreen = false }) {
   ])
   const [input, setInput] = useState('')
   const [isTyping, setIsTyping] = useState(false)
+  const [recentTopics, setRecentTopics] = useState([])
   const endRef = useRef(null)
   const listRef = useRef(null)
   const inputRef = useRef(null)
@@ -92,6 +93,14 @@ function ChatWidgetContent({ fullScreen = false }) {
         content: assistantReply,
         timestamp: new Date()
       }])
+
+      // Fetch live progress indicators
+      try {
+        const mastery = await getUserTopicMastery('LEARNING', 3)
+        setRecentTopics((mastery || []).slice(0, 3))
+      } catch (err) {
+        console.error('Failed to fetch progress:', err)
+      }
     } catch (error) {
       console.error('Chat Error:', error)
       let errorMessage = 'Sorry, I encountered an error. '
@@ -252,6 +261,20 @@ function ChatWidgetContent({ fullScreen = false }) {
             </button>
           </div>
         </div>
+
+        {recentTopics.length > 0 && (
+          <div className="px-4 py-2 bg-blue-50 dark:bg-blue-900/20 border-t text-xs text-gray-800 dark:text-gray-200">
+            <p className="font-semibold mb-1">Currently Learning:</p>
+            <div className="flex flex-wrap gap-2">
+              {recentTopics.map((topic) => (
+                <div key={topic.topicId} className="flex items-center gap-1">
+                  <span>{topic.topic?.name}</span>
+                  <span className="text-blue-600 font-medium">{Math.round(topic.masteryLevel)}%</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Input */}
         <form onSubmit={sendMessage} className="p-4 border-t border-gray-200 dark:border-gray-700">

@@ -1,431 +1,254 @@
 import { useEffect, useState } from 'react'
-import { LineChart, Line, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
-import { TrendingUp, Clock, BookOpen, Target, Award, Calendar, MessageSquare } from 'lucide-react'
+import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, LineChart, Line } from 'recharts'
+import { MessageSquare, Clock, Award, TrendingUp, Lightbulb } from 'lucide-react'
+import { getProgressSummary, getUserTopicMastery } from '../lib/api'
+import TopicDetailModal from '../components/TopicDetailModal'
+
+function formatRelativeTime(date) {
+  const d = new Date(date)
+  const diff = Date.now() - d.getTime()
+  const minutes = Math.floor(diff / 60000)
+  if (minutes < 60) return `${minutes}m ago`
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) return `${hours}h ago`
+  const days = Math.floor(hours / 24)
+  return `${days}d ago`
+}
+
+function StatCard({ icon, label, value }) {
+  return (
+    <div className="bg-white dark:bg-gray-800 rounded-lg p-5 shadow border border-gray-200 dark:border-gray-700">
+      <div className="flex items-center justify-between">
+        <div className="text-gray-500 dark:text-gray-400 text-sm">{label}</div>
+        <div className="text-gray-400 dark:text-gray-500">{icon}</div>
+      </div>
+      <div className="mt-3 text-2xl font-semibold">{value}</div>
+    </div>
+  )
+}
+
+function MasteryBar({ label, count, color }) {
+  const colorMap = {
+    green: 'bg-green-500',
+    blue: 'bg-blue-500',
+    yellow: 'bg-yellow-500',
+    orange: 'bg-orange-500',
+    gray: 'bg-gray-400'
+  }
+  const bar = colorMap[color] || 'bg-blue-500'
+  const pct = Math.min(100, Math.round((count / 100) * 100))
+  return (
+    <div>
+      <div className="flex items-center justify-between text-sm mb-1">
+        <span>{label}</span>
+        <span className="text-gray-500 dark:text-gray-400">{count}</span>
+      </div>
+      <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+        <div className={`${bar} h-2 rounded-full`} style={{ width: `${pct}%` }} />
+      </div>
+    </div>
+  )
+}
+
+function ChartCard({ title, children }) {
+  return (
+    <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow border border-gray-200 dark:border-gray-700">
+      <h2 className="text-lg font-semibold mb-4">{title}</h2>
+      <div className="h-64">
+        <ResponsiveContainer width="100%" height="100%">
+          {children}
+        </ResponsiveContainer>
+      </div>
+    </div>
+  )
+}
+
+function StatusBadge({ status }) {
+  const map = {
+    MASTERED: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
+    PROFICIENT: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
+    LEARNING: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300',
+    BEGINNER: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300',
+    NOT_STARTED: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'
+  }
+  const cls = map[status] || map.NOT_STARTED
+  return <span className={`px-2 py-1 rounded text-xs font-medium ${cls}`}>{status}</span>
+}
 
 function DashboardPage() {
-  const [analytics, setAnalytics] = useState({
-    weekly: [],
-    questionsAsked: 0,
-    chaptersExplored: 0,
-    totalChapters: 15,
-    totalTime: 0,
-    topicsMastered: 0,
-    avgSession: 0,
-    chapterCoverage: []
-  })
-  const [timeframe, setTimeframe] = useState('week')
+  const [progressSummary, setProgressSummary] = useState(null)
+  const [topicMastery, setTopicMastery] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+  const [selectedTopicId, setSelectedTopicId] = useState(null)
+
+  async function loadData() {
+    setLoading(true)
+    setError(null)
+    try {
+      const [summary, mastery] = await Promise.all([
+        getProgressSummary(),
+        getUserTopicMastery(null, 10)
+      ])
+      setProgressSummary(summary)
+      setTopicMastery(mastery)
+    } catch (e) {
+      setError(e?.message || 'Failed to load progress')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   useEffect(() => {
-    async function load() {
-      try {
-        const api = import.meta.env.VITE_API_URL || 'http://localhost:4000'
-        const res = await fetch(api + '/progress/summary')
-        const data = await res.json()
-        setAnalytics({
-          weekly: data.weekly || generateMockData(),
-          questionsAsked: data.questionsAsked || 47,
-          chaptersExplored: data.chaptersExplored || 8,
-          totalChapters: data.totalChapters || 15,
-          totalTime: data.totalTime || 1247,
-          topicsMastered: data.topicsMastered || 5,
-          avgSession: data.avgSession || 28,
-          chapterCoverage: data.chapterCoverage || generateMockCoverage()
-        })
-      } catch {
-        setAnalytics({
-          weekly: generateMockData(),
-          questionsAsked: 47,
-          chaptersExplored: 8,
-          totalChapters: 15,
-          totalTime: 1247,
-          topicsMastered: 5,
-          avgSession: 28,
-          chapterCoverage: generateMockCoverage()
-        })
-      }
-    }
-    load()
-  }, [timeframe])
+    loadData()
+  }, [])
 
-  function generateMockData() {
-    const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
-    return days.map(day => ({
-      day,
-      questions: Math.floor(Math.random() * 15) + 5,
-      minutes: Math.floor(Math.random() * 120) + 30
-    }))
+  const refreshData = () => loadData()
+
+  const overallProgress = Math.round(progressSummary?.overallProgress || 0)
+  const totalQuestions = progressSummary?.totalQuestions || 0
+  const totalTimeSpent = progressSummary?.totalTimeSpent || 0
+  const topicsMastered = progressSummary?.topicsMastered || 0
+  const topicsByStatus = progressSummary?.topicsByStatus || { mastered: 0, proficient: 0, learning: 0, beginner: 0, notStarted: 0 }
+  const weeklyActivity = progressSummary?.weeklyActivity || []
+  const topActiveTopics = progressSummary?.topActiveTopics || []
+  const topicsExplored = progressSummary?.topicsExplored || 0
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6 flex items-center justify-center text-gray-600 dark:text-gray-300">
+        Loading dashboard...
+      </div>
+    )
   }
 
-  function generateMockCoverage() {
-    return [
-      { chapter: 'Chapter 5: Indexes', status: 'well', questions: 8, words: 450 },
-      { chapter: 'Chapter 7: SELECT Queries', status: 'well', questions: 6, words: 320 },
-      { chapter: 'Chapter 9: Performance', status: 'partial', questions: 2, words: 85 },
-      { chapter: 'Chapter 11: Transactions', status: 'partial', questions: 1, words: 60 },
-      { chapter: 'Chapter 12: Replication', status: 'not', questions: 0, words: 0 },
-      { chapter: 'Chapter 15: Security', status: 'not', questions: 0, words: 0 }
-    ]
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6 flex items-center justify-center">
+        <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow text-red-600 dark:text-red-400">{error}</div>
+      </div>
+    )
   }
 
-  const formatTime = (minutes) => {
-    const hours = Math.floor(minutes / 60)
-    const mins = minutes % 60
-    return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`
-  }
-
-  const stats = [
-    {
-      label: 'Questions Asked',
-      value: analytics.questionsAsked,
-      icon: MessageSquare,
-      color: 'text-orange-600 dark:text-orange-400',
-      bg: 'bg-orange-100 dark:bg-orange-900/20',
-      change: '+12 this week'
-    },
-    {
-      label: 'Chapters Explored',
-      value: `${analytics.chaptersExplored}/${analytics.totalChapters}`,
-      icon: BookOpen,
-      color: 'text-blue-600 dark:text-blue-400',
-      bg: 'bg-blue-100 dark:bg-blue-900/20',
-      change: '+2 this week'
-    },
-    {
-      label: 'Total Time',
-      value: formatTime(analytics.totalTime),
-      icon: Clock,
-      color: 'text-green-600 dark:text-green-400',
-      bg: 'bg-green-100 dark:bg-green-900/20',
-      change: '+3.2h this week'
-    },
-    {
-      label: 'Topics Mastered',
-      value: analytics.topicsMastered,
-      icon: Target,
-      color: 'text-purple-600 dark:text-purple-400',
-      bg: 'bg-purple-100 dark:bg-purple-900/20',
-      change: '+1 this month'
-    }
-  ]
-
-  const chapterDistribution = [
-    { name: 'Queries', value: 35, color: '#4f46e5' },
-    { name: 'Indexes', value: 25, color: '#10b981' },
-    { name: 'Performance', value: 20, color: '#f59e0b' },
-    { name: 'Other', value: 20, color: '#8b5cf6' }
-  ]
+  const recommendations = (topicMastery || [])
+    .filter(t => t.status === 'LEARNING')
+    .slice(0, 5)
+    .map(t => `Continue exploring "${t.topic?.name}" or its sibling topics.`)
 
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
-        <div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-            Learning Dashboard
-          </h1>
-          <p className="text-gray-600 dark:text-gray-300 mt-1">
-            Track your PostgreSQL documentation progress
-          </p>
-        </div>
-        
-        <div className="flex items-center space-x-2">
-          <Calendar className="w-4 h-4 text-gray-400" />
-          <select 
-            value={timeframe}
-            onChange={(e) => setTimeframe(e.target.value)}
-            className="px-3 py-2 text-sm border rounded-lg dark:bg-gray-800 dark:border-gray-600 focus:ring-2 focus:ring-indigo-500"
-          >
-            <option value="week">This Week</option>
-            <option value="month">This Month</option>
-            <option value="year">This Year</option>
-          </select>
-        </div>
-      </div>
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat, index) => {
-          const Icon = stat.icon
-          return (
-            <div key={index} className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
-              <div className="flex items-center justify-between mb-4">
-                <div className={`p-3 rounded-xl ${stat.bg}`}>
-                  <Icon className={`w-6 h-6 ${stat.color}`} />
-                </div>
-                <TrendingUp className="w-4 h-4 text-green-500" />
-              </div>
-              <div className="space-y-1">
-                <div className="text-2xl font-bold">{stat.value}</div>
-                <div className="text-sm text-gray-600 dark:text-gray-300">{stat.label}</div>
-                <div className="text-xs text-green-600 dark:text-green-400">{stat.change}</div>
-              </div>
-            </div>
-          )
-        })}
-      </div>
-
-      {/* Chapter Coverage Overview - NEW */}
-      <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6">
-        <h3 className="text-lg font-semibold mb-4">📚 Chapter Coverage Overview</h3>
-        <div className="space-y-4">
-          {/* Well Covered */}
-          <div>
-            <div className="text-sm font-medium text-green-600 dark:text-green-400 mb-2">
-              🎯 Well Covered (3+ questions)
-            </div>
-            <div className="space-y-2 ml-4">
-              {analytics.chapterCoverage.filter(c => c.status === 'well').map((chapter, idx) => (
-                <div key={idx} className="flex items-center justify-between p-2 bg-green-50 dark:bg-green-900/10 rounded">
-                  <span className="text-sm">✓ {chapter.chapter}</span>
-                  <span className="text-xs text-gray-600 dark:text-gray-400">
-                    {chapter.questions} questions, {chapter.words} words
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Partially Covered */}
-          <div>
-            <div className="text-sm font-medium text-yellow-600 dark:text-yellow-400 mb-2">
-              📖 Partially Covered (1-2 questions)
-            </div>
-            <div className="space-y-2 ml-4">
-              {analytics.chapterCoverage.filter(c => c.status === 'partial').map((chapter, idx) => (
-                <div key={idx} className="flex items-center justify-between p-2 bg-yellow-50 dark:bg-yellow-900/10 rounded">
-                  <span className="text-sm">~ {chapter.chapter}</span>
-                  <span className="text-xs text-gray-600 dark:text-gray-400">
-                    {chapter.questions} question{chapter.questions > 1 ? 's' : ''}, {chapter.words} words
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Not Explored */}
-          <div>
-            <div className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">
-              ❓ Not Yet Explored
-            </div>
-            <div className="grid grid-cols-2 gap-2 ml-4">
-              {analytics.chapterCoverage.filter(c => c.status === 'not').map((chapter, idx) => (
-                <div key={idx} className="text-sm text-gray-500 dark:text-gray-400 p-2 bg-gray-50 dark:bg-gray-700/30 rounded">
-                  ○ {chapter.chapter}
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Charts Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Questions/Day Chart */}
-        <div className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg transition-shadow duration-300">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-semibold">Questions Asked (Daily)</h3>
-          </div>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={analytics.weekly} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.3} />
-              <XAxis 
-                dataKey="day" 
-                stroke="#6b7280"
-                fontSize={12}
-              />
-              <YAxis 
-                stroke="#6b7280"
-                fontSize={12}
-              />
-              <Tooltip 
-                contentStyle={{
-                  backgroundColor: '#1f2937',
-                  border: '1px solid #374151',
-                  borderRadius: '8px',
-                  color: '#f9fafb'
-                }}
-              />
-              <Bar dataKey="questions" fill="#4f46e5" radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
+      <div className="max-w-7xl mx-auto space-y-6">
+        <div className="flex justify-between items-center">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Learning Progress</h1>
+          <button onClick={refreshData} className="inline-flex items-center gap-2 px-4 py-2 rounded bg-blue-600 hover:bg-blue-700 text-white shadow">
+            <TrendingUp size={18} /> Refresh
+          </button>
         </div>
 
-        {/* Chapter Distribution */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg transition-shadow duration-300">
-          <h3 className="text-lg font-semibold mb-6">Chapter Distribution</h3>
-          <ResponsiveContainer width="100%" height={200}>
-            <PieChart>
-              <Pie
-                data={chapterDistribution}
-                cx="50%"
-                cy="50%"
-                innerRadius={40}
-                outerRadius={80}
-                paddingAngle={5}
-                dataKey="value"
-              >
-                {chapterDistribution.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
-                ))}
-              </Pie>
+        <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow">
+          <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-3">Overall Progress: {overallProgress}%</h2>
+          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-4">
+            <div className="bg-blue-600 h-4 rounded-full" style={{ width: `${overallProgress}%` }} />
+          </div>
+          <p className="text-sm mt-2 text-gray-600 dark:text-gray-300">{topicsExplored}/100 topics explored</p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <StatCard icon={<MessageSquare />} label="Questions Asked" value={totalQuestions} />
+          <StatCard icon={<Clock />} label="Time Spent" value={`${Math.floor(totalTimeSpent/60)}h ${totalTimeSpent%60}m`} />
+          <StatCard icon={<Award />} label="Topics Mastered" value={`${topicsMastered}/100`} />
+          <StatCard icon={<TrendingUp />} label="In Progress" value={topicsByStatus.learning} />
+        </div>
+
+        <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow">
+          <h2 className="text-xl font-semibold mb-4">Topics by Mastery Level</h2>
+          <div className="space-y-3">
+            <MasteryBar label="Mastered" count={topicsByStatus.mastered} color="green" />
+            <MasteryBar label="Proficient" count={topicsByStatus.proficient} color="blue" />
+            <MasteryBar label="Learning" count={topicsByStatus.learning} color="yellow" />
+            <MasteryBar label="Beginner" count={topicsByStatus.beginner} color="orange" />
+            <MasteryBar label="Not Started" count={topicsByStatus.notStarted} color="gray" />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <ChartCard title="Questions This Week">
+            <BarChart data={weeklyActivity}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="day" />
+              <YAxis />
               <Tooltip />
-            </PieChart>
-          </ResponsiveContainer>
-          <div className="mt-4 space-y-2">
-            {chapterDistribution.map((item, index) => (
-              <div key={index} className="flex items-center justify-between text-sm">
-                <div className="flex items-center space-x-2">
-                  <div 
-                    className="w-3 h-3 rounded-full"
-                    style={{ backgroundColor: item.color }}
-                  ></div>
-                  <span className="text-gray-600 dark:text-gray-300">{item.name}</span>
-                </div>
-                <span className="font-medium">{item.value}%</span>
+              <Bar dataKey="questions" fill="#3b82f6" />
+            </BarChart>
+          </ChartCard>
+          
+          <ChartCard title="Time Spent This Week">
+            <LineChart data={weeklyActivity}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="day" />
+              <YAxis />
+              <Tooltip />
+              <Line type="monotone" dataKey="minutes" stroke="#10b981" />
+            </LineChart>
+          </ChartCard>
+        </div>
+
+        <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow">
+          <h2 className="text-xl font-semibold mb-4">Recent Activity</h2>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-gray-200 dark:border-gray-700">
+                  <th className="text-left p-2">Topic</th>
+                  <th className="text-left p-2">Chapter</th>
+                  <th className="text-left p-2">Mastery</th>
+                  <th className="text-left p-2">Status</th>
+                  <th className="text-left p-2">Questions</th>
+                  <th className="text-left p-2">Last Active</th>
+                </tr>
+              </thead>
+              <tbody>
+                {topActiveTopics.map((topic) => (
+                  <tr key={topic.topicId} className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/60">
+                    <td className="p-2 font-medium">
+                      <button onClick={() => setSelectedTopicId(topic.topicId)} className="text-blue-600 hover:underline">
+                        {topic.topicName}
+                      </button>
+                    </td>
+                    <td className="p-2 text-sm text-gray-600 dark:text-gray-300">{topic.chapterName}</td>
+                    <td className="p-2">
+                      <div className="flex items-center gap-2">
+                        <div className="w-16 bg-gray-200 dark:bg-gray-700 rounded h-2">
+                          <div className="bg-blue-600 h-2 rounded" style={{ width: `${topic.masteryLevel}%` }} />
+                        </div>
+                        <span className="text-sm">{Math.round(topic.masteryLevel)}%</span>
+                      </div>
+                    </td>
+                    <td className="p-2"><StatusBadge status={topic.status} /></td>
+                    <td className="p-2 text-center">{topic.questionsAsked}</td>
+                    <td className="p-2 text-sm text-gray-600 dark:text-gray-300">{formatRelativeTime(topic.lastActive)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow">
+          <h2 className="text-xl font-semibold mb-4">Recommended Next Steps</h2>
+          <div className="space-y-2">
+            {recommendations.map((rec, i) => (
+              <div key={i} className="flex items-start gap-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded">
+                <Lightbulb className="text-blue-600 mt-1" size={20} />
+                <p className="text-gray-800 dark:text-gray-200">{rec}</p>
               </div>
             ))}
           </div>
         </div>
-      </div>
 
-      {/* Time Spent Chart */}
-      <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg transition-shadow duration-300">
-        <div className="flex items-center justify-between mb-6">
-          <h3 className="text-lg font-semibold">Time Spent Learning</h3>
-          <div className="text-sm text-gray-500 dark:text-gray-400">
-            Average: {formatTime(analytics.avgSession)} per session
-          </div>
-        </div>
-        <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={analytics.weekly} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.3} />
-            <XAxis 
-              dataKey="day" 
-              stroke="#6b7280"
-              fontSize={12}
-            />
-            <YAxis 
-              stroke="#6b7280"
-              fontSize={12}
-            />
-            <Tooltip 
-              contentStyle={{
-                backgroundColor: '#1f2937',
-                border: '1px solid #374151',
-                borderRadius: '8px',
-                color: '#f9fafb'
-              }}
-              formatter={(value) => [formatTime(value), 'Time']}
-            />
-            <Line 
-              type="monotone" 
-              dataKey="minutes" 
-              stroke="#10b981" 
-              strokeWidth={3}
-              dot={{ fill: '#10b981', strokeWidth: 2, r: 6 }}
-              activeDot={{ r: 8, stroke: '#10b981', strokeWidth: 2 }}
-            />
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
-
-      {/* Goals & Achievements */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6">
-          <h3 className="text-lg font-semibold mb-4">Weekly Goals</h3>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span>Questions Asked</span>
-                <span className="font-medium">32 / 50</span>
-              </div>
-              <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                <div className="bg-gradient-to-r from-blue-500 to-blue-600 h-2 rounded-full" style={{ width: '64%' }}></div>
-              </div>
-            </div>
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span>Learning Time</span>
-                <span className="font-medium">6.5h / 10h</span>
-              </div>
-              <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                <div className="bg-gradient-to-r from-green-500 to-green-600 h-2 rounded-full" style={{ width: '65%' }}></div>
-              </div>
-            </div>
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span>New Chapters Explored</span>
-                <span className="font-medium">2 / 3</span>
-              </div>
-              <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                <div className="bg-gradient-to-r from-purple-500 to-purple-600 h-2 rounded-full" style={{ width: '67%' }}></div>
-              </div>
-            </div>
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span>Deep Dives (50+ words)</span>
-                <span className="font-medium">15 / 20</span>
-              </div>
-              <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                <div className="bg-gradient-to-r from-orange-500 to-orange-600 h-2 rounded-full" style={{ width: '75%' }}></div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6">
-          <h3 className="text-lg font-semibold mb-4">Recent Achievements</h3>
-          <div className="space-y-3">
-            <div className="flex items-center space-x-3 p-3 bg-yellow-50 dark:bg-yellow-900/10 rounded-lg border border-yellow-200 dark:border-yellow-800">
-              <div className="w-8 h-8 bg-yellow-100 dark:bg-yellow-900/20 rounded-full flex items-center justify-center">
-                <Award className="w-4 h-4 text-yellow-600 dark:text-yellow-400" />
-              </div>
-              <div>
-                <div className="font-medium text-sm">Consistency Champion</div>
-                <div className="text-xs text-gray-600 dark:text-gray-300">7-day learning streak</div>
-              </div>
-            </div>
-            
-            <div className="flex items-center space-x-3 p-3 bg-blue-50 dark:bg-blue-900/10 rounded-lg border border-blue-200 dark:border-blue-800">
-              <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center">
-                <BookOpen className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-              </div>
-              <div>
-                <div className="font-medium text-sm">Deep Diver</div>
-                <div className="text-xs text-gray-600 dark:text-gray-300">Asked 10+ questions on Indexes</div>
-              </div>
-            </div>
-
-            <div className="flex items-center space-x-3 p-3 bg-green-50 dark:bg-green-900/10 rounded-lg border border-green-200 dark:border-green-800">
-              <div className="w-8 h-8 bg-green-100 dark:bg-green-900/20 rounded-full flex items-center justify-center">
-                <Target className="w-4 h-4 text-green-600 dark:text-green-400" />
-              </div>
-              <div>
-                <div className="font-medium text-sm">Explorer</div>
-                <div className="text-xs text-gray-600 dark:text-gray-300">Covered 50% of documentation</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Suggested Next Topics - NEW */}
-      <div className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl p-6 text-white">
-        <h3 className="text-xl font-semibold mb-4">🎯 Suggested Next Topics</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-white/10 rounded-xl p-4 backdrop-blur-sm">
-            <div className="text-lg font-bold mb-1">🔒 Replication</div>
-            <div className="text-sm opacity-90">You haven't explored this yet</div>
-          </div>
-          <div className="bg-white/10 rounded-xl p-4 backdrop-blur-sm">
-            <div className="text-lg font-bold mb-1">🛡️ Security</div>
-            <div className="text-sm opacity-90">Important topic to cover next</div>
-          </div>
-          <div className="bg-white/10 rounded-xl p-4 backdrop-blur-sm">
-            <div className="text-lg font-bold mb-1">⚡ Advanced Performance</div>
-            <div className="text-sm opacity-90">Build on your Indexes knowledge</div>
-          </div>
-        </div>
+        {selectedTopicId && (
+          <TopicDetailModal topicId={selectedTopicId} onClose={() => setSelectedTopicId(null)} />
+        )}
       </div>
     </div>
   )
