@@ -1,5 +1,5 @@
 import { RAGService } from '../services/ragService';
-import { PrismaClient } from '../../generated/prisma';
+import { PrismaClient } from '@prisma/client';
 import express from 'express';
 
 const router = express.Router();

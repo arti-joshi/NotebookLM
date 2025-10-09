@@ -1,5 +1,5 @@
 // backend/scripts/print-chunks-by-page.ts
-import { PrismaClient } from '../generated/prisma'
+import { PrismaClient } from '@prisma/client'
 const prisma = new PrismaClient()
 
 async function main() {

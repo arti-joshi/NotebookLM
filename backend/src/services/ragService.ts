@@ -2,7 +2,7 @@
  * Enhanced RAG Service with Hybrid Search and Query Expansion
  */
 
-import { PrismaClient } from '../../generated/prisma';
+import { PrismaClient } from '@prisma/client';
 import { GoogleGenerativeAIEmbeddings } from '@langchain/google-genai';
 import { generateQueryVariants, extractWeightedKeywords } from './searchUtils';
 import { getEmbedding } from './embeddingService';

@@ -3,7 +3,7 @@
  * Handles document processing with proper job queue and duplicate prevention
  */
 
-import { PrismaClient } from '../../generated/prisma';
+import { PrismaClient } from '@prisma/client';
 import { Document } from 'langchain/document';
 import { 
   RecursiveCharacterTextSplitter,

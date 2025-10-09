@@ -1,7 +1,7 @@
 import path from 'path'
 import fs from 'fs'
 import { fileURLToPath } from 'url'
-import { PrismaClient } from '../generated/prisma'
+import { PrismaClient } from '@prisma/client'
 import { DocumentService } from '../src/services/documentService'
 
 // Simple CLI arg parsing for --limit=N

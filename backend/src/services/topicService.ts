@@ -1,4 +1,6 @@
-import { PrismaClient, Topic as DbTopic } from '../../generated/prisma';
+import { PrismaClient } from '@prisma/client';
+import { fuzzyStringMatch } from '../utils/fuzzyMatcher';
+type DbTopic = any;
 import { getEmbedding } from './embeddingService';
 
 export interface TopicMapping {
@@ -119,6 +121,72 @@ export async function loadTopicHierarchy(): Promise<TopicMaps> {
   }
 }
 
+export async function findTopicByName(name: string): Promise<(DbTopic & { children?: string[] }) | null> {
+  try {
+    const maps = await loadTopicHierarchy();
+    const normalized = normalize(name);
+
+    // exact slug match
+    const slug = normalized.replace(/\s+/g, '-');
+    for (const [key, topic] of maps.bySlug) {
+      if (normalize(key) === slug) return topic;
+    }
+
+    // exact name match
+    for (const topic of maps.byId.values()) {
+      if (normalize(topic.name) === normalized) return topic;
+    }
+
+    // startsWith/contains quick pass
+    for (const topic of maps.byId.values()) {
+      const n = normalize(topic.name);
+      if (n.startsWith(normalized) || n.includes(normalized)) return topic;
+    }
+
+    // fuzzy against name/keywords/aliases
+    let best: { topic: (DbTopic & { children?: string[] }); score: number } | null = null;
+    for (const topic of maps.byId.values()) {
+      if (topic.level !== 1) continue;
+      const terms = [topic.name, ...(topic.keywords || []), ...(topic.aliases || [])];
+      for (const term of terms) {
+        const score = fuzzyStringMatch(normalized, term);
+        if (!best || score > best.score) best = { topic, score };
+      }
+    }
+    if (best && best.score > 0.7) return best.topic;
+    return null;
+  } catch (err) {
+    console.error('[topicService] findTopicByName failed:', err);
+    return null;
+  }
+}
+
+/**
+ * Try multiple candidate terms and return the best-matching level-1 topic.
+ */
+export async function findBestTopicMatch(candidates: string[]): Promise<(DbTopic & { children?: string[] }) | null> {
+  const maps = await loadTopicHierarchy();
+  let best: { topic: (DbTopic & { children?: string[] }); score: number } | null = null;
+  for (const needle of candidates) {
+    const normalized = normalize(needle);
+
+    // slug
+    const slug = normalized.replace(/\s+/g, '-');
+    const bySlug = maps.bySlug.get(slug);
+    if (bySlug && (bySlug as any).level === 1) return bySlug;
+
+    for (const topic of maps.byId.values()) {
+      if (topic.level !== 1) continue;
+      const fields = [topic.slug, topic.name, ...(topic.keywords || []), ...(topic.aliases || [])];
+      for (const f of fields) {
+        const s = fuzzyStringMatch(normalized, f);
+        if (!best || s > best.score) best = { topic, score: s };
+      }
+    }
+  }
+  return best && best.score > 0.7 ? best.topic : null;
+}
+
 export async function findTopicBySlug(slug: string): Promise<(DbTopic & { children?: string[] }) | null> {
   try {
     const maps = await loadTopicHierarchy();
@@ -166,18 +234,23 @@ export async function findTopicsByAliasesOrName(needle: string): Promise<(DbTopi
 export async function mapCitationToTopic(citationSection: string): Promise<{ topic: DbTopic; confidence: number } | null> {
   try {
     const maps = await loadTopicHierarchy();
-    const normalized = normalize(citationSection).replace(/[^a-z0-9\s-_]/g, '');
+    const normalized = normalize(citationSection).replace(/[^a-z0-9\s_-]/g, '');
 
     // Try exact slug match first
     const exact = maps.bySlug.get(normalized);
     if (exact) return { topic: exact as DbTopic, confidence: 0.95 };
 
-    // Fuzzy match on name, keywords, aliases
+    // Fuzzy match: compute max similarity over individual fields
     let best: { topic: DbTopic; confidence: number } | null = null;
     for (const topic of maps.byId.values()) {
-      const fields = [topic.slug, topic.name, ...(topic.keywords || []), ...(topic.aliases || [])].map(normalize);
-      const { score } = keywordMatchScore(fields.join(' '), [normalized]);
-      const confidence = Math.min(1, score * 1.2); // scale
+      if (topic.level !== 1) continue;
+      const fields = [topic.slug, topic.name, ...(topic.keywords || []), ...(topic.aliases || [])];
+      let maxScore = 0;
+      for (const f of fields) {
+        const s = fuzzyStringMatch(normalized, f);
+        if (s > maxScore) maxScore = s;
+      }
+      const confidence = Math.min(1, maxScore);
       if (!best || confidence > best.confidence) best = { topic: topic as DbTopic, confidence };
     }
     if (best && best.confidence > 0.6) return best;

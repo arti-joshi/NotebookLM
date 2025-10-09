@@ -3,7 +3,7 @@ import { auth } from '../middleware/auth';
 import { asyncHandler } from '../utils/asyncHandler';
 import { PostgresChatService } from '../services/postgresChatService';
 import { z } from 'zod';
-import { PrismaClient } from '../../generated/prisma';
+import { PrismaClient } from '@prisma/client';
 
 const router = express.Router();
 const prisma = new PrismaClient();

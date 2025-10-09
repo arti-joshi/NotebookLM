@@ -1,6 +1,5 @@
 generator client {
   provider = "prisma-client-js"
-  output   = "../generated/prisma"
 }
 
 datasource db {
@@ -183,7 +182,7 @@ model TopicInteraction {
   topic            Topic    @relation(fields: [topicId], references: [id])
   topicId          String
   query            String
-  queryEmbedding   Unsupported("vector(768)")
+  queryEmbedding   Unsupported("vector(768)")?
   mappingConfidence Float
   ragConfidence    String   // "high", "medium", "low"
   ragTopScore      Float

@@ -1,5 +1,5 @@
 import { POSTGRES_PROMPT } from '../config/systemPrompts';
-import { PrismaClient } from '../../generated/prisma';
+import { PrismaClient } from '@prisma/client';
 import { RAGService } from './ragService';
 import { getSambaClient } from '../sambaClient';
 

@@ -1,7 +1,7 @@
 import 'dotenv/config'
 import express, { Request, Response, NextFunction } from 'express'
 import cors from 'cors'
-import { PrismaClient } from '../generated/prisma'
+import { PrismaClient } from '@prisma/client'
 import { GoogleGenerativeAIEmbeddings } from '@langchain/google-genai'
 import { corsConfig } from './config/cors'
 import { auth as sessionAuth, sessions as SessionStore, AuthenticatedRequest as SessionRequest } from './middleware/auth'
