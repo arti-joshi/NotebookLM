@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, LineChart, Line } from 'recharts'
-import { MessageSquare, Clock, Award, TrendingUp, Lightbulb } from 'lucide-react'
+import { MessageSquare, Clock, Award, TrendingUp, Lightbulb, Download } from 'lucide-react'
 import { getProgressSummary, getUserTopicMastery } from '../lib/api'
 import TopicDetailModal from '../components/TopicDetailModal'
+import ProgressOnboarding from '../components/ProgressOnboarding'
 
 function formatRelativeTime(date) {
   const d = new Date(date)
@@ -123,6 +124,43 @@ function DashboardPage() {
 
   const refreshData = () => loadData()
 
+  async function exportProgress() {
+    try {
+      const summary = await getProgressSummary()
+      const topics = await getUserTopicMastery()
+
+      const exportData = {
+        exportDate: new Date().toISOString(),
+        overallProgress: summary?.overallProgress ?? 0,
+        stats: {
+          totalQuestions: summary?.totalQuestions ?? 0,
+          totalTimeSpent: summary?.totalTimeSpent ?? 0,
+          topicsMastered: summary?.topicsMastered ?? 0
+        },
+        topics: (topics || []).map(t => ({
+          name: t?.topic?.name,
+          chapter: t?.topic?.parent?.name || 'N/A',
+          mastery: t?.masteryLevel ?? 0,
+          status: t?.status,
+          questionsAsked: t?.questionsAsked ?? 0,
+          lastActive: t?.lastInteraction || null
+        }))
+      }
+
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `progress-${new Date().toISOString().split('T')[0]}.json`
+      a.click()
+      URL.revokeObjectURL(url)
+
+      try { alert('Progress exported successfully!') } catch {}
+    } catch (err) {
+      try { alert('Export failed: ' + (err?.message || 'Unknown error')) } catch {}
+    }
+  }
+
   const overallProgress = Math.round(progressSummary?.overallProgress || 0)
   const totalQuestions = progressSummary?.totalQuestions || 0
   const totalTimeSpent = progressSummary?.totalTimeSpent || 0
@@ -156,11 +194,17 @@ function DashboardPage() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
       <div className="max-w-7xl mx-auto space-y-6">
+        <ProgressOnboarding />
         <div className="flex justify-between items-center">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Learning Progress</h1>
-          <button onClick={refreshData} className="inline-flex items-center gap-2 px-4 py-2 rounded bg-blue-600 hover:bg-blue-700 text-white shadow">
-            <TrendingUp size={18} /> Refresh
-          </button>
+          <div className="flex items-center gap-2">
+            <button onClick={exportProgress} className="flex items-center gap-2 px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-gray-100">
+              <Download size={18} /> Export Progress
+            </button>
+            <button onClick={refreshData} className="inline-flex items-center gap-2 px-4 py-2 rounded bg-blue-600 hover:bg-blue-700 text-white shadow">
+              <TrendingUp size={18} /> Refresh
+            </button>
+          </div>
         </div>
 
         <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow">

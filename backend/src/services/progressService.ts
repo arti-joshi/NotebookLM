@@ -578,6 +578,7 @@
 
 import { PrismaClient } from '@prisma/client';
 import { TopicMapping } from './topicService';
+import { logInteraction, logMasteryUpdate, logError } from '../utils/progressLogger';
 import { 
   RecordInteractionParams, 
   ProgressSummary, 
@@ -608,14 +609,48 @@ export async function recordInteraction(params: RecordInteractionParams): Promis
   if (!query) throw new Error('recordInteraction: query is required');
   if (!Array.isArray(topicMappings)) throw new Error('recordInteraction: topicMappings must be an array');
 
+  // Handle topic mapping failure
+  if (!topicMappings || topicMappings.length === 0) {
+    console.warn('[progressService] No topics mapped for query, skipping interaction');
+    return;
+  }
+
   const eligible = topicMappings.filter(m => (m?.confidence ?? 0) > 0.6 && m?.topicId);
   if (eligible.length === 0) return;
 
+  // Adjustments for very short queries
+  let adjustedTimeSpent = timeSpentMs ?? null;
+  let adjustedRagConfidence = (ragMetadata?.confidence || '').toString();
+  if (query.split(/\s+/).filter(Boolean).length < 10) {
+    adjustedTimeSpent = 0;
+    adjustedRagConfidence = 'low';
+  }
+
   const citedSections = Array.isArray(ragMetadata?.citedSections) ? ragMetadata.citedSections : [];
-  const ragConfidence = (ragMetadata?.confidence || '').toString();
+  const ragConfidence = adjustedRagConfidence;
   const ragTopScore = Number(ragMetadata?.topScore || 0);
 
   const affectedTopicIds = new Set<string>();
+
+  // Follow-up detection: same topic within 5 minutes
+  try {
+    const primaryTopicId = eligible[0]?.topicId;
+    if (primaryTopicId) {
+      const recentInteraction = await prisma.topicInteraction.findFirst({
+        where: {
+          userId,
+          topicId: primaryTopicId,
+          createdAt: { gte: new Date(Date.now() - 5 * 60 * 1000) }
+        },
+        orderBy: { createdAt: 'desc' }
+      });
+      if (recentInteraction) {
+        await prisma.topicInteraction.update({ where: { id: recentInteraction.id }, data: { hadFollowUp: true } });
+      }
+    }
+  } catch (e) {
+    console.warn('[progressService] follow-up detection failed', e);
+  }
 
   await prisma.$transaction(async (tx) => {
     for (const m of eligible) {
@@ -630,7 +665,7 @@ export async function recordInteraction(params: RecordInteractionParams): Promis
           citedSections,
           answerLength,
           citationCount,
-          timeSpentMs: timeSpentMs ?? null,
+          timeSpentMs: adjustedTimeSpent,
         }
       });
 
@@ -646,6 +681,16 @@ export async function recordInteraction(params: RecordInteractionParams): Promis
       }
 
       affectedTopicIds.add(m.topicId);
+
+      try {
+        logInteraction({
+          userId,
+          query,
+          topicsMapped: [m.topicId],
+          confidence: m.confidence,
+          timestamp: new Date()
+        })
+      } catch {}
     }
   }, {
     maxWait: 10000,
@@ -654,9 +699,28 @@ export async function recordInteraction(params: RecordInteractionParams): Promis
 
   for (const topicId of Array.from(affectedTopicIds)) {
     try {
+      const before = await prisma.topicMastery.findUnique({ where: { userId_topicId: { userId, topicId } } })
       await updateMastery(userId, topicId);
+      const after = await prisma.topicMastery.findUnique({ where: { userId_topicId: { userId, topicId } } })
+      if (after) {
+        const oldLevel = before?.masteryLevel ?? 0
+        const oldStatus = before?.status ?? 'NOT_STARTED'
+        if (after.masteryLevel !== oldLevel || after.status !== oldStatus) {
+          try {
+            logMasteryUpdate({
+              userId,
+              topicId,
+              oldLevel,
+              newLevel: after.masteryLevel,
+              oldStatus: String(oldStatus),
+              newStatus: String(after.status)
+            })
+          } catch {}
+        }
+      }
     } catch (e) {
       console.warn('[progressService] updateMastery failed after recordInteraction for topic', topicId, e);
+      try { logError('recordInteraction:updateMastery', e) } catch {}
     }
   }
 }
@@ -695,11 +759,12 @@ export async function updateMastery(userId: string, topicId: string): Promise<vo
   console.log(`[progressService] updateMastery start user=${userId} topic=${topicId}`);
   
   await prisma.$transaction(async (tx) => {
-    const interactions = await tx.topicInteraction.findMany({
-      where: { userId, topicId },
-      orderBy: { createdAt: 'asc' }
-    });
-    
+    const [interactions, topic, currentMastery] = await Promise.all([
+      tx.topicInteraction.findMany({ where: { userId, topicId }, orderBy: { createdAt: 'asc' } }),
+      tx.topic.findUnique({ where: { id: topicId }, include: { children: true } }),
+      tx.topicMastery.findUnique({ where: { userId_topicId: { userId, topicId } } })
+    ]);
+
     const questionsAsked = interactions.length;
     
     if (questionsAsked === 0) {
@@ -740,7 +805,6 @@ export async function updateMastery(userId: string, topicId: string): Promise<vo
       return;
     }
 
-    const topic = await tx.topic.findUnique({ where: { id: topicId } });
     const children = await tx.topic.findMany({ where: { parentId: topicId } });
     const expectedQuestions = Number(topic?.expectedQuestions ?? 5);
 

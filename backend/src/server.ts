@@ -1823,6 +1823,25 @@ app.get('/rag/status', asyncHandler(async (req: Request, res: Response) => {
   res.json(status)
 }))
 
+// --- Admin: Progress Stats ---
+app.get('/admin/progress-stats', auth, asyncHandler(async (req: Request, res: Response) => {
+  const stats = {
+    totalInteractions: await prisma.topicInteraction.count(),
+    totalMasteryRecords: await prisma.topicMastery.count(),
+    topicDistribution: await prisma.topicMastery.groupBy({
+      by: ['status'],
+      _count: { _all: true }
+    }),
+    avgMasteryLevel: await prisma.topicMastery.aggregate({
+      _avg: { masteryLevel: true }
+    }),
+    recentActivity: await prisma.topicInteraction.count({
+      where: { createdAt: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) } }
+    })
+  }
+  res.json(stats)
+}))
+
 // --- Topics & Progress APIs ---
 // Get all topics with hierarchy (chapters + children)
 app.get('/topics', auth, asyncHandler(async (req: Request, res: Response) => {

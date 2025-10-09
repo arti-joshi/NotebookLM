@@ -1,5 +1,5 @@
 import { PrismaClient } from '@prisma/client';
-import { fuzzyStringMatch } from '../utils/fuzzyMatcher';
+import { fuzzyStringMatch, cosineSimilarity } from '../utils/fuzzyMatcher';
 type DbTopic = any;
 import { getEmbedding } from './embeddingService';
 
@@ -16,6 +16,12 @@ type TopicMaps = {
 };
 
 const prisma = new PrismaClient();
+
+// Caches
+let topicCache: Map<string, DbTopic & { children?: string[] }> | null = null;
+let topicEmbeddingsCache: Map<string, number[]> | null = null;
+let lastCacheRefresh = 0;
+const CACHE_TTL = 60 * 60 * 1000; // 1 hour
 
 let cachedMaps: TopicMaps | null = null;
 let cacheLoadedAt: number | null = null;
@@ -45,9 +51,9 @@ function keywordMatchScore(text: string, terms: string[]): { score: number; matc
   return { score: Math.min(1, score / Math.max(1, terms.length)), matches };
 }
 
-export async function loadTopicHierarchy(): Promise<TopicMaps> {
+export async function loadTopicHierarchy(forceRefresh = false): Promise<TopicMaps> {
   try {
-    if (cachedMaps && cacheLoadedAt && (now() - cacheLoadedAt) < CACHE_TTL_MS) {
+    if (!forceRefresh && cachedMaps && cacheLoadedAt && (now() - cacheLoadedAt) < CACHE_TTL_MS) {
       return cachedMaps;
     }
 
@@ -62,6 +68,7 @@ export async function loadTopicHierarchy(): Promise<TopicMaps> {
     
     const byId = new Map<string, DbTopic & { children?: string[] }>();
     const bySlug = new Map<string, DbTopic & { children?: string[] }>();
+    const embeddings = new Map<string, number[]>();
 
     // Initialize maps with parsed vectors
     for (const t of topicsRaw) {
@@ -92,6 +99,9 @@ export async function loadTopicHierarchy(): Promise<TopicMaps> {
       }
 
       byId.set(t.id, topic);
+      if (topic.representativeEmbedding && Array.isArray(topic.representativeEmbedding) && topic.representativeEmbedding.length > 0) {
+        embeddings.set(topic.id, topic.representativeEmbedding as number[]);
+      }
     }
 
     // Build parent-child relationships
@@ -110,6 +120,9 @@ export async function loadTopicHierarchy(): Promise<TopicMaps> {
 
     cachedMaps = { byId, bySlug };
     cacheLoadedAt = now();
+    topicCache = byId;
+    topicEmbeddingsCache = embeddings;
+    lastCacheRefresh = Date.now();
     return cachedMaps;
   } catch (err) {
     console.error('[topicService] loadTopicHierarchy failed:', err);
@@ -117,8 +130,18 @@ export async function loadTopicHierarchy(): Promise<TopicMaps> {
     const empty = { byId: new Map(), bySlug: new Map() };
     cachedMaps = empty;
     cacheLoadedAt = now();
+    topicCache = empty.byId as any;
+    topicEmbeddingsCache = new Map();
     return empty;
   }
+}
+
+export function invalidateTopicCache() {
+  cachedMaps = null;
+  cacheLoadedAt = null;
+  topicCache = null;
+  topicEmbeddingsCache = null;
+  lastCacheRefresh = 0;
 }
 
 export async function findTopicByName(name: string): Promise<(DbTopic & { children?: string[] }) | null> {
@@ -277,23 +300,36 @@ export async function mapQueryToTopics(query: string, ragResults: any): Promise<
 
     const candidates: { topicId: string; confidence: number; source: 'embedding' | 'citation' | 'both'; matchedKeywords?: string[] }[] = [];
 
-    // Use pgvector cosine similarity directly in SQL for efficiency and to access Unsupported vector column
+    // Prefer in-memory cache for similarity to avoid DB hits
     if (queryEmbedding && Array.isArray(queryEmbedding) && queryEmbedding.length > 0) {
-      const vec = `[${queryEmbedding.join(',')}]`;
-      try {
-        const rows = await prisma.$queryRaw<Array<{ id: string; distance: number }>>`
-          SELECT id, ("representativeEmbedding" <=> ${vec}::vector) AS distance
-          FROM "Topic"
-          WHERE "representativeEmbedding" IS NOT NULL
-          ORDER BY distance ASC
-          LIMIT 3
-        `;
-        for (const r of rows) {
-          const sim = 1 - (r.distance ?? 1);
-          candidates.push({ topicId: r.id, confidence: clamp01(sim), source: 'embedding' });
+      if (topicEmbeddingsCache && topicEmbeddingsCache.size > 0) {
+        const sims: Array<{ topicId: string; sim: number }> = [];
+        for (const [id, emb] of topicEmbeddingsCache.entries()) {
+          const sim = cosineSimilarity(queryEmbedding, emb);
+          if (Number.isFinite(sim)) sims.push({ topicId: id, sim });
         }
-      } catch (sqlErr) {
-        console.warn('[topicService] embedding similarity query failed:', sqlErr);
+        sims.sort((a, b) => b.sim - a.sim);
+        for (const s of sims.slice(0, 3)) {
+          candidates.push({ topicId: s.topicId, confidence: clamp01(s.sim), source: 'embedding' });
+        }
+      } else {
+        // Fallback to SQL similarity if cache not available
+        const vec = `[${queryEmbedding.join(',')}]`;
+        try {
+          const rows = await prisma.$queryRaw<Array<{ id: string; distance: number }>>`
+            SELECT id, ("representativeEmbedding" <=> ${vec}::vector) AS distance
+            FROM "Topic"
+            WHERE "representativeEmbedding" IS NOT NULL
+            ORDER BY distance ASC
+            LIMIT 3
+          `;
+          for (const r of rows) {
+            const sim = 1 - (r.distance ?? 1);
+            candidates.push({ topicId: r.id, confidence: clamp01(sim), source: 'embedding' });
+          }
+        } catch (sqlErr) {
+          console.warn('[topicService] embedding similarity query failed:', sqlErr);
+        }
       }
     }
 
