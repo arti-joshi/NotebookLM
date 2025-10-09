@@ -1,22 +1,13 @@
 import { PrismaClient } from '../../generated/prisma';
 import { TopicMapping } from './topicService';
+import { 
+  RecordInteractionParams, 
+  ProgressSummary, 
+  TopicDetail, 
+  RAGMetadata 
+} from '../types/progress';
 
 const prisma = new PrismaClient();
-
-export interface RecordInteractionParams {
-  userId: string;
-  query: string;
-  queryEmbedding: number[];
-  topicMappings: TopicMapping[]; // from topicService
-  ragMetadata: {
-    confidence: string; // "high" | "medium" | "low"
-    topScore: number;
-    citedSections: string[];
-  };
-  answerLength: number;
-  citationCount: number;
-  timeSpentMs?: number;
-}
 
 function toVectorLiteral(vec: number[]): string {
   if (!Array.isArray(vec) || vec.length === 0) return '[]';
@@ -80,6 +71,9 @@ export async function recordInteraction(params: RecordInteractionParams): Promis
 
       affectedTopicIds.add(m.topicId);
     }
+  }, {
+    maxWait: 10000, // 10 seconds max wait for transaction
+    timeout: 30000  // 30 seconds timeout
   });
 
   // Recompute mastery using detailed algorithm outside the transaction
@@ -419,31 +413,6 @@ export default {
 
 // -------- Aggregations & Details --------
 
-export interface ProgressSummary {
-  overallProgress: number;
-  totalQuestions: number;
-  totalTimeSpent: number; // minutes
-  topicsExplored: number;
-  topicsMastered: number;
-  topicsByStatus: {
-    mastered: number;
-    proficient: number;
-    learning: number;
-    beginner: number;
-    notStarted: number;
-  };
-  weeklyActivity: Array<{ day: string; questions: number; minutes: number }>;
-  topActiveTopics: Array<{
-    topicId: string;
-    topicName: string;
-    chapterName: string;
-    masteryLevel: number;
-    status: string;
-    questionsAsked: number;
-    lastActive: Date;
-  }>;
-}
-
 export async function getUserProgress(userId: string): Promise<ProgressSummary> {
   // Load all mastery rows and topics for weighting
   const [masteries, topics] = await Promise.all([
@@ -536,14 +505,6 @@ export async function getUserProgress(userId: string): Promise<ProgressSummary> 
     weeklyActivity,
     topActiveTopics: top
   };
-}
-
-export interface TopicDetail {
-  topic: any;
-  mastery: any;
-  recentInteractions: any[];
-  subtopicsProgress: Array<{ subtopic: any; explored: boolean }>;
-  recommendations: string[];
 }
 
 export async function getTopicDetail(userId: string, topicId: string): Promise<TopicDetail> {

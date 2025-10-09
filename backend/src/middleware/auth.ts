@@ -20,6 +20,17 @@ export function auth(req: Request, res: Response, next: NextFunction): void {
   const header = req.headers.authorization;
   const token = header?.startsWith('Bearer ') ? header.slice(7) : null;
 
+  // TEMP: bypass auth in dev when using demo-token
+  if (token === 'demo-token') {
+    (req as AuthenticatedRequest).session = {
+      username: 'demo@admin.com',
+      role: 'ADMIN',
+      createdAt: Date.now()
+    };
+    next();
+    return;
+  }
+
   if (!token || !sessions.has(token)) {
     res.status(401).json({ error: 'Unauthorized' });
     return;

@@ -49,21 +49,59 @@ export async function loadTopicHierarchy(): Promise<TopicMaps> {
       return cachedMaps;
     }
 
-    const topics = await prisma.topic.findMany();
+    // Fetch topics with raw SQL to get vectors properly
+    const topicsRaw = await prisma.$queryRaw<any[]>`
+      SELECT 
+        id, level, name, slug, "parentId", "chapterNum",
+        keywords, aliases, "expectedQuestions", "createdAt",
+        "representativeEmbedding"::text as embedding_text
+      FROM "Topic"
+    `;
+    
     const byId = new Map<string, DbTopic & { children?: string[] }>();
     const bySlug = new Map<string, DbTopic & { children?: string[] }>();
 
-    // Initialize maps
-    for (const t of topics) {
-      byId.set(t.id, { ...t, children: [] });
+    // Initialize maps with parsed vectors
+    for (const t of topicsRaw) {
+      const topic: DbTopic & { children?: string[] } = {
+        id: t.id,
+        level: t.level,
+        name: t.name,
+        slug: t.slug,
+        parentId: t.parentId,
+        chapterNum: t.chapterNum,
+        keywords: t.keywords || [],
+        aliases: t.aliases || [],
+        expectedQuestions: t.expectedQuestions || 5,
+        createdAt: t.createdAt,
+        representativeEmbedding: null,
+        children: []
+      };
+
+      // Parse vector from PostgreSQL text format: "[0.1,0.2,...]"
+      if (t.embedding_text) {
+        try {
+          const vecStr = t.embedding_text.replace(/[\[\]]/g, '');
+          topic.representativeEmbedding = vecStr.split(',').map(parseFloat);
+        } catch (err) {
+          console.warn(`Failed to parse embedding for topic ${t.id}:`, err);
+          topic.representativeEmbedding = null;
+        }
+      }
+
+      byId.set(t.id, topic);
     }
-    for (const t of topics) {
+
+    // Build parent-child relationships
+    for (const t of topicsRaw) {
       if (t.parentId) {
         const parent = byId.get(t.parentId);
         if (parent) parent.children!.push(t.id);
       }
     }
-    for (const t of topics) {
+
+    // Build slug map
+    for (const t of topicsRaw) {
       const node = byId.get(t.id)!;
       bySlug.set(t.slug, node);
     }

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, LineChart, Line } from 'recharts'
 import { MessageSquare, Clock, Award, TrendingUp, Lightbulb } from 'lucide-react'
 import { getProgressSummary, getUserTopicMastery } from '../lib/api'
@@ -76,6 +77,7 @@ function StatusBadge({ status }) {
 }
 
 function DashboardPage() {
+  const navigate = useNavigate()
   const [progressSummary, setProgressSummary] = useState(null)
   const [topicMastery, setTopicMastery] = useState([])
   const [loading, setLoading] = useState(true)
@@ -83,6 +85,13 @@ function DashboardPage() {
   const [selectedTopicId, setSelectedTopicId] = useState(null)
 
   async function loadData() {
+    // Check authentication first
+    const token = localStorage.getItem('auth_token')
+    if (!token) {
+      navigate('/auth')
+      return
+    }
+
     setLoading(true)
     setError(null)
     try {
@@ -93,6 +102,15 @@ function DashboardPage() {
       setProgressSummary(summary)
       setTopicMastery(mastery)
     } catch (e) {
+      console.error('Dashboard load error:', e)
+      
+      // Handle auth errors
+      if (e.status === 401) {
+        localStorage.removeItem('auth_token')
+        navigate('/auth')
+        return
+      }
+      
       setError(e?.message || 'Failed to load progress')
     } finally {
       setLoading(false)

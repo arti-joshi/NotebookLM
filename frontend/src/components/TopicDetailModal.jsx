@@ -89,8 +89,35 @@ export default function TopicDetailModal({ topicId, onClose }) {
   }
 
   useEffect(() => {
-    if (topicId) load()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    let cancelled = false
+    
+    const loadData = async () => {
+      if (!topicId) return
+      
+      try {
+        setLoading(true)
+        setError(null)
+        const data = await getTopicProgress(topicId)
+        if (!cancelled) {
+          setDetail(data)
+        }
+      } catch (err) {
+        if (!cancelled) {
+          console.error('Failed to load topic detail:', err)
+          setError('Failed to load topic details')
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false)
+        }
+      }
+    }
+    
+    loadData()
+    
+    return () => {
+      cancelled = true // Cleanup on unmount
+    }
   }, [topicId])
 
   async function handleMarkComplete() {

@@ -4,6 +4,7 @@ import cors from 'cors'
 import { PrismaClient } from '../generated/prisma'
 import { GoogleGenerativeAIEmbeddings } from '@langchain/google-genai'
 import { corsConfig } from './config/cors'
+import { auth as sessionAuth, sessions as SessionStore, AuthenticatedRequest as SessionRequest } from './middleware/auth'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import multer from 'multer'
@@ -36,11 +37,7 @@ interface User {
   isDemo?: boolean
 }
 
-interface AuthenticatedRequest extends Request {
-  user?: User
-  isAuthenticated?: boolean
-  isAdmin?: boolean
-}
+type AuthenticatedRequest = SessionRequest
 
 interface SambaNovaClient {
   chat: {
@@ -62,8 +59,7 @@ const DEMO_ADMIN = {
   role: 'ADMIN'
 }
 
-// Simple session storage (in production, use Redis or database)
-const sessions = new Map<string, { username: string, role: string, createdAt: number }>()
+// Use shared session storage from middleware/auth
 
 // Initialize Prisma first
 const prisma = new PrismaClient({
@@ -472,9 +468,9 @@ function cleanExpiredSessions(): void {
   const now = Date.now()
   const oneHour = 60 * 60 * 1000
   
-  for (const [token, session] of sessions.entries()) {
+  for (const [token, session] of SessionStore.entries()) {
     if (now - session.createdAt > oneHour) {
-      sessions.delete(token)
+      SessionStore.delete(token)
     }
   }
 }
@@ -522,57 +518,13 @@ async function getSambaClient(): Promise<SambaNovaClient> {
   }
 }
 
-// Auth middleware with demo token support
-function auth(req: Request, res: Response, next: NextFunction): void {
-  const header = req.headers.authorization
-  const token = header?.startsWith('Bearer ') ? header.slice(7) : null
-
-  if (!token) {
-    res.status(401).json({ error: 'Unauthorized - No token provided' })
-    return
-  }
-
-  // Handle demo token
-  if (token === DEMO_TOKEN) {
-    // Set demo admin session properties
-    (req as AuthenticatedRequest).user = {
-      id: DEMO_USER_ID,
-      email: DEMO_ADMIN.email,
-      role: DEMO_ADMIN.role,
-      isDemo: true
-    };
-    (req as AuthenticatedRequest).isAuthenticated = true;
-    (req as AuthenticatedRequest).isAdmin = true;
-    next();
-    return;
-  }
-
-  // Regular JWT session handling for non-demo tokens
-  const session = sessions.get(token)
-  if (!session) {
-    res.status(401).json({ error: 'Invalid session token' })
-    return
-  }
-
-  // Check if session is expired (1 hour)
-  const oneHour = 60 * 60 * 1000
-  if (token !== DEMO_TOKEN) {
-    if (Date.now() - session.createdAt > oneHour) {
-      sessions.delete(token)
-      res.status(401).json({ error: 'Session expired' })
-      return
-    }
-  }
-
-  const authReq = req as AuthenticatedRequest
-  authReq.isAuthenticated = true
-  authReq.isAdmin = session.role === 'ADMIN'
-  next()
-}
+// Replace local auth with centralized middleware auth (sessionAuth)
+const auth = sessionAuth
 
 function requireAdmin(req: Request, res: Response, next: NextFunction): void {
   const authReq = req as AuthenticatedRequest
-  if (!authReq.isAdmin) {
+  const role = authReq?.session?.role || 'USER'
+  if (role !== 'ADMIN') {
     res.status(403).json({ error: 'Forbidden: Admins only' })
     return
   }
@@ -596,7 +548,7 @@ app.post('/auth/login', asyncHandler(async (req: Request, res: Response) => {
   // Simple demo admin check
   if (email === DEMO_ADMIN.email && password === DEMO_ADMIN.password) {
     const token = DEMO_TOKEN
-    sessions.set(token, {
+    SessionStore.set(token, {
       username: DEMO_ADMIN.email,
       role: DEMO_ADMIN.role,
       createdAt: Date.now()
@@ -615,7 +567,7 @@ app.post('/auth/login', asyncHandler(async (req: Request, res: Response) => {
       if (user && user.passwordHash === 'demo') {
         // This is the demo user created by seed script
         const token = DEMO_TOKEN
-        sessions.set(token, {
+        SessionStore.set(token, {
           username: user.email,
           role: user.role,
           createdAt: Date.now()
@@ -659,7 +611,7 @@ app.post('/auth/logout', asyncHandler(async (req: Request, res: Response) => {
   const token = header?.startsWith('Bearer ') ? header.slice(7) : null
   
   if (token) {
-    sessions.delete(token)
+    SessionStore.delete(token)
   }
   
   res.json({ message: 'Logged out successfully' })
@@ -753,6 +705,55 @@ app.get('/progress', auth, asyncHandler(async (req: Request, res: Response) => {
     where: { userId: DEMO_USER_ID }
   })
   res.json(rows)
+}))
+
+// Place static routes BEFORE parameterized route to avoid capture by /progress/:id
+app.get('/progress/summary', auth, asyncHandler(async (req: Request, res: Response) => {
+  const userId = DEMO_USER_ID // or from req.user.id
+  const summary = await progressService.getUserProgress(userId)
+  const safeSummary = {
+    totalTopics: summary?.totalTopics ?? 0,
+    masteredTopics: summary?.masteredTopics ?? 0,
+    learningTopics: summary?.learningTopics ?? 0,
+    notStartedTopics: summary?.notStartedTopics ?? Math.max(0, (summary?.totalTopics ?? 0) - ((summary?.masteredTopics ?? 0) + (summary?.learningTopics ?? 0))),
+    overallProgress: summary?.overallProgress ?? 0,
+    weeklyActivity: summary?.weeklyActivity ?? [],
+    topActiveTopics: summary?.topActiveTopics ?? []
+  }
+  res.json(safeSummary)
+}))
+
+app.get('/progress/topics', auth, asyncHandler(async (req: Request, res: Response) => {
+  const userId = DEMO_USER_ID
+  const { status, limit } = req.query
+
+  const validStatuses = ['NOT_STARTED', 'BEGINNER', 'LEARNING', 'PROFICIENT', 'MASTERED']
+  if (status && !validStatuses.includes(String(status))) {
+    return res.status(400).json({ error: 'Invalid status', valid: validStatuses })
+  }
+
+  let take = 100
+  if (typeof limit !== 'undefined') {
+    const parsed = parseInt(String(limit), 10)
+    if (!Number.isFinite(parsed) || parsed < 1) {
+      return res.status(400).json({ error: 'Limit must be a positive number' })
+    }
+    take = Math.min(parsed, 1000)
+  }
+
+  const where: any = { userId }
+  if (status) where.status = status
+
+  const masteryRecords = await prisma.topicMastery.findMany({
+    where,
+    include: { topic: true },
+    orderBy: [
+      { lastInteraction: 'desc' },
+      { updatedAt: 'desc' }
+    ],
+    take
+  })
+  res.json(masteryRecords)
 }))
 
 app.get('/progress/:id', auth, asyncHandler(async (req: Request, res: Response) => {
@@ -1462,18 +1463,24 @@ FORMAT RULES:
 - Status: Success`)
     let answer = completion?.choices?.[0]?.message?.content || 'I could not generate a response.'
 
-    // Progress tracking: update and record interaction asynchronously
+    // Progress tracking: update and record interaction
     try {
       const interactionData: any = (req as any)._interactionData
       if (interactionData) {
         interactionData.answerLength = answer.length
         interactionData.citationCount = (answer.match(/\[Page \d+/g) || []).length
-        progressService.recordInteraction(interactionData).catch((err: any) => {
-          console.error('Failed to record interaction:', err)
-        })
+        
+        // Record interaction synchronously to ensure data integrity
+        try {
+          await progressService.recordInteraction(interactionData)
+          console.log('[ai/chat] Progress tracking completed successfully')
+        } catch (progressErr) {
+          console.error('[ai/chat] Progress tracking failed:', progressErr)
+          // Don't block response, but log for monitoring
+        }
       }
     } catch (e) {
-      console.warn('[ai/chat] Failed to enqueue progress tracking:', (e as Error)?.message)
+      console.warn('[ai/chat] Failed to prepare progress tracking:', (e as Error)?.message)
     }
 
     // Citations disabled by request
@@ -1783,11 +1790,7 @@ app.get('/ai/chat-sambanova/stream', asyncHandler(async (req: Request, res: Resp
 }))
 
 // --- Progress Summary ---
-app.get('/progress/summary', auth, asyncHandler(async (req: Request, res: Response) => {
-  const userId = DEMO_USER_ID // or from req.user.id
-  const summary = await progressService.getUserProgress(userId)
-  res.json(summary)
-}))
+// (moved earlier above /progress/:id)
 
 // --- Status Routes ---
 app.get('/rag/status', asyncHandler(async (req: Request, res: Response) => {
@@ -1825,9 +1828,26 @@ app.get('/rag/status', asyncHandler(async (req: Request, res: Response) => {
 app.get('/topics', auth, asyncHandler(async (req: Request, res: Response) => {
   const topics = await prisma.topic.findMany({
     where: { level: 0 },
-    include: {
+    select: {
+      id: true,
+      level: true,
+      name: true,
+      slug: true,
+      chapterNum: true,
+      keywords: true,
+      aliases: true,
+      expectedQuestions: true,
       children: {
-        orderBy: { name: 'asc' }
+        orderBy: { name: 'asc' },
+        select: {
+          id: true,
+          level: true,
+          name: true,
+          slug: true,
+          keywords: true,
+          aliases: true,
+          expectedQuestions: true
+        }
       }
     },
     orderBy: { chapterNum: 'asc' }
@@ -1839,35 +1859,56 @@ app.get('/topics', auth, asyncHandler(async (req: Request, res: Response) => {
 app.get('/topics/:topicId/progress', auth, asyncHandler(async (req: Request, res: Response) => {
   const { topicId } = req.params
   const userId = DEMO_USER_ID
-  const detail = await progressService.getTopicDetail(userId, topicId)
-  res.json(detail)
+
+  if (!topicId || topicId.length < 20) {
+    return res.status(400).json({ error: 'Invalid topic ID' })
+  }
+
+  try {
+    const detail = await progressService.getTopicDetail(userId, topicId)
+    res.json(detail)
+  } catch (error: any) {
+    if (error?.message === 'Topic not found') {
+      return res.status(404).json({ error: 'Topic not found' })
+    }
+    throw error
+  }
 }))
 
 // Get user's topic mastery list (for dashboard)
-app.get('/progress/topics', auth, asyncHandler(async (req: Request, res: Response) => {
-  const userId = DEMO_USER_ID
-  const { status, limit } = req.query
-  const where: any = { userId }
-  if (status) where.status = status
-
-  const masteryRecords = await prisma.topicMastery.findMany({
-    where,
-    include: { topic: true },
-    orderBy: { lastInteraction: 'desc' },
-    take: limit ? parseInt(limit as string) : 100
-  })
-  res.json(masteryRecords)
-}))
+// (moved earlier above /progress/:id)
 
 // Manually mark topic as completed (optional)
 app.post('/topics/:topicId/complete', auth, asyncHandler(async (req: Request, res: Response) => {
   const { topicId } = req.params
   const userId = DEMO_USER_ID
-  await prisma.topicMastery.update({
+
+  const topic = await prisma.topic.findUnique({ where: { id: topicId } })
+  if (!topic) {
+    return res.status(404).json({ error: 'Topic not found' })
+  }
+
+  await prisma.topicMastery.upsert({
     where: { userId_topicId: { userId, topicId } },
-    data: {
+    update: {
       status: 'MASTERED',
       masteryLevel: 100,
+      completedAt: new Date()
+    },
+    create: {
+      userId,
+      topicId,
+      status: 'MASTERED',
+      masteryLevel: 100,
+      questionsAsked: 0,
+      coverageScore: 100,
+      depthScore: 100,
+      confidenceScore: 100,
+      diversityScore: 100,
+      retentionScore: 100,
+      subtopicsExplored: [],
+      firstInteraction: new Date(),
+      lastInteraction: new Date(),
       completedAt: new Date()
     }
   })
