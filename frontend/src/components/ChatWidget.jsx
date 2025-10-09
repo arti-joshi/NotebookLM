@@ -2,20 +2,25 @@ import { useEffect, useRef, useState } from 'react'
 import { MessageCircle, Send, X, Bot, User, Minimize2, Maximize2 } from 'lucide-react'
 import { callApi, getUserTopicMastery } from '../lib/api'
 import { ErrorBoundary } from './ErrorBoundary'
+import { notifyProgressUpdate } from '../lib/progressEvents'
+import { saveChatState, loadChatState } from '../lib/chatStorage'
 
 function ChatWidgetContent({ fullScreen = false }) {
-  const [isOpen, setIsOpen] = useState(false)
-  const [isMinimized, setIsMinimized] = useState(false)
-  const [messages, setMessages] = useState([
-    { 
-      role: 'assistant', 
-      content: 'Hi! I\'m your AI assistant. Ask me about PostgreSQL.',
+  // Load persisted state on mount
+  const persistedState = loadChatState()
+
+  const [isOpen, setIsOpen] = useState(persistedState?.isOpen ?? false)
+  const [isMinimized, setIsMinimized] = useState(persistedState?.isMinimized ?? false)
+  const [messages, setMessages] = useState(persistedState?.messages ?? [
+    {
+      role: 'assistant',
+      content: "Hi! I'm your AI assistant for PostgreSQL documentation. Ask me anything!",
       timestamp: new Date()
     }
   ])
   const [input, setInput] = useState('')
   const [isTyping, setIsTyping] = useState(false)
-  const [recentTopics, setRecentTopics] = useState([])
+  const [recentTopics, setRecentTopics] = useState(persistedState?.recentTopics ?? [])
   const endRef = useRef(null)
   const listRef = useRef(null)
   const inputRef = useRef(null)
@@ -43,6 +48,20 @@ function ChatWidgetContent({ fullScreen = false }) {
       scrollMessagesToBottom()
     }
   }, [isOpen, isMinimized, fullScreen])
+
+  useEffect(() => {
+    // Auto-save chat state whenever it changes
+    const saveTimeout = setTimeout(() => {
+      saveChatState({
+        messages,
+        isOpen,
+        isMinimized,
+        recentTopics
+      })
+    }, 500) // Debounce saves by 500ms
+    
+    return () => clearTimeout(saveTimeout)
+  }, [messages, isOpen, isMinimized, recentTopics])
 
   async function sendMessage(e) {
     e.preventDefault()
@@ -93,6 +112,20 @@ function ChatWidgetContent({ fullScreen = false }) {
         content: assistantReply,
         timestamp: new Date()
       }])
+
+      // Notify dashboard of progress update
+      try {
+        // Emit progress event
+        notifyProgressUpdate({
+          source: 'chat',
+          message: text,
+          timestamp: new Date().toISOString()
+        })
+        
+        console.log('Progress update event emitted from chat')
+      } catch (err) {
+        console.error('Failed to emit progress event:', err)
+      }
 
       // Fetch live progress indicators
       try {

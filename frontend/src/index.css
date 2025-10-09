@@ -23,6 +23,10 @@ html, body, #root {
   .fade-in-50 {
     animation: fade-in 0.3s ease-out;
   }
+  
+  .animate-fade-in {
+    animation: fade-in 0.3s ease-out;
+  }
 }
 
 @keyframes animate-in {

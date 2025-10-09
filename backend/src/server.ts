@@ -720,6 +720,15 @@ app.get('/progress/summary', auth, asyncHandler(async (req: Request, res: Respon
     weeklyActivity: summary?.weeklyActivity ?? [],
     topActiveTopics: summary?.topActiveTopics ?? []
   }
+  
+  // Prevent caching of progress data
+  res.set({
+    'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+    'Pragma': 'no-cache',
+    'Expires': '0',
+    'Surrogate-Control': 'no-store'
+  })
+  
   res.json(safeSummary)
 }))
 
@@ -753,6 +762,15 @@ app.get('/progress/topics', auth, asyncHandler(async (req: Request, res: Respons
     ],
     take
   })
+  
+  // Prevent caching of progress data
+  res.set({
+    'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+    'Pragma': 'no-cache',
+    'Expires': '0',
+    'Surrogate-Control': 'no-store'
+  })
+  
   res.json(masteryRecords)
 }))
 
@@ -1871,6 +1889,15 @@ app.get('/topics', auth, asyncHandler(async (req: Request, res: Response) => {
     },
     orderBy: { chapterNum: 'asc' }
   })
+  
+  // Prevent caching of progress data
+  res.set({
+    'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+    'Pragma': 'no-cache',
+    'Expires': '0',
+    'Surrogate-Control': 'no-store'
+  })
+  
   res.json(topics)
 }))
 
@@ -1885,6 +1912,15 @@ app.get('/topics/:topicId/progress', auth, asyncHandler(async (req: Request, res
 
   try {
     const detail = await progressService.getTopicDetail(userId, topicId)
+    
+    // Prevent caching of progress data
+    res.set({
+      'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0',
+      'Surrogate-Control': 'no-store'
+    })
+    
     res.json(detail)
   } catch (error: any) {
     if (error?.message === 'Topic not found') {

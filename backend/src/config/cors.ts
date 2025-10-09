@@ -26,7 +26,20 @@ export const corsConfig: CorsOptions = {
         callback(new Error(`Origin ${origin} not allowed by CORS`));
     },
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-    exposedHeaders: ['Set-Cookie']
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: [
+        'Content-Type',
+        'Authorization',
+        'Cache-Control',
+        'Pragma',
+        'Expires',
+        'X-Requested-With'
+    ],
+    exposedHeaders: [
+        'Set-Cookie',
+        'Cache-Control',
+        'Pragma',
+        'Expires'
+    ],
+    maxAge: 86400 // 24 hours
 };

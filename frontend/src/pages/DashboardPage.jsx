@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useEffect, useState, useRef } from 'react'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, LineChart, Line } from 'recharts'
 import { MessageSquare, Clock, Award, TrendingUp, Lightbulb, Download } from 'lucide-react'
 import { getProgressSummary, getUserTopicMastery } from '../lib/api'
 import TopicDetailModal from '../components/TopicDetailModal'
 import ProgressOnboarding from '../components/ProgressOnboarding'
+import { progressEvents, PROGRESS_EVENTS } from '../lib/progressEvents'
 
 function formatRelativeTime(date) {
   const d = new Date(date)
@@ -79,47 +80,137 @@ function StatusBadge({ status }) {
 
 function DashboardPage() {
   const navigate = useNavigate()
+  const location = useLocation()
+  const loadingRef = useRef(false)
   const [progressSummary, setProgressSummary] = useState(null)
   const [topicMastery, setTopicMastery] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [selectedTopicId, setSelectedTopicId] = useState(null)
+  const [showRefreshNotification, setShowRefreshNotification] = useState(false)
 
   async function loadData() {
+    if (loadingRef.current) {
+      console.log('[Dashboard] Skipping loadData - already loading')
+      return
+    }
+    
+    // Show refresh notification for auto-refreshes (not initial load)
+    const isAutoRefresh = progressSummary !== null
+    if (isAutoRefresh) {
+      setShowRefreshNotification(true)
+    }
+    
+    console.log('[Dashboard] Starting data load...')
+    loadingRef.current = true
+    setLoading(true)
+    setError(null)
+    
     // Check authentication first
     const token = localStorage.getItem('auth_token')
     if (!token) {
+      console.log('[Dashboard] No auth token, redirecting to auth')
       navigate('/auth')
       return
     }
 
-    setLoading(true)
-    setError(null)
     try {
+      console.log('[Dashboard] Fetching progress summary and topic mastery...')
+      const startTime = Date.now()
+      
       const [summary, mastery] = await Promise.all([
         getProgressSummary(),
         getUserTopicMastery(null, 10)
       ])
+      
+      const fetchTime = Date.now() - startTime
+      console.log(`[Dashboard] Data fetched in ${fetchTime}ms`)
+      console.log('[Dashboard] Summary:', summary)
+      console.log('[Dashboard] Mastery records:', mastery?.length || 0)
+      
       setProgressSummary(summary)
-      setTopicMastery(mastery)
+      setTopicMastery(mastery || [])
+      
+      // Hide notification after successful refresh
+      if (isAutoRefresh) {
+        setTimeout(() => setShowRefreshNotification(false), 2000)
+      }
+      
+      console.log('[Dashboard] State updated successfully')
     } catch (e) {
-      console.error('Dashboard load error:', e)
+      console.error('[Dashboard] Error loading data:', e)
       
       // Handle auth errors
       if (e.status === 401) {
+        console.log('[Dashboard] Auth error, clearing token and redirecting')
         localStorage.removeItem('auth_token')
         navigate('/auth')
         return
       }
       
       setError(e?.message || 'Failed to load progress')
+      setShowRefreshNotification(false)
     } finally {
       setLoading(false)
+      loadingRef.current = false
+      console.log('[Dashboard] Load complete')
     }
   }
 
   useEffect(() => {
     loadData()
+    
+    // Auto-refresh when user returns to tab
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        console.log('Dashboard tab visible - refreshing data...')
+        loadData()
+      }
+    }
+    
+    // Auto-refresh when window regains focus
+    const handleFocus = () => {
+      console.log('Dashboard focused - refreshing data...')
+      loadData()
+    }
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    window.addEventListener('focus', handleFocus)
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+      window.removeEventListener('focus', handleFocus)
+    }
+  }, [])
+
+  useEffect(() => {
+    // Force refresh when navigating TO dashboard
+    console.log('Dashboard route mounted - loading fresh data...')
+    loadData()
+  }, [location.pathname])
+
+  useEffect(() => {
+    // Listen for progress updates from chatbot
+    const unsubscribe = progressEvents.on(PROGRESS_EVENTS.PROGRESS_CHANGED, (data) => {
+      console.log('[Dashboard] ✓ Progress update event received:', data)
+      
+      // Debounce multiple rapid updates
+      if (loadingRef.current) {
+        console.log('[Dashboard] ⏩ Skipping refresh - already loading')
+        return
+      }
+      
+      // Wait 1 second before refreshing to allow backend to finish processing
+      console.log('[Dashboard] ⏰ Scheduling refresh in 1 second...')
+      setTimeout(() => {
+        console.log('[Dashboard] 🔄 Executing auto-refresh...')
+        loadData()
+      }, 1000)
+    })
+    
+    return () => {
+      unsubscribe()
+    }
   }, [])
 
   const refreshData = () => loadData()
@@ -206,6 +297,16 @@ function DashboardPage() {
             </button>
           </div>
         </div>
+
+        {showRefreshNotification && (
+          <div className="fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 z-50 animate-fade-in">
+            <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+            </svg>
+            <span className="text-sm font-medium">Progress Updated</span>
+          </div>
+        )}
 
         <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow">
           <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-3">Overall Progress: {overallProgress}%</h2>

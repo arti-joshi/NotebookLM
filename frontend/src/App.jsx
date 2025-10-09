@@ -8,6 +8,7 @@ import DashboardPage from './pages/DashboardPage.jsx'
 import ChatWidget from './components/ChatWidget.jsx'
 import AuthPage from './pages/AuthPage.jsx'
 import { Navigate } from 'react-router-dom'
+import { clearChatOnLogout } from './lib/chatStorage'
 
 function RequireAuth({ children }) {
   const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null
@@ -167,6 +168,7 @@ function App() {
                   onClick={() => { 
                     try { 
                       localStorage.removeItem('auth_token') 
+                      clearChatOnLogout() // Clear chat state
                       window.dispatchEvent(new Event('authStateChanged'))
                     } catch {} 
                     window.location.href = '/auth' 
@@ -223,6 +225,7 @@ function App() {
                     onClick={() => { 
                       try { 
                         localStorage.removeItem('auth_token') 
+                        clearChatOnLogout() // Clear chat state
                         window.dispatchEvent(new Event('authStateChanged'))
                       } catch {} 
                       window.location.href = '/auth' 

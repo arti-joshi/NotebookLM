@@ -136,8 +136,26 @@ export async function apiPost(path, body) {
   return res.json()
 }
 
-export async function apiGet(path) {
-  const res = await callApi(path, { method: 'GET' })
+export async function apiGet(path, options = {}) {
+  // Add cache-busting timestamp for progress endpoints
+  const shouldBustCache = path.includes('/progress') || path.includes('/topics')
+  
+  let url = path
+  if (shouldBustCache) {
+    const separator = path.includes('?') ? '&' : '?'
+    url = `${path}${separator}_t=${Date.now()}`
+  }
+  
+  const res = await callApi(url, { 
+    method: 'GET',
+    headers: {
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0',
+      ...options.headers
+    },
+    ...options
+  })
   if (!res.ok) throw new Error(await res.text())
   return res.json()
 }
