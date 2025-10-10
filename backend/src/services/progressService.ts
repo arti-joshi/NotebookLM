@@ -765,7 +765,13 @@ export async function updateMastery(userId: string, topicId: string): Promise<vo
       tx.topicMastery.findUnique({ where: { userId_topicId: { userId, topicId } } })
     ]);
 
-    const questionsAsked = interactions.length;
+    // Count UNIQUE queries (not total interactions)
+    const uniqueQueries = new Set(interactions.map(i => i.query.toLowerCase().trim())).size;
+    
+    console.log(`[progressService] Total interactions: ${interactions.length}`);
+    console.log(`[progressService] Unique queries: ${uniqueQueries}`);
+    
+    const questionsAsked = uniqueQueries;
     
     if (questionsAsked === 0) {
       await tx.topicMastery.upsert({
@@ -865,19 +871,39 @@ export async function updateMastery(userId: string, topicId: string): Promise<vo
     
     console.log(`[progressService] coverageScore=${coverageScore.toFixed(2)} explored=${subtopicsExploredIds.length}/${children.length}`);
 
-    // ✅ FIX: More realistic Depth Score
-    const depthScores: number[] = interactions.map(it => {
-      const lengthScore = Math.min(((Math.max(0, it.answerLength || 0)) / 800) * 50, 50);
-      const citationScore = Math.min(((Math.max(0, it.citationCount || 0)) / 5) * 30, 30);
-      const confidenceBonus = Math.min(Math.max(0, it.ragTopScore || 0) * 20, 20);
-      return Math.min(lengthScore + citationScore + confidenceBonus, 100);
-    });
-    const depthScore = depthScores.reduce((a, b) => a + b, 0) / depthScores.length;
+    // Calculate Depth Score (25% weight) - STRICTER VERSION
+    let totalDepthScore = 0;
+    for (const interaction of interactions) {
+      // Base RAG score (reduced values)
+      const ragScore = interaction.ragConfidence === 'high' ? 60 
+        : interaction.ragConfidence === 'medium' ? 40 
+        : 20;
+      
+      // Answer quality (capped at 30 points max)
+      const answerQuality = Math.min(
+        ((Math.max(0, interaction.answerLength || 0)) / 800) * 20 + ((Math.max(0, interaction.citationCount || 0)) * 2),
+        30
+      );
+      
+      // Follow-up bonus (reduced)
+      const followUpBonus = interaction.hadFollowUp ? 5 : 0;
+      
+      // Single interaction score (max 95 points)
+      const interactionScore = Math.min(ragScore + answerQuality + followUpBonus, 95);
+      totalDepthScore += interactionScore;
+    }
+    // Apply question penalty - need more questions for high depth
+    const questionPenalty = Math.min(interactions.length / Math.max(1, (topic?.expectedQuestions as number | undefined) ?? 5), 1);
+    const depthScore = interactions.length > 0 
+      ? (totalDepthScore / interactions.length) * questionPenalty 
+      : 0;
     console.log(`[progressService] depthScore=${depthScore.toFixed(2)}`);
 
-    // Confidence Score
+    // Calculate Confidence Score (20% weight) - STRICTER
     const avgRagTop = interactions.reduce((s, it) => s + (it.ragTopScore || 0), 0) / interactions.length;
-    const confidenceScore = Math.min(100, Math.max(0, avgRagTop * 100));
+    // Apply diminishing returns - need 3+ questions for full confidence
+    const confirmationFactor = Math.min(interactions.length / 3, 1);
+    const confidenceScore = Math.min(100, Math.max(0, (avgRagTop * 100) * confirmationFactor));
     console.log(`[progressService] confidenceScore=${confidenceScore.toFixed(2)} avgRagTop=${avgRagTop.toFixed(4)}`);
 
     // ✅ FIX: Diversity Score with proper small-sample handling
@@ -908,63 +934,83 @@ export async function updateMastery(userId: string, topicId: string): Promise<vo
     }
     console.log(`[progressService] diversityScore=${diversityScore.toFixed(2)}`);
 
-    // ✅ FIX: Retention Score with better early-interaction handling
-    let retentionScore = 0;
-    if (interactions.length < 2) {
-      retentionScore = 70;
-    } else if (interactions.length < 4) {
-      // For 2-3 interactions, calculate based on gap but be lenient
-      const sorted = [...interactions].sort((a, b) => 
-        (new Date(a.createdAt as any).getTime()) - (new Date(b.createdAt as any).getTime())
-      );
-      let gapSum = 0;
-      let gapCount = 0;
-      for (let i = 1; i < sorted.length; i++) {
-        const gapMs = new Date(sorted[i].createdAt as any).getTime() - 
-                      new Date(sorted[i - 1].createdAt as any).getTime();
-        const hours = gapMs / (1000 * 60 * 60);
-        gapSum += hours < 1 ? 50 : hours < 12 ? 70 : 85;
-        gapCount++;
-      }
-      retentionScore = gapCount > 0 ? gapSum / gapCount : 60;
-    } else {
-      const sorted = [...interactions].sort((a, b) => 
-        (new Date(a.createdAt as any).getTime()) - (new Date(b.createdAt as any).getTime())
-      );
-      const gaps: number[] = [];
-      for (let i = 1; i < sorted.length; i++) {
-        const gapMs = new Date(sorted[i].createdAt as any).getTime() - 
-                      new Date(sorted[i - 1].createdAt as any).getTime();
-        gaps.push(Math.max(0, gapMs));
-      }
-      const scores = gaps.map(ms => {
-        const hrs = ms / (1000 * 60 * 60);
-        if (hrs < 1) return 40;
-        if (hrs < 12) return 60;
-        if (hrs < 48) return 85;
-        if (hrs < 24 * 7) return 95;
-        return 100;
-      });
-      retentionScore = scores.reduce((a, b) => a + b, 0) / scores.length;
+    // Calculate Retention Score (10% weight) - MUCH STRICTER
+    const sortedInteractions = [...interactions].sort((a, b) => 
+      (new Date(a.createdAt as any).getTime()) - (new Date(b.createdAt as any).getTime())
+    );
+    const retentionScores: number[] = [];
+    for (let i = 1; i < sortedInteractions.length; i++) {
+      const gapMs = new Date(sortedInteractions[i].createdAt as any).getTime() - 
+                    new Date(sortedInteractions[i - 1].createdAt as any).getTime();
+      const gapHours = gapMs / (1000 * 60 * 60);
+      // Much stricter scoring
+      let score = 10; // cramming (< 2 hours)
+      if (gapHours >= 168) score = 100; // > 7 days
+      else if (gapHours >= 72) score = 85; // 3-7 days
+      else if (gapHours >= 48) score = 70; // 2-3 days
+      else if (gapHours >= 24) score = 50; // 1-2 days
+      else if (gapHours >= 6) score = 30; // 6-24 hours
+      else if (gapHours >= 2) score = 20; // 2-6 hours
+      retentionScores.push(score);
     }
+    // Default to 0 for single interaction (no retention yet)
+    const retentionScore = retentionScores.length > 0
+      ? retentionScores.reduce((a, b) => a + b, 0) / retentionScores.length
+      : 0;
     console.log(`[progressService] retentionScore=${retentionScore.toFixed(2)}`);
 
-    // Final mastery calculation
-    const masteryLevel = (
+    // Compute final masteryLevel with progressive penalty
+    let rawMasteryLevel = (
       coverageScore * 0.30 +
       depthScore * 0.25 +
       confidenceScore * 0.20 +
       diversityScore * 0.15 +
       retentionScore * 0.10
     );
-    console.log(`[progressService] masteryLevel=${masteryLevel.toFixed(2)}`);
 
-    // Status determination
+    const expectedQ = Math.max(1, (topic?.expectedQuestions as number | undefined) ?? 5);
+    const questionRatio = interactions.length / expectedQ;
+    let masteryLevel: number;
+    if (questionRatio < 0.3) {
+      // Less than 30% of expected questions - cap at 40%
+      masteryLevel = Math.min(rawMasteryLevel, 40);
+    } else if (questionRatio < 0.5) {
+      // Less than 50% - cap at 60%
+      masteryLevel = Math.min(rawMasteryLevel, 60);
+    } else if (questionRatio < 0.7) {
+      // Less than 70% - cap at 75%
+      masteryLevel = Math.min(rawMasteryLevel, 75);
+    } else {
+      // 70%+ questions - allow full score
+      masteryLevel = rawMasteryLevel;
+    }
+    // Detailed breakdown logging
+    console.log(`[progressService] === Mastery Calculation Breakdown ===`);
+    console.log(`[progressService] Topic: ${topic?.name} (${topic?.id})`);
+    console.log(`[progressService] Expected Questions: ${(topic?.expectedQuestions as number | undefined) ?? 0}`);
+    console.log(`[progressService] Actual Questions: ${interactions.length}`);
+    console.log(`[progressService] Question Ratio: ${(questionRatio * 100).toFixed(1)}%`);
+    console.log(`[progressService] ---`);
+    console.log(`[progressService] Coverage: ${coverageScore.toFixed(2)}% (weight: 30%)`);
+    console.log(`[progressService] Depth: ${depthScore.toFixed(2)}% (weight: 25%)`);
+    console.log(`[progressService] Confidence: ${confidenceScore.toFixed(2)}% (weight: 20%)`);
+    console.log(`[progressService] Diversity: ${diversityScore.toFixed(2)}% (weight: 15%)`);
+    console.log(`[progressService] Retention: ${retentionScore.toFixed(2)}% (weight: 10%)`);
+    console.log(`[progressService] ---`);
+    console.log(`[progressService] Raw Mastery: ${rawMasteryLevel.toFixed(2)}%`);
+    console.log(`[progressService] Final Mastery: ${masteryLevel.toFixed(2)}% (after caps)`);
+
+    // Determine status (stricter thresholds)
     let status: any = 'NOT_STARTED';
-    if (masteryLevel >= 85) status = 'MASTERED';
-    else if (masteryLevel >= 70) status = 'PROFICIENT';
-    else if (masteryLevel >= 40) status = 'LEARNING';
-    else if (masteryLevel >= 20) status = 'BEGINNER';
+    if (masteryLevel >= 85 && interactions.length >= expectedQ) {
+      status = 'MASTERED';
+    } else if (masteryLevel >= 65 && interactions.length >= expectedQ * 0.7) {
+      status = 'PROFICIENT';
+    } else if (masteryLevel >= 35 && interactions.length >= 3) {
+      status = 'LEARNING';
+    } else if (masteryLevel >= 15 && interactions.length >= 1) {
+      status = 'BEGINNER';
+    }
 
     // Completion criteria
     const avgRagConfidence = interactions.reduce((s, it) => 
@@ -987,7 +1033,8 @@ export async function updateMastery(userId: string, topicId: string): Promise<vo
     ) {
       completedAt = new Date();
     }
-    console.log(`[progressService] status=${status} completedAt=${completedAt ? completedAt.toISOString() : 'null'}`);
+    console.log(`[progressService] Status: ${status}`);
+    console.log(`[progressService] =====================================`);
 
     await tx.topicMastery.upsert({
       where: { userId_topicId: { userId, topicId } },
@@ -1047,7 +1094,23 @@ export async function getUserProgress(userId: string): Promise<ProgressSummary> 
     ? Math.min(100, Math.max(0, weightedSum / totalExpected)) 
     : (masteries.length ? (masteries.reduce((s, m) => s + (m.masteryLevel || 0), 0) / masteries.length) : 0);
 
-  const totalQuestions = masteries.reduce((s, m) => s + (m.questionsAsked || 0), 0);
+  // Calculate UNIQUE questions across ALL topics
+  // Get all interactions and count unique queries
+  const allInteractions = await prisma.topicInteraction.findMany({
+    where: { userId },
+    select: { query: true }
+  });
+  
+  // Count unique queries (case-insensitive, trimmed)
+  const uniqueQueries = new Set(
+    allInteractions.map(i => i.query.toLowerCase().trim())
+  );
+  const totalQuestions = uniqueQueries.size;
+  
+  console.log(`[progressService] getUserProgress:`);
+  console.log(`[progressService] - Total interactions: ${allInteractions.length}`);
+  console.log(`[progressService] - Unique questions: ${totalQuestions}`);
+
   const topicsByStatus = {
     mastered: masteries.filter(m => m.status === 'MASTERED').length,
     proficient: masteries.filter(m => m.status === 'PROFICIENT').length,
